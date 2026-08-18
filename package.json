@@ -1,0 +1,25 @@
+{
+  "name": "syntex",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=web",
+    "test": "npm run test --workspace=web",
+    "test:e2e": "npm run test:e2e --workspace=web",
+    "lint": "npm run lint --workspace=web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:link": "supabase link --project-ref $SUPABASE_PROJECT_REF",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:diff": "supabase db diff",
+    "db:types": "supabase gen types typescript --linked > packages/database/src/types.ts",
+    "db:seed": "npm run db:seed --workspace=web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
