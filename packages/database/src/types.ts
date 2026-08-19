@@ -487,6 +487,13 @@ export type Database = {
             referencedColumns: ["id", "tenant_id"]
           },
           {
+            foreignKeyName: "establishment_company_id_tenant_id_fkey"
+            columns: ["company_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "company_current_representation"
+            referencedColumns: ["company_id", "tenant_id"]
+          },
+          {
             foreignKeyName: "establishment_municipality_id_fkey"
             columns: ["municipality_id"]
             isOneToOne: false
@@ -921,7 +928,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      company_current_representation: {
+        Row: {
+          company_id: string | null
+          status: string | null
+          tenant_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       app_current_tenant_ids: { Args: never; Returns: string[] }
