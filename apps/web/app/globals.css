@@ -2,25 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Tokens do Syntex UI — fonte única: design/SYNTEX-UI.md.
+ * Nenhum valor aqui é decoração: cada um está documentado na lei do
+ * front-end. Não adicione token novo sem editar o documento primeiro.
+ */
+:root {
+  /* §1 Superfícies e tinta — base neutra levemente quente */
+  --paper: #f6f5f3;
+  --surface: #ffffff;
+  --surface-2: #edebe7;
+  --border: #ddd9d3;
+  --border-strong: #c6c1b8;
+
+  --ink: #1a1815;
+  --ink-2: #4b4741;
+  --ink-3: #7a756c;
+
+  /* §2 Petrol — cor de ação: navegação, seleção, foco, vínculo */
+  --petrol-900: #0c303a;
+  --petrol-800: #0f3d4a;
+  --petrol-700: #155263;
+  --petrol-600: #1c6b80;
+  --petrol-100: #e4eef1;
+
+  /* Cromo da sidebar (shell) */
+  --shell-950: #14171a;
+  --shell-900: #1c2126;
+  --shell-border: #262b30;
+  --shell-ink: #e7e5e1;
+  --shell-ink-2: #9c9990;
+
+  /* §3 Estado de sistema — o software funcionou ou não */
+  --success: #15754e;
+  --warning: #b07208;
+  --danger: #b3372c;
+  --info: #1c6b80;
+
+  /* §3 Estado de domínio — a situação jurídica da coisa no mundo.
+     Nunca compartilha cor com o bloco acima: 'disputada' não é 'danger'. */
+  --st-reconhecida: #15754e;
+  --st-reconhecida-bg: #e8f2ed;
+  --st-reivindicada: #b07208;
+  --st-reivindicada-bg: #faf2e1;
+  --st-disputada: #b4541f;
+  --st-disputada-bg: #faefe7;
+  --st-perdida: #7a756c;
+  --st-perdida-bg: #efede9;
+  --st-sensivel: #6b3f8c;
+  --st-sensivel-bg: #f5f0f8;
+
+  /* §6 Forma — nunca 16/20/24 */
+  --r-xs: 3px;
+  --r-sm: 5px;
+  --r-md: 7px;
+  --shadow-sm: 0 1px 2px rgba(26, 24, 21, 0.05);
+  /* Elevação real só para drawer/modal (§6: "o resto, não"). Mesma base de
+     cor do shadow-sm, mais forte — não é uma cor nova, é a mesma tinta. */
+  --shadow-elevated: 0 12px 32px rgba(26, 24, 21, 0.16), 0 2px 6px rgba(26, 24, 21, 0.08);
+  /* Scrim atrás de drawer/modal/command — mesma tinta de --shell-950, só em
+     rgba() porque o modificador de opacidade do Tailwind (bg-shell-950/40)
+     não funciona sobre uma var() que guarda hex puro. */
+  --overlay: rgba(20, 23, 26, 0.4);
+
+  /* §4 Tipografia — piso de legibilidade 11.5px / 4.5:1, inegociável */
+  --text-page-title: 26px;
+  --text-section: 18px;
+  --text-component: 15px;
+  --text-body: 14px;
+  --text-dense: 13px;
+  --text-label: 11.5px;
+
+  /* §6 z-index nomeado — nunca número literal em componente */
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-dropdown: 20;
+  --z-popover: 30;
+  --z-drawer: 40;
+  --z-modal: 50;
+  --z-command: 60;
+  --z-toast: 70;
+
+  /* §5 Densidade — dois modos tokenizados desde já, 'comfortable' ativo.
+     O controle na UI fica para depois; a variável não. */
+  --row-h: 44px;
+  --input-h: 40px;
+  --density-body: var(--text-body);
+}
+
+[data-density="compact"] {
+  --row-h: 36px;
+  --input-h: 36px;
+  --density-body: var(--text-dense);
+}
+
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --primary: 222 47% 11%;
-    --primary-foreground: 210 40% 98%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --radius: 0.5rem;
+  * {
+    border-color: var(--border);
   }
 
-  * {
-    @apply border-border;
+  html {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   }
 
   body {
-    @apply bg-background text-foreground;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: var(--text-body);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--petrol-600);
+    outline-offset: 2px;
+  }
+
+  /* §4 "font-variant-numeric: tabular-nums em todo número que aparece em
+     coluna, comparação ou identificador" — aplicado globalmente à mono,
+     que é onde identificador e valor tabular vivem. */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 }
