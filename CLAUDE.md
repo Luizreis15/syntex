@@ -74,7 +74,8 @@ UX · permissão · validação · migration · audit · evento · testes · tra
 
 ## Stack
 
-- **Web:** Next.js (App Router), TypeScript, Tailwind, shadcn/ui, React Hook Form, Zod
+- **Web:** Next.js (App Router), TypeScript, Tailwind, shadcn/ui (Radix como base de primitive, nunca como produto final — ver `design/SYNTEX-UI.md`), React Hook Form, Zod
+- **Estado:** TanStack Query (estado de servidor), TanStack Table (`SyntexDataTable`), URL/`searchParams` para filtro e view salva
 - **Dados:** Supabase / PostgreSQL, RLS, Storage, Auth
 - **Migrations:** SQL puro via Supabase CLI. Não use gerador de migration de ORM — RLS, policies e constraints `EXCLUDE` são mais claros e mais corretos em SQL escrito à mão.
 - **Tipos:** gerados do schema (`supabase gen types typescript`)
@@ -105,6 +106,22 @@ Regra: hardcode com fronteira limpa até aparecer a **segunda** evidência de va
 - Segredos em `.env.local`, que está no `.gitignore`. `.env.example` só com placeholders.
 - `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` são públicas por design — podem ir para o client.
 - `SUPABASE_SERVICE_ROLE_KEY` e `RESEND_API_KEY` são secretas. Nunca no client, nunca em commit, nunca em log.
+
+---
+
+## Front-end — lei resumida
+
+A lei completa está em **`design/SYNTEX-UI.md`**. Leia antes de tocar em qualquer tela. O que nunca se esquece:
+
+- **A distinção do Syntex vive na estrutura, não na cor.** As quatro assinaturas: faixa de vigência, barra "Vigência em" como moldura permanente, mono em todo identificador, e dois sistemas de cor separados.
+- **`disputada` não é `danger`.** Estado de domínio (situação jurídica) e estado de sistema (funcionou ou não) são conjuntos de cor distintos e não se misturam. Estado nunca é comunicado só por cor.
+- **O agente compõe primitives `Syntex*`, não inventa.** É proibido, sem perguntar antes: cor, raio, sombra, espaçamento ou escala fora dos tokens; novo estilo de card ou botão; gradiente; biblioteca visual nova; `shadcn add` com default. Número literal de cor, tamanho ou z-index em componente é bug.
+- **Card só com agrupamento semântico real.** Um dado não vira card. Transformar tudo em card é assinatura de template.
+- **Piso de legibilidade:** nada abaixo de 11.5px nem de 4.5:1. Quem opera tem 30 anos, quem assina tem 65.
+- **Formatação brasileira** (CPF, CNPJ, moeda, data, competência) vive em `lib/formatters`. Nunca à mão num componente.
+- **Feature ownership:** cada domínio tem seus componentes, queries, actions, schemas e permissions em `features/<dominio>/`. Nada de pasta global com `CompanyAlgo.tsx` ao lado de `FinanceOutraCoisa.tsx`.
+- Server Components por padrão. URL é estado — filtro relevante vai para `searchParams`.
+- `<Can permission="...">` na UI, nunca `if (role === ...)`. E UI não é fonte de segurança: a autorização real continua na API e no banco.
 
 ---
 
