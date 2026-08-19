@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { can, type UserGrant } from "@syntex/permissions";
+import { allowedBranchIds, can, hasAnyGrant, type UserGrant } from "@syntex/permissions";
 
 const TENANT_A = "11111111-1111-1111-1111-111111111111";
 const TENANT_B = "22222222-2222-2222-2222-222222222222";
@@ -55,5 +55,35 @@ describe("matriz de permissão role x permission x scope", () => {
     expect(can(grants, "company.read", TENANT_A, { tenantId: TENANT_A, departmentId: "qualquer" })).toBe(
       false,
     );
+  });
+
+  describe("portão de listagem (hasAnyGrant / allowedBranchIds)", () => {
+    it("usuário só-de-branch não é bloqueado por um gate sem resource concreto", () => {
+      // Esta é a regressão real: can() com resource sem branchId sempre nega
+      // quem só tem grant de escopo 'branch' — hasAnyGrant existe para não
+      // confundir "sem recurso ainda" com "sem permissão".
+      const grants: UserGrant[] = [{ role: "atendimento", scope: "branch", branchId: BRANCH_MAUA }];
+      expect(can(grants, "company.read", TENANT_A, { tenantId: TENANT_A })).toBe(false);
+      expect(hasAnyGrant(grants, "company.read")).toBe(true);
+    });
+
+    it("allowedBranchIds retorna 'all' para escopo tenant/global", () => {
+      expect(allowedBranchIds([{ role: "admin", scope: "tenant" }], "company.read")).toBe("all");
+      expect(allowedBranchIds([{ role: "admin", scope: "global" }], "company.read")).toBe("all");
+    });
+
+    it("allowedBranchIds restringe às unidades concedidas em escopo branch", () => {
+      const grants: UserGrant[] = [
+        { role: "atendimento", scope: "branch", branchId: BRANCH_MAUA },
+        { role: "atendimento", scope: "branch", branchId: BRANCH_SANTO_ANDRE },
+      ];
+      expect(allowedBranchIds(grants, "company.read")).toEqual([BRANCH_MAUA, BRANCH_SANTO_ANDRE]);
+    });
+
+    it("allowedBranchIds retorna lista vazia sem nenhum grant para a permissão", () => {
+      const grants: UserGrant[] = [{ role: "financeiro", scope: "tenant" }];
+      expect(allowedBranchIds(grants, "company.read")).toEqual([]);
+      expect(hasAnyGrant(grants, "company.read")).toBe(false);
+    });
   });
 });

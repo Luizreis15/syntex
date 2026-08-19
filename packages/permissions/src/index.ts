@@ -75,6 +75,12 @@ function scopeAllows(grant: UserGrant, resource: ResourceContext, userId?: strin
  * RLS garante isolamento de tenant no banco; esta função é a segunda
  * verificação (rica, tipada, testável) que decide o que o usuário pode ver
  * dentro do próprio tenant.
+ *
+ * Exige um `resource` concreto — é isto que a distingue de `hasAnyGrant` e
+ * `allowedBranchIds` abaixo. Chamar `can()` com um resource incompleto (ex.:
+ * sem `branchId` para checar um grant de escopo `branch`) não é "checagem
+ * mais ampla", é bug: `scopeAllows` nega por falta de dado, não por falta de
+ * permissão — um usuário só-de-uma-unidade ficaria bloqueado até de listar.
  */
 export function can(
   grants: UserGrant[],
@@ -87,4 +93,29 @@ export function can(
   return grants.some(
     (grant) => ROLE_PERMISSIONS[grant.role]?.includes(permission) && scopeAllows(grant, resource, userId),
   );
+}
+
+/**
+ * Checagem de portão para listagem: "este usuário tem esta permissão em
+ * algum escopo?", sem ainda saber o recurso concreto. Use antes de montar a
+ * query de uma lista — a restrição real por linha vem de `allowedBranchIds`
+ * ou de filtrar cada linha com `can()` depois de buscá-la.
+ */
+export function hasAnyGrant(grants: UserGrant[], permission: PermissionKey): boolean {
+  return grants.some((grant) => ROLE_PERMISSIONS[grant.role]?.includes(permission));
+}
+
+/**
+ * Para montar o filtro de uma listagem: `"all"` quando algum grant cobre o
+ * tenant inteiro (ou é `global`); senão, a lista de `branchId`s cobertos por
+ * grants de escopo `branch` (pode ser vazia = sem acesso nenhum). Escopos
+ * `own`/`department` não entram aqui — são outra dimensão de filtro.
+ */
+export function allowedBranchIds(grants: UserGrant[], permission: PermissionKey): "all" | string[] {
+  const relevant = grants.filter((grant) => ROLE_PERMISSIONS[grant.role]?.includes(permission));
+  if (relevant.some((grant) => grant.scope === "tenant" || grant.scope === "global")) return "all";
+  const branchIds = relevant
+    .filter((grant) => grant.scope === "branch" && grant.branchId != null)
+    .map((grant) => grant.branchId!);
+  return Array.from(new Set(branchIds));
 }
