@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export function LoginForm() {
@@ -33,35 +31,41 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1">
-        <label htmlFor="email" className="text-sm font-medium">
+        <label htmlFor="email" className="text-label uppercase text-ink-3">
           E-mail
         </label>
-        <Input
+        <input
           id="email"
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
+          className="h-input w-full rounded-sm border border-border bg-surface px-3 text-body text-ink outline-none focus-visible:border-petrol-600"
         />
       </div>
       <div className="space-y-1">
-        <label htmlFor="password" className="text-sm font-medium">
+        <label htmlFor="password" className="text-label uppercase text-ink-3">
           Senha
         </label>
-        <Input
+        <input
           id="password"
           type="password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
+          className="h-input w-full rounded-sm border border-border bg-surface px-3 text-body text-ink outline-none focus-visible:border-petrol-600"
         />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" className="w-full" disabled={loading}>
+      {error && <p className="text-body text-danger">{error}</p>}
+      <button
+        type="submit"
+        disabled={loading}
+        className="h-input w-full rounded-sm bg-petrol-800 text-body font-semibold text-shell-ink transition-colors hover:bg-petrol-700 disabled:opacity-50"
+      >
         {loading ? "Entrando…" : "Entrar"}
-      </Button>
+      </button>
     </form>
   );
 }
