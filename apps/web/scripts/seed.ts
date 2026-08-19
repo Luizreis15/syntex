@@ -1,13 +1,14 @@
 /**
- * Seed de desenvolvimento — tenant SECABC.
+ * Seed de desenvolvimento/demonstração — tenant SECABC.
  *
  * Todo CNPJ, nome de empresa, número de carta sindical e número de processo
- * abaixo é FICTÍCIO, criado só para exercitar o domínio. Nenhum dado real do
- * SECABC foi usado (não temos acesso a ele nesta fatia).
+ * abaixo é FICTÍCIO, criado só para exercitar o domínio e demonstrar a
+ * densidade real de uma base sindical. Nenhum dado real do SECABC foi usado
+ * (não temos acesso a ele nesta fatia). Os CNPJs têm dígito verificador
+ * válido (módulo 11) — plausíveis, nunca reais.
  *
- * Roda com service_role (bypassa RLS) porque precisa popular auth.users e
- * gravar em mais de um tenant potencialmente — nunca use este cliente fora
- * de scripts server-only.
+ * Roda com service_role (bypassa RLS) porque precisa popular auth.users —
+ * nunca use este cliente fora de scripts server-only.
  */
 import { createSupabaseAdminClient } from "@syntex/database";
 import { PERMISSIONS, ROLE_PERMISSIONS, type RoleName } from "@syntex/permissions";
@@ -26,6 +27,7 @@ async function main() {
 
   console.log("Seed: tenant SECABC + unidades");
   const tenant = await upsertTenant();
+  await resetTenantData(tenant.id);
   const branches = await seedBranches(tenant.id, municipalities);
 
   console.log("Seed: catálogo de permissões + roles do tenant");
@@ -42,7 +44,7 @@ async function main() {
     ATENDIMENTO_MAUA_PASSWORD,
     "Atendimento Mauá",
   );
-  await grantRole(tenant.id, atendimentoMauaUser.appUserId, roles.atendimento, "branch", branches["Mauá"]!.id);
+  await grantRole(tenant.id, atendimentoMauaUser.appUserId, roles.atendimento, "branch", branches["Mauá"].id);
 
   console.log("Seed: categorias, registro sindical e CCT");
   const categories = await seedCategories(tenant.id);
@@ -51,20 +53,11 @@ async function main() {
   const agreements = await seedAgreements(tenant.id, categories);
   await seedContributionRules(tenant.id, agreements);
 
-  console.log("Seed: empresas de exemplo");
-  await seedCompanyRepresentacaoLimpa(tenant.id, branches, municipalities, cnaes, registration, adminUser.appUserId);
-  await seedCompanyHistoricoMudanca(tenant.id, branches, municipalities, cnaes, registration, adminUser.appUserId);
-  await seedCompanyDisputada(
-    tenant.id,
-    branches,
-    municipalities,
-    cnaes,
-    registration,
-    rivalRegistration,
-    adminUser.appUserId,
-  );
+  console.log("Seed: empresas de exemplo (mínimo 40, densidade real de demonstração)");
+  const ctx: CompanySeedContext = { tenantId: tenant.id, branches, municipalities, cnaes, registration, rivalRegistration, decidedBy: adminUser.appUserId };
+  const created = await seedCompanies(ctx);
 
-  console.log("\nSeed concluído.");
+  console.log(`\nSeed concluído. ${created} empresas criadas.`);
   console.log(`Login admin:        ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
   console.log(`Login atendimento:  ${ATENDIMENTO_MAUA_EMAIL} / ${ATENDIMENTO_MAUA_PASSWORD} (escopo: Mauá)`);
 }
@@ -89,6 +82,9 @@ const COMMERCE_CNAES = [
     section: "G",
   },
   { code: "47.53-9-00", description: "Comércio varejista especializado de eletrodomésticos e equipamentos", section: "G" },
+  { code: "47.44-0-05", description: "Comércio varejista de materiais de construção", section: "G" },
+  { code: "47.72-5-00", description: "Comércio varejista de cosméticos, produtos de perfumaria e de higiene pessoal", section: "G" },
+  { code: "47.89-0-05", description: "Comércio varejista de produtos saneantes domissanitários", section: "G" },
 ] as const;
 
 async function seedMunicipalities() {
@@ -116,6 +112,37 @@ async function upsertTenant() {
     .single();
   if (error) throw error;
   return data;
+}
+
+/**
+ * Torna o seed re-executável: limpa tudo que pertence ao tenant SECABC
+ * (exceto o próprio tenant e as branches, recriadas/atualizadas por
+ * upsert) antes de recriar. Sem isso, rodar `db:seed` duas vezes falha em
+ * CNPJ duplicado e no EXCLUDE de CCT sobreposta. auth.users nunca é
+ * apagado aqui — seedUser reaproveita o usuário existente pelo e-mail.
+ */
+async function resetTenantData(tenantId: string) {
+  const tables = [
+    "audit_log",
+    "outbox_event",
+    "contribution_rule",
+    "collective_agreement_territory",
+    "collective_agreement",
+    "union_representation",
+    "union_territory",
+    "union_registration",
+    "establishment",
+    "company",
+    "professional_category",
+    "economic_category",
+    "user_role",
+    "role_permission",
+    "role",
+  ] as const;
+  for (const table of tables) {
+    const { error } = await supabase.from(table).delete().eq("tenant_id", tenantId);
+    if (error) throw error;
+  }
 }
 
 async function seedBranches(tenantId: string, municipalities: Record<string, { id: string }>) {
@@ -272,8 +299,6 @@ async function seedRivalRegistration(
   tenantId: string,
   categories: { economic: { id: string }; professional: { id: string } },
 ) {
-  // Registro de um sindicato rival fictício, mantido pelo próprio tenant
-  // SECABC como evidência de uma disputa de base territorial.
   const { data, error } = await supabase
     .from("union_registration")
     .insert({
@@ -298,7 +323,7 @@ async function seedAgreements(
     {
       tenant_id: tenantId,
       kind: "cct" as const,
-      mediador_number: "MED-2024-000456 (fictício)",
+      mediador_number: "MR018452/2024",
       valid_from: "2024-05-01",
       valid_until: "2025-04-30",
       base_date: "2024-05-01",
@@ -308,7 +333,7 @@ async function seedAgreements(
     {
       tenant_id: tenantId,
       kind: "cct" as const,
-      mediador_number: "MED-2026-000123 (fictício)",
+      mediador_number: "MR021897/2025",
       valid_from: "2025-05-01",
       valid_until: "2026-04-30",
       base_date: "2025-05-01",
@@ -335,232 +360,315 @@ async function seedContributionRules(tenantId: string, agreements: { id: string;
   if (error) throw error;
 }
 
-async function seedCompanyRepresentacaoLimpa(
-  tenantId: string,
-  branches: Record<string, { id: string }>,
-  municipalities: Record<string, { id: string }>,
-  cnaes: Record<string, { id: string }>,
-  registration: { id: string },
-  decidedBy: string,
-) {
-  const { data: company, error } = await supabase
-    .from("company")
-    .insert({
-      tenant_id: tenantId,
-      branch_id: branches["Santo André"]!.id,
-      cnpj: "11222333000181",
-      legal_name: "Comércio de Tecidos Ipê Ltda (fictício)",
-      trade_name: "Tecidos Ipê",
-      primary_cnae_id: cnaes["47.81-4-00"]!.id,
-      municipality_id: municipalities["Santo André"]!.id,
-    })
-    .select()
-    .single();
-  if (error) throw error;
+// ---------------------------------------------------------------------------
+// Empresas — geração em volume para demonstração (mínimo 40, prompt 02 §6)
+// ---------------------------------------------------------------------------
 
-  const { data: establishment, error: establishmentError } = await supabase
-    .from("establishment")
-    .insert({
-      tenant_id: tenantId,
-      company_id: company.id,
-      cnpj: "11222333000181",
-      kind: "matriz",
-      cnae_id: cnaes["47.81-4-00"]!.id,
-      municipality_id: municipalities["Santo André"]!.id,
-    })
-    .select()
-    .single();
-  if (establishmentError) throw establishmentError;
-
-  const { data: filial, error: filialError } = await supabase
-    .from("establishment")
-    .insert({
-      tenant_id: tenantId,
-      company_id: company.id,
-      cnpj: "11222333000262",
-      kind: "filial",
-      cnae_id: cnaes["47.81-4-00"]!.id,
-      municipality_id: municipalities["São Caetano do Sul"]!.id,
-    })
-    .select()
-    .single();
-  if (filialError) throw filialError;
-
-  const rows = [
-    {
-      tenant_id: tenantId,
-      establishment_id: establishment.id,
-      union_registration_id: registration.id,
-      status: "reconhecida" as const,
-      valid_from: "2020-01-01",
-      valid_until: null,
-      basis: "cct_registrada" as const,
-      evidence: "Representação reconhecida desde a adesão à CCT registrada em 2020, sem contestação.",
-      decided_by: decidedBy,
-      decided_at: new Date().toISOString(),
-    },
-    {
-      tenant_id: tenantId,
-      establishment_id: filial.id,
-      union_registration_id: registration.id,
-      status: "reconhecida" as const,
-      valid_from: "2021-06-01",
-      valid_until: null,
-      basis: "cnae" as const,
-      evidence: "Filial de São Caetano do Sul, mesmo CNAE da matriz, enquadrada na mesma base territorial.",
-      decided_by: decidedBy,
-      decided_at: new Date().toISOString(),
-    },
-  ];
-  const { error: repError } = await supabase.from("union_representation").insert(rows);
-  if (repError) throw repError;
+interface CompanySeedContext {
+  tenantId: string;
+  branches: Record<string, { id: string }>;
+  municipalities: Record<string, { id: string }>;
+  cnaes: Record<string, { id: string }>;
+  registration: { id: string };
+  rivalRegistration: { id: string };
+  decidedBy: string;
 }
 
-async function seedCompanyHistoricoMudanca(
-  tenantId: string,
-  branches: Record<string, { id: string }>,
-  municipalities: Record<string, { id: string }>,
-  cnaes: Record<string, { id: string }>,
-  registration: { id: string },
-  decidedBy: string,
-) {
-  const { data: company, error } = await supabase
-    .from("company")
-    .insert({
-      tenant_id: tenantId,
-      branch_id: branches["Diadema"]!.id,
-      cnpj: "22333444000195",
-      legal_name: "Mercado Bom Preço Diadema Ltda (fictício)",
-      trade_name: "Mercado Bom Preço",
-      primary_cnae_id: cnaes["47.11-3-02"]!.id,
-      municipality_id: municipalities["Diadema"]!.id,
-    })
-    .select()
-    .single();
-  if (error) throw error;
+const BRANCH_NAMES = ["Santo André", "Mauá", "São Caetano do Sul", "São Bernardo do Campo", "Diadema"] as const;
+const CNAE_CODES = Object.freeze([
+  "47.11-3-02",
+  "47.21-1-02",
+  "47.81-4-00",
+  "47.51-2-01",
+  "47.53-9-00",
+  "47.44-0-05",
+  "47.72-5-00",
+  "47.89-0-05",
+]);
 
-  const { data: establishment, error: establishmentError } = await supabase
-    .from("establishment")
-    .insert({
-      tenant_id: tenantId,
-      company_id: company.id,
-      cnpj: "22333444000195",
-      kind: "matriz",
-      cnae_id: cnaes["47.11-3-02"]!.id,
-      municipality_id: municipalities["Diadema"]!.id,
-    })
-    .select()
-    .single();
-  if (establishmentError) throw establishmentError;
+const TRADE_PREFIX = [
+  "Mercado",
+  "Supermercado",
+  "Farmácia",
+  "Loja",
+  "Comercial",
+  "Armarinhos",
+  "Papelaria",
+  "Ótica",
+  "Móveis",
+  "Eletro",
+  "Confecções",
+  "Bazar",
+  "Empório",
+  "Casa",
+  "Distribuidora",
+];
+const TRADE_NAME = [
+  "São Roque",
+  "Vitória",
+  "Boa Vista",
+  "Central",
+  "Popular",
+  "do ABC",
+  "Ipê",
+  "Progresso",
+  "União",
+  "Bom Preço",
+  "Estrela",
+  "Nova Era",
+  "Horizonte",
+  "Primavera",
+  "Alvorada",
+  "Bela Vista",
+  "São José",
+  "Santa Rita",
+  "Real",
+  "Modelo",
+  "Rio Branco",
+  "das Nações",
+  "Nova Aliança",
+  "Metropolitana",
+];
 
-  const rows = [
-    {
-      tenant_id: tenantId,
-      establishment_id: establishment.id,
-      union_registration_id: registration.id,
-      status: "reconhecida" as const,
-      valid_from: "2016-01-01",
-      valid_until: "2018-12-31",
-      basis: "manual" as const,
-      evidence: "Cadastro inicial manual na migração da base sindical em 2016.",
-      decided_by: decidedBy,
-      decided_at: new Date().toISOString(),
-    },
-    {
-      tenant_id: tenantId,
-      establishment_id: establishment.id,
-      union_registration_id: registration.id,
-      status: "reconhecida" as const,
-      valid_from: "2019-01-01",
-      valid_until: "2023-12-31",
-      basis: "cnae" as const,
-      evidence: "Reenquadramento por atualização do CNAE principal da empresa em 2019.",
-      decided_by: decidedBy,
-      decided_at: new Date().toISOString(),
-    },
-    {
-      tenant_id: tenantId,
-      establishment_id: establishment.id,
-      union_registration_id: registration.id,
-      status: "reconhecida" as const,
-      valid_from: "2024-01-01",
-      valid_until: null,
-      basis: "decisao_judicial" as const,
-      evidence: "Reconhecimento confirmado por decisão judicial fictícia (processo nº 0001234-56.2023.5.02.0032).",
-      decided_by: decidedBy,
-      decided_at: new Date().toISOString(),
-    },
-  ];
-  const { error: repError } = await supabase.from("union_representation").insert(rows);
-  if (repError) throw repError;
+/** CNPJ com dígito verificador válido (módulo 11) — fictício, mas plausível. */
+function generateCnpj(sequence: number): string {
+  const seqDigits = String(sequence).padStart(8, "0").split("").map(Number);
+  const base = [...seqDigits, 0, 0, 0, 1]; // sufixo de filial 0001
+  const dv1 = calcCnpjCheckDigit(base);
+  const dv2 = calcCnpjCheckDigit([...base, dv1]);
+  return [...base, dv1, dv2].join("");
 }
 
-async function seedCompanyDisputada(
-  tenantId: string,
-  branches: Record<string, { id: string }>,
-  municipalities: Record<string, { id: string }>,
-  cnaes: Record<string, { id: string }>,
-  registration: { id: string },
-  rivalRegistration: { id: string },
-  decidedBy: string,
-) {
-  const { data: company, error } = await supabase
-    .from("company")
-    .insert({
-      tenant_id: tenantId,
-      branch_id: branches["São Bernardo do Campo"]!.id,
-      cnpj: "33444555000109",
-      legal_name: "Eletroeste Comércio de Eletrônicos S.A. (fictício)",
-      trade_name: "Eletroeste",
-      primary_cnae_id: cnaes["47.53-9-00"]!.id,
-      municipality_id: municipalities["São Bernardo do Campo"]!.id,
-    })
-    .select()
-    .single();
-  if (error) throw error;
+function calcCnpjCheckDigit(digits: number[]): number {
+  const weights = digits.length === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const sum = digits.reduce((acc, d, i) => acc + d * weights[i]!, 0);
+  const remainder = sum % 11;
+  return remainder < 2 ? 0 : 11 - remainder;
+}
 
-  const { data: establishment, error: establishmentError } = await supabase
-    .from("establishment")
-    .insert({
-      tenant_id: tenantId,
-      company_id: company.id,
-      cnpj: "33444555000109",
-      kind: "matriz",
-      cnae_id: cnaes["47.53-9-00"]!.id,
-      municipality_id: municipalities["São Bernardo do Campo"]!.id,
-    })
-    .select()
-    .single();
-  if (establishmentError) throw establishmentError;
+function tradeNameFor(index: number): string {
+  const prefix = TRADE_PREFIX[index % TRADE_PREFIX.length]!;
+  const name = TRADE_NAME[Math.floor(index / TRADE_PREFIX.length) % TRADE_NAME.length]!;
+  return `${prefix} ${name}`;
+}
 
-  const rows = [
+interface PlanOverrides {
+  tradeName: string;
+  branchName: (typeof BRANCH_NAMES)[number];
+  cnaeCode: string;
+  cnpjSeq: number;
+}
+
+type PlanEntry = (
+  | { kind: "reconhecida-simples"; periods: 1 }
+  | { kind: "reconhecida-historico"; periods: 2 | 3 }
+  | { kind: "reivindicada" }
+  | { kind: "disputada" }
+  | { kind: "perdida" }
+) & { overrides?: PlanOverrides };
+
+/**
+ * Três âncoras nomeadas e reconhecíveis (mesmos três cenários da fatia 1),
+ * mais volume gerado para demonstrar densidade real — mínimo 40 no total.
+ * Distribuição do volume: ~25 reconhecidas (algumas com histórico), 5
+ * reivindicadas, 3 disputadas, 3 perdidas.
+ */
+function buildPlan(): PlanEntry[] {
+  const plan: PlanEntry[] = [
     {
-      tenant_id: tenantId,
-      establishment_id: establishment.id,
-      union_registration_id: registration.id,
-      status: "reivindicada" as const,
-      valid_from: "2025-01-01",
-      valid_until: null,
-      basis: "cnae" as const,
-      evidence: "SECABC reivindica representação com base no CNAE de comércio varejista de eletrônicos.",
-      decided_by: decidedBy,
-      decided_at: new Date().toISOString(),
+      kind: "reconhecida-simples",
+      periods: 1,
+      overrides: { tradeName: "Tecidos Ipê", branchName: "Santo André", cnaeCode: "47.81-4-00", cnpjSeq: 1 },
     },
     {
-      tenant_id: tenantId,
-      establishment_id: establishment.id,
-      union_registration_id: rivalRegistration.id,
-      status: "reivindicada" as const,
-      valid_from: "2025-03-01",
-      valid_until: null,
-      basis: "carta_sindical" as const,
-      evidence: "Sindicato rival (fictício) reivindica a mesma base territorial e categoria — disputa em aberto.",
-      decided_by: decidedBy,
-      decided_at: new Date().toISOString(),
+      kind: "reconhecida-historico",
+      periods: 3,
+      overrides: { tradeName: "Mercado Bom Preço", branchName: "Diadema", cnaeCode: "47.11-3-02", cnpjSeq: 2 },
+    },
+    {
+      kind: "disputada",
+      overrides: { tradeName: "Eletroeste", branchName: "São Bernardo do Campo", cnaeCode: "47.53-9-00", cnpjSeq: 3 },
     },
   ];
-  const { error: repError } = await supabase.from("union_representation").insert(rows);
-  if (repError) throw repError;
+  for (let i = 0; i < 19; i++) plan.push({ kind: "reconhecida-simples", periods: 1 });
+  for (let i = 0; i < 5; i++) plan.push({ kind: "reconhecida-historico", periods: 2 });
+  for (let i = 0; i < 3; i++) plan.push({ kind: "reconhecida-historico", periods: 3 });
+  for (let i = 0; i < 5; i++) plan.push({ kind: "reivindicada" });
+  for (let i = 0; i < 3; i++) plan.push({ kind: "disputada" });
+  for (let i = 0; i < 3; i++) plan.push({ kind: "perdida" });
+  return plan;
+}
+
+async function seedCompanies(ctx: CompanySeedContext): Promise<number> {
+  const plan = buildPlan();
+  let created = 0;
+
+  for (let i = 0; i < plan.length; i++) {
+    const entry = plan[i]!;
+    const branchName = entry.overrides?.branchName ?? BRANCH_NAMES[i % BRANCH_NAMES.length]!;
+    const cnaeCode = entry.overrides?.cnaeCode ?? CNAE_CODES[i % CNAE_CODES.length]!;
+    const cnpj = generateCnpj(entry.overrides ? entry.overrides.cnpjSeq : 20_000_000 + i);
+    const tradeName = entry.overrides?.tradeName ?? tradeNameFor(i);
+    const legalName = `${tradeName} Comércio Ltda. (fictício)`;
+
+    const { data: company, error: companyError } = await supabase
+      .from("company")
+      .insert({
+        tenant_id: ctx.tenantId,
+        branch_id: ctx.branches[branchName]!.id,
+        cnpj,
+        legal_name: legalName,
+        trade_name: tradeName,
+        primary_cnae_id: ctx.cnaes[cnaeCode]!.id,
+        municipality_id: ctx.municipalities[branchName]!.id,
+      })
+      .select()
+      .single();
+    if (companyError) throw companyError;
+
+    const { data: establishment, error: establishmentError } = await supabase
+      .from("establishment")
+      .insert({
+        tenant_id: ctx.tenantId,
+        company_id: company.id,
+        cnpj,
+        kind: "matriz",
+        cnae_id: ctx.cnaes[cnaeCode]!.id,
+        municipality_id: ctx.municipalities[branchName]!.id,
+      })
+      .select()
+      .single();
+    if (establishmentError) throw establishmentError;
+
+    await seedRepresentationFor(ctx, establishment.id, entry);
+    created += 1;
+  }
+
+  return created;
+}
+
+async function seedRepresentationFor(ctx: CompanySeedContext, establishmentId: string, entry: PlanEntry) {
+  const decided_at = new Date().toISOString();
+  const rows: {
+    tenant_id: string;
+    establishment_id: string;
+    union_registration_id: string;
+    status: "reconhecida" | "reivindicada" | "disputada" | "perdida";
+    valid_from: string;
+    valid_until: string | null;
+    basis: "cnae" | "cct_registrada" | "decisao_judicial" | "carta_sindical" | "manual";
+    evidence: string;
+    decided_by: string;
+    decided_at: string;
+  }[] = [];
+
+  switch (entry.kind) {
+    case "reconhecida-simples":
+      rows.push({
+        tenant_id: ctx.tenantId,
+        establishment_id: establishmentId,
+        union_registration_id: ctx.registration.id,
+        status: "reconhecida",
+        valid_from: "2019-03-01",
+        valid_until: null,
+        basis: "cct_registrada",
+        evidence: "Representação reconhecida com base na adesão à CCT, sem contestação.",
+        decided_by: ctx.decidedBy,
+        decided_at,
+      });
+      break;
+
+    case "reconhecida-historico": {
+      const boundaries =
+        entry.periods === 2
+          ? [
+              { from: "2015-01-01", until: "2021-12-31", basis: "manual" as const, evidence: "Cadastro inicial manual na migração da base sindical." },
+              { from: "2022-01-01", until: null, basis: "cnae" as const, evidence: "Reenquadramento por atualização do CNAE principal." },
+            ]
+          : [
+              { from: "2012-01-01", until: "2017-12-31", basis: "manual" as const, evidence: "Cadastro inicial manual na migração da base sindical." },
+              { from: "2018-01-01", until: "2023-06-30", basis: "cnae" as const, evidence: "Reenquadramento por atualização do CNAE principal." },
+              { from: "2023-07-01", until: null, basis: "decisao_judicial" as const, evidence: "Reconhecimento confirmado por decisão judicial fictícia." },
+            ];
+      for (const period of boundaries) {
+        rows.push({
+          tenant_id: ctx.tenantId,
+          establishment_id: establishmentId,
+          union_registration_id: ctx.registration.id,
+          status: "reconhecida",
+          valid_from: period.from,
+          valid_until: period.until,
+          basis: period.basis,
+          evidence: period.evidence,
+          decided_by: ctx.decidedBy,
+          decided_at,
+        });
+      }
+      break;
+    }
+
+    case "reivindicada":
+      rows.push({
+        tenant_id: ctx.tenantId,
+        establishment_id: establishmentId,
+        union_registration_id: ctx.registration.id,
+        status: "reivindicada",
+        valid_from: "2025-09-01",
+        valid_until: null,
+        basis: "cnae",
+        evidence: "SECABC reivindica representação com base no CNAE de comércio varejista — ainda não reconhecida.",
+        decided_by: ctx.decidedBy,
+        decided_at,
+      });
+      break;
+
+    case "disputada":
+      rows.push(
+        {
+          tenant_id: ctx.tenantId,
+          establishment_id: establishmentId,
+          union_registration_id: ctx.registration.id,
+          status: "reivindicada",
+          valid_from: "2025-01-01",
+          valid_until: null,
+          basis: "cnae",
+          evidence: "SECABC reivindica representação com base no CNAE de comércio varejista.",
+          decided_by: ctx.decidedBy,
+          decided_at,
+        },
+        {
+          tenant_id: ctx.tenantId,
+          establishment_id: establishmentId,
+          union_registration_id: ctx.rivalRegistration.id,
+          status: "reivindicada",
+          valid_from: "2025-03-01",
+          valid_until: null,
+          basis: "carta_sindical",
+          evidence: "Sindicato rival (fictício) reivindica a mesma base territorial e categoria — disputa em aberto.",
+          decided_by: ctx.decidedBy,
+          decided_at,
+        },
+      );
+      break;
+
+    case "perdida":
+      rows.push({
+        tenant_id: ctx.tenantId,
+        establishment_id: establishmentId,
+        union_registration_id: ctx.registration.id,
+        status: "perdida",
+        valid_from: "2020-01-01",
+        valid_until: null,
+        basis: "decisao_judicial",
+        evidence: "Representação perdida por decisão judicial fictícia favorável ao sindicato rival.",
+        decided_by: ctx.decidedBy,
+        decided_at,
+      });
+      break;
+  }
+
+  const { error } = await supabase.from("union_representation").insert(rows);
+  if (error) throw error;
 }
 
 main().catch((error) => {
