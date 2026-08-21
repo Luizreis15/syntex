@@ -1,7 +1,3 @@
-import { loadEnvConfig } from "@next/env";
-
-loadEnvConfig(process.cwd());
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -14,7 +10,7 @@ const nextConfig = {
   ],
 };
 
-// Só diagnóstico — não aborta. Login usa Server Action (env de runtime).
+// Diagnóstico no Build (não aborta). Login usa Server Action + env de runtime.
 if (process.env.VERCEL) {
   const ok = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
