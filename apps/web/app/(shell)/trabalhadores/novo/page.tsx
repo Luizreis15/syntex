@@ -13,7 +13,7 @@ export default async function NovoTrabalhadorPage() {
     return (
       <div>
         <SyntexPageHeader
-          breadcrumbs={[{ label: "Relações" }, { label: "Trabalhadores", href: "/trabalhadores" }, { label: "Novo" }]}
+          breadcrumbs={[{ label: "Cadastro" }, { label: "Trabalhadores", href: "/trabalhadores" }, { label: "Novo" }]}
           title="Novo trabalhador"
         />
         <div className="p-6">
@@ -46,7 +46,7 @@ export default async function NovoTrabalhadorPage() {
   return (
     <div>
       <SyntexPageHeader
-        breadcrumbs={[{ label: "Relações" }, { label: "Trabalhadores", href: "/trabalhadores" }, { label: "Novo" }]}
+        breadcrumbs={[{ label: "Cadastro" }, { label: "Trabalhadores", href: "/trabalhadores" }, { label: "Novo" }]}
         title="Novo trabalhador"
         metadata={
           <span className="text-body text-ink-2">

@@ -38,7 +38,7 @@ export function Sidebar({ sections, tenantName, tenantLegalName, branchLabel }: 
       </div>
 
       <div className="border-b border-shell-border px-4 py-3">
-        <p className="text-label uppercase text-shell-ink-2">Unidade</p>
+        <p className="text-label uppercase text-shell-ink-2">Unidade sindical</p>
         <p className="text-body text-shell-ink">{branchLabel}</p>
       </div>
 

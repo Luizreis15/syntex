@@ -71,6 +71,12 @@ export async function POST(request: NextRequest) {
       trade_name: parsed.data.tradeName ?? null,
       primary_cnae_id: parsed.data.primaryCnaeId ?? null,
       municipality_id: parsed.data.municipalityId ?? null,
+      phone: parsed.data.phone || null,
+      address_street: parsed.data.addressStreet || null,
+      address_neighborhood: parsed.data.addressNeighborhood || null,
+      address_city: parsed.data.addressCity || null,
+      address_state: parsed.data.addressState ?? null,
+      address_zip: parsed.data.addressZip ?? null,
     })
     .select()
     .single();

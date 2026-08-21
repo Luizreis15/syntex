@@ -31,4 +31,13 @@ A UI misturava “Unidade” (branch do sindicato, ex. nome “Sede”) com sede
 
 ## Ver também
 
-Checklist nuvem: `fundacao/06-ambiente-nuvem-dev.md`.
+Checklist nuvem: `fundacao/06-ambiente-nuvem-dev.md`.  
+Checklist campos empresa: `fundacao/07-checklist-cadastro-empresa.md`.
+
+## Emenda — ciclo painel sindicato (2026-08-21)
+
+Neste ciclo o foco é **somente o shell do tenant** (`(shell)`): sidebar Cadastro/Atendimento, dashboard, formulário completo de empresa, polimento de listas.
+
+**Não evoluir** neste ciclo (apenas não quebrar): `/empresa`, `/associado`, `/escritorio`, control plane além do já entregue.
+
+Método: UI operacional em PT-BR ligada ao backend existente; migration só onde o Cadastro exige campo real (ex.: telefone).

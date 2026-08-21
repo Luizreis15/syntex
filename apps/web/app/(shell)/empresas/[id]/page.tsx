@@ -57,11 +57,37 @@ export default async function CompanyDetailPage({
   return (
     <main className="mx-auto max-w-3xl space-y-6 p-6">
       <div>
+        <p className="text-label uppercase text-ink-3">Cadastro · Empresas</p>
         <h1 className="text-component font-semibold text-ink">{company.trade_name ?? company.legal_name}</h1>
         <p className="font-mono text-body text-ink-2">{company.cnpj}</p>
+        {company.legal_name && company.trade_name ? (
+          <p className="text-body text-ink-2">{company.legal_name}</p>
+        ) : null}
       </div>
 
-      <section className="rounded-md border border-border bg-surface p-4">
+      <section className="rounded-sm border border-border bg-surface p-4">
+        <h2 className="mb-2 text-component font-semibold text-ink">Contato e endereço</h2>
+        <dl className="grid gap-2 text-body sm:grid-cols-2">
+          <div>
+            <dt className="text-label text-ink-3">Telefone</dt>
+            <dd>{company.phone ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-label text-ink-3">CEP</dt>
+            <dd className="font-mono">{company.address_zip ?? "—"}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-label text-ink-3">Endereço</dt>
+            <dd>
+              {[company.address_street, company.address_neighborhood, company.address_city, company.address_state]
+                .filter(Boolean)
+                .join(" · ") || "—"}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="rounded-sm border border-border bg-surface p-4">
         <h2 className="mb-2 text-component font-semibold text-ink">Estabelecimentos</h2>
         <div className="space-y-2">
           {(establishments ?? []).map((e) => (

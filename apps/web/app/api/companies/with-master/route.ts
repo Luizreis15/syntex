@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { recordAudit } from "@syntex/database";
+import { companyOperationalCreateSchema } from "@syntex/validation";
 import { checkPermission, requireSession } from "@/lib/auth/require-permission";
 import { createCompanyWithMaster } from "@/lib/domain/create-company-with-master";
-
-const schema = z.object({
-  legalName: z.string().min(2).max(200),
-  cnpj: z.string().min(14).max(18),
-  tradeName: z.string().max(200).optional().nullable(),
-  branchId: z.string().uuid().optional().nullable(),
-  masterEmail: z.string().email(),
-});
 
 export async function POST(request: NextRequest) {
   const auth = await requireSession();
@@ -22,25 +15,37 @@ export async function POST(request: NextRequest) {
   if (denied) return denied;
 
   const body = await request.json();
-  const parsed = schema.safeParse(body);
+  const parsed = companyOperationalCreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
   }
 
+  const branchDenied = checkPermission(session, "company.write", {
+    tenantId: session.tenantId,
+    branchId: parsed.data.branchId ?? null,
+  });
+  if (branchDenied) return branchDenied;
+
   try {
     const result = await createCompanyWithMaster(session.supabase, {
+      ...parsed.data,
       tenantId: session.tenantId,
-      legalName: parsed.data.legalName,
-      cnpj: parsed.data.cnpj,
-      tradeName: parsed.data.tradeName,
-      branchId: parsed.data.branchId,
-      masterEmail: parsed.data.masterEmail,
       invitedBy: session.appUserId,
     });
+
+    await recordAudit(session.supabase, {
+      tenantId: session.tenantId,
+      actorId: session.appUserId,
+      action: "create",
+      table: "company",
+      resourceId: result.company.id,
+    });
+
     return NextResponse.json(
       {
         data: {
           company: result.company,
+          establishment: result.establishment,
           inviteId: result.inviteId,
           inviteToken: result.inviteToken,
         },
@@ -48,7 +53,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (err) {
-    const message = err instanceof Error ? err.message : "falha ao criar empresa+master";
+    const message = err instanceof Error ? err.message : "falha ao criar empresa";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

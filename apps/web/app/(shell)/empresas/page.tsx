@@ -19,7 +19,7 @@ export default async function EmpresasPage({
   if (!hasAnyGrant(session.grants, "company.read")) {
     return (
       <div>
-        <SyntexPageHeader breadcrumbs={[{ label: "Relações" }, { label: "Empresas" }]} title="Empresas" />
+        <SyntexPageHeader breadcrumbs={[{ label: "Cadastro" }, { label: "Empresas" }]} title="Empresas" />
         <div className="p-6">
           <SyntexEmptyState
             title="Sem permissão para ver empresas"
@@ -39,18 +39,23 @@ export default async function EmpresasPage({
     pageSize: PAGE_SIZE,
   });
 
+  const canCreate =
+    hasAnyGrant(session.grants, "company.master.provision") ||
+    hasAnyGrant(session.grants, "company.write");
+
   return (
     <div>
       <SyntexPageHeader
-        breadcrumbs={[{ label: "Relações" }, { label: "Empresas" }]}
+        breadcrumbs={[{ label: "Cadastro" }, { label: "Empresas" }]}
         title="Empresas"
+        metadata={<span className="text-body text-ink-2">{page.rowCount} registro(s)</span>}
         actions={
-          hasAnyGrant(session.grants, "company.master.provision") ? (
+          canCreate ? (
             <a
-              href="/empresas/nova-com-master"
+              href="/empresas/nova"
               className="inline-flex h-input items-center rounded-sm bg-petrol-800 px-3 text-body text-shell-ink"
             >
-              Empresa + master
+              Nova empresa
             </a>
           ) : null
         }

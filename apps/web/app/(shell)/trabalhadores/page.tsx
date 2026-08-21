@@ -18,7 +18,7 @@ export default async function TrabalhadoresPage({
   if (!hasAnyGrant(session.grants, "worker.read")) {
     return (
       <div>
-        <SyntexPageHeader breadcrumbs={[{ label: "Relações" }, { label: "Trabalhadores" }]} title="Trabalhadores" />
+        <SyntexPageHeader breadcrumbs={[{ label: "Cadastro" }, { label: "Trabalhadores" }]} title="Trabalhadores" />
         <div className="p-6">
           <SyntexEmptyState title="Sem permissão" description="worker.read é necessária." />
         </div>
@@ -37,7 +37,7 @@ export default async function TrabalhadoresPage({
   return (
     <div>
       <SyntexPageHeader
-        breadcrumbs={[{ label: "Relações" }, { label: "Trabalhadores" }]}
+        breadcrumbs={[{ label: "Cadastro" }, { label: "Trabalhadores" }]}
         title="Trabalhadores"
         metadata={<span className="text-body text-ink-2">{total} registro(s)</span>}
         actions={

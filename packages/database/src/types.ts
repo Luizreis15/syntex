@@ -396,6 +396,7 @@ export type Database = {
           id: string
           legal_name: string
           municipality_id: string | null
+          phone: string | null
           primary_cnae_id: string | null
           status: string
           tenant_id: string
@@ -415,6 +416,7 @@ export type Database = {
           id?: string
           legal_name: string
           municipality_id?: string | null
+          phone?: string | null
           primary_cnae_id?: string | null
           status?: string
           tenant_id: string
@@ -434,6 +436,7 @@ export type Database = {
           id?: string
           legal_name?: string
           municipality_id?: string | null
+          phone?: string | null
           primary_cnae_id?: string | null
           status?: string
           tenant_id?: string

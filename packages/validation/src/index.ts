@@ -33,8 +33,40 @@ export const companyCreateSchema = z.object({
   primaryCnaeId: z.string().uuid().optional(),
   municipalityId: z.string().uuid().optional(),
   branchId: z.string().uuid().optional(),
+  phone: z.string().min(8).optional().or(z.literal("")),
+  addressStreet: z.string().min(1).optional().or(z.literal("")),
+  addressNeighborhood: z.string().min(1).optional().or(z.literal("")),
+  addressCity: z.string().min(1).optional().or(z.literal("")),
+  addressState: z
+    .string()
+    .optional()
+    .transform((v) => {
+      const t = v?.trim().toUpperCase();
+      return t ? t : undefined;
+    })
+    .refine((v) => v === undefined || v.length === 2, "UF com 2 letras"),
+  addressZip: z
+    .string()
+    .optional()
+    .transform((v) => {
+      const d = v?.replace(/\D/g, "") ?? "";
+      return d.length ? d : undefined;
+    })
+    .refine((v) => v === undefined || v.length === 8, "CEP com 8 dígitos"),
+  /** Responsável pela conta (portal empresa) — convite company_master. */
+  accountResponsibleName: z.string().min(1).optional(),
+  accountResponsibleEmail: z.string().email().optional(),
 });
 export type CompanyCreateInput = z.infer<typeof companyCreateSchema>;
+
+/** Cadastro operacional: empresa + responsável pela conta. */
+export const companyOperationalCreateSchema = companyCreateSchema
+  .omit({ accountResponsibleName: true, accountResponsibleEmail: true })
+  .extend({
+    accountResponsibleName: z.string().min(2),
+    accountResponsibleEmail: z.string().email(),
+  });
+export type CompanyOperationalCreateInput = z.infer<typeof companyOperationalCreateSchema>;
 
 export const establishmentCreateSchema = z.object({
   companyId: z.string().uuid(),

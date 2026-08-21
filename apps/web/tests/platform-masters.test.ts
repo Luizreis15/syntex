@@ -133,7 +133,8 @@ describe("provisionamento platform + company master", () => {
       tenantId: unionTenant.id,
       legalName: "Empresa Master L7",
       cnpj: unique("00"),
-      masterEmail: `${unique("cm")}@example.com`,
+      accountResponsibleName: "Responsável Teste",
+      accountResponsibleEmail: `${unique("cm")}@example.com`,
       invitedBy: inviterId,
     });
 

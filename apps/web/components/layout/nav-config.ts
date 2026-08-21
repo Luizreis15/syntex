@@ -1,8 +1,8 @@
 import { can, type PermissionKey, type UserGrant } from "@syntex/permissions";
 
 /**
- * Navegação só lista o que existe. Módulo sem permissão some (SYNTEX-UI).
- * Itens "em breve" / mapa do produto ficam no roadmap (ADR-013), não na sidebar.
+ * Navegação do painel do sindicato — eixos Cadastro / Atendimento (ADR-016).
+ * Módulo sem permissão some. Portais externos não entram aqui.
  */
 export type NavItem = {
   label: string;
@@ -17,11 +17,14 @@ export interface NavSection {
 
 export const NAV_SECTIONS: NavSection[] = [
   {
-    label: "Relações",
+    label: "Início",
+    items: [{ label: "Painel", href: "/painel", permission: "company.read" }],
+  },
+  {
+    label: "Cadastro",
     items: [
-      { label: "Trabalhadores", href: "/trabalhadores", permission: "worker.read" },
       { label: "Empresas", href: "/empresas", permission: "company.read" },
-      { label: "Convenções", href: "/convencoes", permission: "agreement.read" },
+      { label: "Trabalhadores", href: "/trabalhadores", permission: "worker.read" },
     ],
   },
   {
@@ -29,8 +32,13 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [{ label: "Cobranças", href: "/cobrancas", permission: "finance.read" }],
   },
   {
+    label: "Atendimento",
+    items: [{ label: "Filiação", href: "/filiacao", permission: "membership.read" }],
+  },
+  {
     label: "Operação",
     items: [
+      { label: "Convenções", href: "/convencoes", permission: "agreement.read" },
       { label: "Equipe", href: "/equipe", permission: "staff.read" },
       { label: "Escritórios", href: "/escritorios", permission: "office.provision" },
     ],

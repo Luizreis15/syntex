@@ -10,7 +10,7 @@ import { getPlatformSession } from "@/lib/auth/platform-session";
 /**
  * Roteador pós-login:
  * platform → /platform · associado → /associado · escritório → /escritorio ·
- * empresa → /empresa · sindicato → /empresas
+ * empresa → /empresa · sindicato → /painel
  */
 export default async function InicioPage() {
   const platform = await getPlatformSession();
@@ -21,7 +21,7 @@ export default async function InicioPage() {
     if (isAssociatePortalActor(session.grants)) redirect("/associado");
     if (isOfficePortalActor(session.grants)) redirect("/escritorio");
     if (isCompanyPortalActor(session.grants)) redirect("/empresa");
-    redirect("/empresas");
+    redirect("/painel");
   }
 
   redirect("/login");
