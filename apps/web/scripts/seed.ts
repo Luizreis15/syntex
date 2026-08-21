@@ -12,6 +12,7 @@
  */
 import { createSupabaseAdminClient } from "@syntex/database";
 import { PERMISSIONS, ROLE_PERMISSIONS, type RoleName } from "@syntex/permissions";
+import { DEMO_COMPANIES, type Scenario } from "./data/demo-companies";
 
 const supabase = createSupabaseAdminClient();
 
@@ -19,6 +20,10 @@ const ADMIN_EMAIL = "admin@secabc.exemplo.org.br";
 const ADMIN_PASSWORD = "syntex-dev-2026!";
 const ATENDIMENTO_MAUA_EMAIL = "atendimento.maua@secabc.exemplo.org.br";
 const ATENDIMENTO_MAUA_PASSWORD = "syntex-dev-2026!";
+const DIRETORIA_EMAIL = "diretoria@secabc.exemplo.org.br";
+const DIRETORIA_PASSWORD = "syntex-dev-2026!";
+const PLATFORM_EMAIL = "platform@syntex.exemplo.org.br";
+const PLATFORM_PASSWORD = "syntex-dev-2026!";
 
 async function main() {
   console.log("Seed: municípios e CNAEs (referência global)");
@@ -38,6 +43,8 @@ async function main() {
   const adminUser = await seedUser(tenant.id, ADMIN_EMAIL, ADMIN_PASSWORD, "Admin SECABC");
   await grantRole(tenant.id, adminUser.appUserId, roles.admin, "tenant");
 
+  await seedPlatformAdmin();
+
   const atendimentoMauaUser = await seedUser(
     tenant.id,
     ATENDIMENTO_MAUA_EMAIL,
@@ -45,6 +52,13 @@ async function main() {
     "Atendimento Mauá",
   );
   await grantRole(tenant.id, atendimentoMauaUser.appUserId, roles.atendimento, "branch", branches["Mauá"].id);
+
+  // Usuário de demonstração: role de direção, escopo tenant inteiro. Duas
+  // roles empilhadas (diretoria + financeiro) para cobrir toda permissão
+  // hoje definida — é o login que mostra a sidebar completa (prompt 02.1 §2).
+  const diretoriaUser = await seedUser(tenant.id, DIRETORIA_EMAIL, DIRETORIA_PASSWORD, "Diretoria SECABC");
+  await grantRole(tenant.id, diretoriaUser.appUserId, roles.diretoria, "tenant");
+  await grantRole(tenant.id, diretoriaUser.appUserId, roles.financeiro, "tenant");
 
   console.log("Seed: categorias, registro sindical e CCT");
   const categories = await seedCategories(tenant.id);
@@ -60,6 +74,8 @@ async function main() {
   console.log(`\nSeed concluído. ${created} empresas criadas.`);
   console.log(`Login admin:        ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
   console.log(`Login atendimento:  ${ATENDIMENTO_MAUA_EMAIL} / ${ATENDIMENTO_MAUA_PASSWORD} (escopo: Mauá)`);
+  console.log(`Login diretoria:    ${DIRETORIA_EMAIL} / ${DIRETORIA_PASSWORD} (demonstração, permissão ampla)`);
+  console.log(`Login platform:     ${PLATFORM_EMAIL} / ${PLATFORM_PASSWORD} → /platform`);
 }
 
 const ABC_MUNICIPALITIES = [
@@ -85,6 +101,16 @@ const COMMERCE_CNAES = [
   { code: "47.44-0-05", description: "Comércio varejista de materiais de construção", section: "G" },
   { code: "47.72-5-00", description: "Comércio varejista de cosméticos, produtos de perfumaria e de higiene pessoal", section: "G" },
   { code: "47.89-0-05", description: "Comércio varejista de produtos saneantes domissanitários", section: "G" },
+  { code: "47.71-7-01", description: "Comércio varejista de produtos farmacêuticos, sem manipulação de fórmulas", section: "G" },
+  { code: "45.30-7-03", description: "Comércio a varejo de peças e acessórios novos para veículos automotores", section: "G" },
+  {
+    code: "47.13-0-02",
+    description: "Comércio varejista de mercadorias em geral, com predominância de produtos não alimentícios - lojas de departamentos ou magazines",
+    section: "G",
+  },
+  { code: "47.61-0-03", description: "Comércio varejista de artigos de papelaria", section: "G" },
+  { code: "47.22-9-02", description: "Comércio varejista de carnes - açougues", section: "G" },
+  { code: "47.74-1-00", description: "Comércio varejista de artigos de óptica", section: "G" },
 ] as const;
 
 async function seedMunicipalities() {
@@ -125,12 +151,21 @@ async function resetTenantData(tenantId: string) {
   const tables = [
     "audit_log",
     "outbox_event",
+    "payment_webhook_event",
+    "journal_line",
+    "journal_entry",
+    "charge",
+    "obligation",
     "contribution_rule",
     "collective_agreement_territory",
     "collective_agreement",
     "union_representation",
     "union_territory",
     "union_registration",
+    "membership",
+    "employment_relationship",
+    "worker",
+    "person",
     "establishment",
     "company",
     "professional_category",
@@ -202,6 +237,30 @@ async function seedRoles(tenantId: string) {
   return Object.fromEntries(roleRows.map((r) => [r.name, r])) as unknown as Record<RoleName, { id: string }>;
 }
 
+async function seedPlatformAdmin() {
+  const { data: existing } = await supabase.auth.admin.listUsers();
+  let authUserId = existing.users.find((u) => u.email === PLATFORM_EMAIL)?.id;
+  if (!authUserId) {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: PLATFORM_EMAIL,
+      password: PLATFORM_PASSWORD,
+      email_confirm: true,
+    });
+    if (error) throw error;
+    authUserId = data.user.id;
+  }
+
+  const { error } = await supabase.from("platform_admin").upsert(
+    {
+      auth_user_id: authUserId,
+      email: PLATFORM_EMAIL,
+      full_name: "Platform Admin Syntex",
+    },
+    { onConflict: "auth_user_id" },
+  );
+  if (error) throw error;
+}
+
 async function seedUser(tenantId: string, email: string, password: string, fullName: string) {
   const { data: existing } = await supabase.auth.admin.listUsers();
   let authUserId = existing.users.find((u) => u.email === email)?.id;
@@ -233,7 +292,7 @@ async function grantRole(
   tenantId: string,
   appUserId: string,
   role: { id: string },
-  scope: "own" | "branch" | "department" | "tenant" | "global",
+  scope: "own" | "branch" | "department" | "company" | "tenant" | "global",
   branchId?: string,
 ) {
   const { error } = await supabase.from("user_role").insert({
@@ -361,7 +420,7 @@ async function seedContributionRules(tenantId: string, agreements: { id: string;
 }
 
 // ---------------------------------------------------------------------------
-// Empresas — geração em volume para demonstração (mínimo 40, prompt 02 §6)
+// Empresas — lista curada, não gerada por combinação (prompt 02.1 §1)
 // ---------------------------------------------------------------------------
 
 interface CompanySeedContext {
@@ -374,66 +433,23 @@ interface CompanySeedContext {
   decidedBy: string;
 }
 
-const BRANCH_NAMES = ["Santo André", "Mauá", "São Caetano do Sul", "São Bernardo do Campo", "Diadema"] as const;
-const CNAE_CODES = Object.freeze([
-  "47.11-3-02",
-  "47.21-1-02",
-  "47.81-4-00",
-  "47.51-2-01",
-  "47.53-9-00",
-  "47.44-0-05",
-  "47.72-5-00",
-  "47.89-0-05",
-]);
+/**
+ * CNPJ com dígito verificador válido (módulo 11), a partir de uma raiz
+ * derivada por hash do nome — determinística (o seed é re-executável) e
+ * sem padrão sequencial perceptível entre empresas diferentes.
+ */
+function rootFromSeed(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (Math.imul(hash, 31) + seed.charCodeAt(i)) >>> 0;
+  }
+  return 10_000_000 + (hash % 90_000_000);
+}
 
-const TRADE_PREFIX = [
-  "Mercado",
-  "Supermercado",
-  "Farmácia",
-  "Loja",
-  "Comercial",
-  "Armarinhos",
-  "Papelaria",
-  "Ótica",
-  "Móveis",
-  "Eletro",
-  "Confecções",
-  "Bazar",
-  "Empório",
-  "Casa",
-  "Distribuidora",
-];
-const TRADE_NAME = [
-  "São Roque",
-  "Vitória",
-  "Boa Vista",
-  "Central",
-  "Popular",
-  "do ABC",
-  "Ipê",
-  "Progresso",
-  "União",
-  "Bom Preço",
-  "Estrela",
-  "Nova Era",
-  "Horizonte",
-  "Primavera",
-  "Alvorada",
-  "Bela Vista",
-  "São José",
-  "Santa Rita",
-  "Real",
-  "Modelo",
-  "Rio Branco",
-  "das Nações",
-  "Nova Aliança",
-  "Metropolitana",
-];
-
-/** CNPJ com dígito verificador válido (módulo 11) — fictício, mas plausível. */
-function generateCnpj(sequence: number): string {
-  const seqDigits = String(sequence).padStart(8, "0").split("").map(Number);
-  const base = [...seqDigits, 0, 0, 0, 1]; // sufixo de filial 0001
+function generateCnpj(root: number, branchSuffix = 1): string {
+  const rootDigits = String(root).padStart(8, "0").split("").map(Number);
+  const orderDigits = String(branchSuffix).padStart(4, "0").split("").map(Number);
+  const base = [...rootDigits, ...orderDigits];
   const dv1 = calcCnpjCheckDigit(base);
   const dv2 = calcCnpjCheckDigit([...base, dv1]);
   return [...base, dv1, dv2].join("");
@@ -446,229 +462,226 @@ function calcCnpjCheckDigit(digits: number[]): number {
   return remainder < 2 ? 0 : 11 - remainder;
 }
 
-function tradeNameFor(index: number): string {
-  const prefix = TRADE_PREFIX[index % TRADE_PREFIX.length]!;
-  const name = TRADE_NAME[Math.floor(index / TRADE_PREFIX.length) % TRADE_NAME.length]!;
-  return `${prefix} ${name}`;
-}
+/** Alguns anos de início plausíveis e variados — não todo mundo começa no mesmo dia. */
+const STABLE_START_YEARS = [2007, 2009, 2011, 2013, 2015, 2017];
 
-interface PlanOverrides {
-  tradeName: string;
-  branchName: (typeof BRANCH_NAMES)[number];
-  cnaeCode: string;
-  cnpjSeq: number;
-}
+type RepRow = {
+  tenant_id: string;
+  establishment_id: string;
+  union_registration_id: string;
+  status: "reconhecida" | "reivindicada" | "disputada" | "perdida";
+  valid_from: string;
+  valid_until: string | null;
+  basis: "cnae" | "cct_registrada" | "decisao_judicial" | "carta_sindical" | "manual";
+  evidence: string;
+  decided_by: string;
+  decided_at: string;
+};
 
-type PlanEntry = (
-  | { kind: "reconhecida-simples"; periods: 1 }
-  | { kind: "reconhecida-historico"; periods: 2 | 3 }
-  | { kind: "reivindicada" }
-  | { kind: "disputada" }
-  | { kind: "perdida" }
-) & { overrides?: PlanOverrides };
-
-/**
- * Três âncoras nomeadas e reconhecíveis (mesmos três cenários da fatia 1),
- * mais volume gerado para demonstrar densidade real — mínimo 40 no total.
- * Distribuição do volume: ~25 reconhecidas (algumas com histórico), 5
- * reivindicadas, 3 disputadas, 3 perdidas.
- */
-function buildPlan(): PlanEntry[] {
-  const plan: PlanEntry[] = [
-    {
-      kind: "reconhecida-simples",
-      periods: 1,
-      overrides: { tradeName: "Tecidos Ipê", branchName: "Santo André", cnaeCode: "47.81-4-00", cnpjSeq: 1 },
-    },
-    {
-      kind: "reconhecida-historico",
-      periods: 3,
-      overrides: { tradeName: "Mercado Bom Preço", branchName: "Diadema", cnaeCode: "47.11-3-02", cnpjSeq: 2 },
-    },
-    {
-      kind: "disputada",
-      overrides: { tradeName: "Eletroeste", branchName: "São Bernardo do Campo", cnaeCode: "47.53-9-00", cnpjSeq: 3 },
-    },
-  ];
-  for (let i = 0; i < 19; i++) plan.push({ kind: "reconhecida-simples", periods: 1 });
-  for (let i = 0; i < 5; i++) plan.push({ kind: "reconhecida-historico", periods: 2 });
-  for (let i = 0; i < 3; i++) plan.push({ kind: "reconhecida-historico", periods: 3 });
-  for (let i = 0; i < 5; i++) plan.push({ kind: "reivindicada" });
-  for (let i = 0; i < 3; i++) plan.push({ kind: "disputada" });
-  for (let i = 0; i < 3; i++) plan.push({ kind: "perdida" });
-  return plan;
-}
-
-async function seedCompanies(ctx: CompanySeedContext): Promise<number> {
-  const plan = buildPlan();
-  let created = 0;
-
-  for (let i = 0; i < plan.length; i++) {
-    const entry = plan[i]!;
-    const branchName = entry.overrides?.branchName ?? BRANCH_NAMES[i % BRANCH_NAMES.length]!;
-    const cnaeCode = entry.overrides?.cnaeCode ?? CNAE_CODES[i % CNAE_CODES.length]!;
-    const cnpj = generateCnpj(entry.overrides ? entry.overrides.cnpjSeq : 20_000_000 + i);
-    const tradeName = entry.overrides?.tradeName ?? tradeNameFor(i);
-    const legalName = `${tradeName} Comércio Ltda. (fictício)`;
-
-    const { data: company, error: companyError } = await supabase
-      .from("company")
-      .insert({
-        tenant_id: ctx.tenantId,
-        branch_id: ctx.branches[branchName]!.id,
-        cnpj,
-        legal_name: legalName,
-        trade_name: tradeName,
-        primary_cnae_id: ctx.cnaes[cnaeCode]!.id,
-        municipality_id: ctx.municipalities[branchName]!.id,
-      })
-      .select()
-      .single();
-    if (companyError) throw companyError;
-
-    const { data: establishment, error: establishmentError } = await supabase
-      .from("establishment")
-      .insert({
-        tenant_id: ctx.tenantId,
-        company_id: company.id,
-        cnpj,
-        kind: "matriz",
-        cnae_id: ctx.cnaes[cnaeCode]!.id,
-        municipality_id: ctx.municipalities[branchName]!.id,
-      })
-      .select()
-      .single();
-    if (establishmentError) throw establishmentError;
-
-    await seedRepresentationFor(ctx, establishment.id, entry);
-    created += 1;
-  }
-
-  return created;
-}
-
-async function seedRepresentationFor(ctx: CompanySeedContext, establishmentId: string, entry: PlanEntry) {
+function representationForScenario(
+  ctx: CompanySeedContext,
+  establishmentId: string,
+  scenario: Scenario,
+  variant: number,
+): RepRow[] {
   const decided_at = new Date().toISOString();
-  const rows: {
-    tenant_id: string;
-    establishment_id: string;
-    union_registration_id: string;
-    status: "reconhecida" | "reivindicada" | "disputada" | "perdida";
-    valid_from: string;
-    valid_until: string | null;
-    basis: "cnae" | "cct_registrada" | "decisao_judicial" | "carta_sindical" | "manual";
-    evidence: string;
-    decided_by: string;
-    decided_at: string;
-  }[] = [];
+  const base = {
+    tenant_id: ctx.tenantId,
+    establishment_id: establishmentId,
+    decided_by: ctx.decidedBy,
+    decided_at,
+  };
 
-  switch (entry.kind) {
-    case "reconhecida-simples":
-      rows.push({
-        tenant_id: ctx.tenantId,
-        establishment_id: establishmentId,
-        union_registration_id: ctx.registration.id,
-        status: "reconhecida",
-        valid_from: "2019-03-01",
-        valid_until: null,
-        basis: "cct_registrada",
-        evidence: "Representação reconhecida com base na adesão à CCT, sem contestação.",
-        decided_by: ctx.decidedBy,
-        decided_at,
-      });
-      break;
-
-    case "reconhecida-historico": {
-      const boundaries =
-        entry.periods === 2
-          ? [
-              { from: "2015-01-01", until: "2021-12-31", basis: "manual" as const, evidence: "Cadastro inicial manual na migração da base sindical." },
-              { from: "2022-01-01", until: null, basis: "cnae" as const, evidence: "Reenquadramento por atualização do CNAE principal." },
-            ]
-          : [
-              { from: "2012-01-01", until: "2017-12-31", basis: "manual" as const, evidence: "Cadastro inicial manual na migração da base sindical." },
-              { from: "2018-01-01", until: "2023-06-30", basis: "cnae" as const, evidence: "Reenquadramento por atualização do CNAE principal." },
-              { from: "2023-07-01", until: null, basis: "decisao_judicial" as const, evidence: "Reconhecimento confirmado por decisão judicial fictícia." },
-            ];
-      for (const period of boundaries) {
-        rows.push({
-          tenant_id: ctx.tenantId,
-          establishment_id: establishmentId,
+  switch (scenario) {
+    case "stable": {
+      const year = STABLE_START_YEARS[variant % STABLE_START_YEARS.length];
+      const bases = ["cct_registrada", "carta_sindical", "manual"] as const;
+      return [
+        {
+          ...base,
           union_registration_id: ctx.registration.id,
           status: "reconhecida",
-          valid_from: period.from,
-          valid_until: period.until,
-          basis: period.basis,
-          evidence: period.evidence,
-          decided_by: ctx.decidedBy,
-          decided_at,
-        });
-      }
-      break;
+          valid_from: `${year}-03-01`,
+          valid_until: null,
+          basis: bases[variant % bases.length]!,
+          evidence: "Representação reconhecida desde a filiação à base territorial, sem contestação.",
+        },
+      ];
     }
 
-    case "reivindicada":
-      rows.push({
-        tenant_id: ctx.tenantId,
-        establishment_id: establishmentId,
+    case "evolved": {
+      const threePeriods = variant % 2 === 0;
+      const periods = threePeriods
+        ? [
+            { from: "2012-01-01", until: "2017-12-31", basis: "manual" as const, evidence: "Cadastro inicial manual na migração da base sindical." },
+            { from: "2018-01-01", until: "2023-06-30", basis: "cnae" as const, evidence: "Reenquadramento por atualização do CNAE principal da empresa." },
+            { from: "2023-07-01", until: null, basis: "decisao_judicial" as const, evidence: "Reconhecimento confirmado por decisão judicial fictícia." },
+          ]
+        : [
+            { from: "2015-01-01", until: "2021-12-31", basis: "manual" as const, evidence: "Cadastro inicial manual na migração da base sindical." },
+            { from: "2022-01-01", until: null, basis: "cnae" as const, evidence: "Reenquadramento por atualização do CNAE principal da empresa." },
+          ];
+      return periods.map((p) => ({
+        ...base,
         union_registration_id: ctx.registration.id,
-        status: "reivindicada",
-        valid_from: "2025-09-01",
-        valid_until: null,
-        basis: "cnae",
-        evidence: "SECABC reivindica representação com base no CNAE de comércio varejista — ainda não reconhecida.",
-        decided_by: ctx.decidedBy,
-        decided_at,
-      });
-      break;
+        status: "reconhecida" as const,
+        valid_from: p.from,
+        valid_until: p.until,
+        basis: p.basis,
+        evidence: p.evidence,
+      }));
+    }
 
-    case "disputada":
-      rows.push(
+    case "claimed":
+      return [
         {
-          tenant_id: ctx.tenantId,
-          establishment_id: establishmentId,
+          ...base,
+          union_registration_id: ctx.registration.id,
+          status: "reivindicada",
+          valid_from: "2025-08-01",
+          valid_until: null,
+          basis: "cnae",
+          evidence: "SECABC reivindica representação com base no CNAE — ainda não reconhecida.",
+        },
+      ];
+
+    case "disputed":
+      return [
+        {
+          ...base,
           union_registration_id: ctx.registration.id,
           status: "reivindicada",
           valid_from: "2025-01-01",
           valid_until: null,
           basis: "cnae",
           evidence: "SECABC reivindica representação com base no CNAE de comércio varejista.",
-          decided_by: ctx.decidedBy,
-          decided_at,
         },
         {
-          tenant_id: ctx.tenantId,
-          establishment_id: establishmentId,
+          ...base,
           union_registration_id: ctx.rivalRegistration.id,
           status: "reivindicada",
           valid_from: "2025-03-01",
           valid_until: null,
           basis: "carta_sindical",
           evidence: "Sindicato rival (fictício) reivindica a mesma base territorial e categoria — disputa em aberto.",
-          decided_by: ctx.decidedBy,
-          decided_at,
         },
-      );
-      break;
+      ];
 
-    case "perdida":
-      rows.push({
+    case "lost":
+      return [
+        {
+          ...base,
+          union_registration_id: ctx.registration.id,
+          status: "perdida",
+          valid_from: "2021-04-01",
+          valid_until: null,
+          basis: "decisao_judicial",
+          evidence: "Representação perdida por decisão judicial fictícia favorável ao sindicato rival.",
+        },
+      ];
+
+    case "resolved":
+      return [
+        {
+          ...base,
+          union_registration_id: ctx.registration.id,
+          status: "reivindicada",
+          valid_from: "2019-06-01",
+          valid_until: "2022-02-28",
+          basis: "cnae",
+          evidence: "SECABC reivindicou representação durante o período de disputa com o sindicato rival.",
+        },
+        {
+          ...base,
+          union_registration_id: ctx.rivalRegistration.id,
+          status: "reivindicada",
+          valid_from: "2019-11-01",
+          valid_until: "2022-02-28",
+          basis: "carta_sindical",
+          evidence: "Sindicato rival (fictício) reivindicou a mesma base durante o período de disputa.",
+        },
+        {
+          ...base,
+          union_registration_id: ctx.registration.id,
+          status: "reconhecida",
+          valid_from: "2022-03-01",
+          valid_until: null,
+          basis: "decisao_judicial",
+          evidence: "Disputa resolvida por decisão judicial fictícia — representação reconhecida ao SECABC.",
+        },
+      ];
+  }
+}
+
+async function seedCompanies(ctx: CompanySeedContext): Promise<number> {
+  let created = 0;
+
+  for (let i = 0; i < DEMO_COMPANIES.length; i++) {
+    const demo = DEMO_COMPANIES[i]!;
+    const root = rootFromSeed(demo.legalName);
+    const cnpj = generateCnpj(root, 1);
+
+    const { data: company, error: companyError } = await supabase
+      .from("company")
+      .insert({
         tenant_id: ctx.tenantId,
-        establishment_id: establishmentId,
-        union_registration_id: ctx.registration.id,
-        status: "perdida",
-        valid_from: "2020-01-01",
-        valid_until: null,
-        basis: "decisao_judicial",
-        evidence: "Representação perdida por decisão judicial fictícia favorável ao sindicato rival.",
-        decided_by: ctx.decidedBy,
-        decided_at,
-      });
-      break;
+        branch_id: ctx.branches[demo.branch]!.id,
+        cnpj,
+        legal_name: demo.legalName,
+        trade_name: demo.tradeName ?? null,
+        primary_cnae_id: ctx.cnaes[demo.cnae]!.id,
+        municipality_id: ctx.municipalities[demo.branch]!.id,
+      })
+      .select()
+      .single();
+    if (companyError) throw companyError;
+
+    const { data: matriz, error: matrizError } = await supabase
+      .from("establishment")
+      .insert({
+        tenant_id: ctx.tenantId,
+        company_id: company.id,
+        cnpj,
+        kind: "matriz",
+        cnae_id: ctx.cnaes[demo.cnae]!.id,
+        municipality_id: ctx.municipalities[demo.branch]!.id,
+      })
+      .select()
+      .single();
+    if (matrizError) throw matrizError;
+
+    const matrizRows = representationForScenario(ctx, matriz.id, demo.scenario, i);
+    const { error: repError } = await supabase.from("union_representation").insert(matrizRows);
+    if (repError) throw repError;
+
+    if (demo.filial) {
+      const filialCnae = demo.filial.cnae ?? demo.cnae;
+      const filialCnpj = generateCnpj(root, 2);
+      const { data: filial, error: filialError } = await supabase
+        .from("establishment")
+        .insert({
+          tenant_id: ctx.tenantId,
+          company_id: company.id,
+          cnpj: filialCnpj,
+          kind: "filial",
+          cnae_id: ctx.cnaes[filialCnae]!.id,
+          municipality_id: ctx.municipalities[demo.filial.branch]!.id,
+        })
+        .select()
+        .single();
+      if (filialError) throw filialError;
+
+      // A filial resolve de forma independente da matriz — é o ponto que
+      // demonstra representação por estabelecimento, não por empresa.
+      const filialRows = representationForScenario(ctx, filial.id, "stable", i + 100);
+      const { error: filialRepError } = await supabase.from("union_representation").insert(filialRows);
+      if (filialRepError) throw filialRepError;
+    }
+
+    created += 1;
   }
 
-  const { error } = await supabase.from("union_representation").insert(rows);
-  if (error) throw error;
+  return created;
 }
 
 main().catch((error) => {

@@ -41,7 +41,20 @@ export default async function EmpresasPage({
 
   return (
     <div>
-      <SyntexPageHeader breadcrumbs={[{ label: "Relações" }, { label: "Empresas" }]} title="Empresas" />
+      <SyntexPageHeader
+        breadcrumbs={[{ label: "Relações" }, { label: "Empresas" }]}
+        title="Empresas"
+        actions={
+          hasAnyGrant(session.grants, "company.master.provision") ? (
+            <a
+              href="/empresas/nova-com-master"
+              className="inline-flex h-input items-center rounded-sm bg-petrol-800 px-3 text-body text-shell-ink"
+            >
+              Empresa + master
+            </a>
+          ) : null
+        }
+      />
       <div className="p-6">
         <CompaniesTable page={page} pageIndex={pageIndex} q={searchParams.q ?? ""} />
       </div>

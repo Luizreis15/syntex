@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@syntex/database";
 import type { ResolveRepresentationResult } from "@syntex/types";
+import { fetchContributionRulesForAgreement, resolveAgreement } from "./resolve-agreement";
 
 type Client = SupabaseClient<Database>;
 
@@ -55,9 +56,15 @@ export async function resolveRepresentation(
   }
 
   const representation = active[0]!;
-  const agreement = await findAgreement(supabase, tenantId, representation.union_registration_id, referenceDate);
+  const agreement = await findAgreementForRepresentation(
+    supabase,
+    tenantId,
+    establishmentId,
+    representation.union_registration_id,
+    referenceDate,
+  );
   const contributionRules = agreement
-    ? await fetchContributionRules(supabase, tenantId, agreement.id, referenceDate)
+    ? await fetchContributionRulesForAgreement(supabase, tenantId, agreement.id, referenceDate)
     : [];
 
   return {
@@ -71,9 +78,10 @@ export async function resolveRepresentation(
   };
 }
 
-async function findAgreement(
+async function findAgreementForRepresentation(
   supabase: Client,
   tenantId: string,
+  establishmentId: string,
   unionRegistrationId: string | null,
   referenceDate: string,
 ): Promise<ResolveRepresentationResult["agreement"]> {
@@ -88,33 +96,19 @@ async function findAgreement(
   if (registrationError || !registration) return null;
   if (!registration.economic_category_id || !registration.professional_category_id) return null;
 
-  const { data: agreement, error: agreementError } = await supabase
-    .from("collective_agreement")
-    .select("*")
+  const { data: establishment, error: establishmentError } = await supabase
+    .from("establishment")
+    .select("municipality_id")
     .eq("tenant_id", tenantId)
-    .eq("economic_category_id", registration.economic_category_id)
-    .eq("professional_category_id", registration.professional_category_id)
-    .lte("valid_from", referenceDate)
-    .gte("valid_until", referenceDate)
-    .maybeSingle();
-  if (agreementError || !agreement) return null;
+    .eq("id", establishmentId)
+    .single();
+  if (establishmentError || !establishment) return null;
 
-  return agreement as unknown as ResolveRepresentationResult["agreement"];
-}
-
-async function fetchContributionRules(
-  supabase: Client,
-  tenantId: string,
-  agreementId: string,
-  referenceDate: string,
-) {
-  const { data, error } = await supabase
-    .from("contribution_rule")
-    .select("*")
-    .eq("tenant_id", tenantId)
-    .eq("collective_agreement_id", agreementId)
-    .lte("valid_from", referenceDate)
-    .or(`valid_until.is.null,valid_until.gte.${referenceDate}`);
-  if (error) throw error;
-  return (data ?? []) as unknown as ResolveRepresentationResult["contributionRules"];
+  return resolveAgreement(supabase, {
+    tenantId,
+    economicCategoryId: registration.economic_category_id,
+    professionalCategoryId: registration.professional_category_id,
+    referenceDate,
+    municipalityId: establishment.municipality_id,
+  });
 }

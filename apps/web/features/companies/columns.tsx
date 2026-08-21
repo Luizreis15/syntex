@@ -12,6 +12,7 @@ export const companyColumns = [
   helper.accessor((row) => row.tradeName ?? row.legalName, {
     id: "name",
     header: "Empresa",
+    meta: { label: "Empresa" },
     cell: ({ row }) => (
       <Link href={`/empresas/${row.original.id}`} className="font-medium text-ink hover:text-petrol-700">
         {row.original.tradeName ?? row.original.legalName}
@@ -20,14 +21,17 @@ export const companyColumns = [
   }),
   helper.accessor("cnpj", {
     header: "CNPJ",
+    meta: { label: "CNPJ" },
     cell: ({ getValue }) => <span className="font-mono text-ink-2">{formatCnpj(getValue())}</span>,
   }),
   helper.accessor("municipalityName", {
     header: "Município",
+    meta: { label: "Município" },
     cell: ({ getValue }) => <span className="text-ink-2">{getValue() ?? "—"}</span>,
   }),
   helper.accessor("status", {
     header: "Representação",
+    meta: { label: "Representação" },
     cell: ({ getValue }) => {
       const status = getValue();
       if (status === "sem_representacao") {
@@ -38,6 +42,7 @@ export const companyColumns = [
   }),
   helper.accessor("validity", {
     header: "Vigência",
+    meta: { label: "Vigência" },
     cell: ({ getValue }) => (
       <div className="w-32">
         <SyntexValidityBand periods={getValue()} referenceDate={today} />

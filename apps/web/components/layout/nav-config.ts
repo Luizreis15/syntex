@@ -1,30 +1,42 @@
 import { can, type PermissionKey, type UserGrant } from "@syntex/permissions";
 
-export interface NavItem {
+/**
+ * Navegação só lista o que existe. Módulo sem permissão some (SYNTEX-UI).
+ * Itens "em breve" / mapa do produto ficam no roadmap (ADR-013), não na sidebar.
+ */
+export type NavItem = {
   label: string;
   href: string;
   permission: PermissionKey;
-}
+};
 
 export interface NavSection {
   label: string;
   items: NavItem[];
 }
 
-/**
- * Todo o mapa de navegação do produto — não só o que esta fatia constrói.
- * Um item sem página real fica de fora do array (não "desabilitado"): hoje
- * isso deixa a seção "Relações" com um item só, e é honesto que seja assim
- * — Trabalhadores, Financeiro, Atendimento etc. entram quando existirem.
- */
 export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Relações",
-    items: [{ label: "Empresas", href: "/empresas", permission: "company.read" }],
+    items: [
+      { label: "Trabalhadores", href: "/trabalhadores", permission: "worker.read" },
+      { label: "Empresas", href: "/empresas", permission: "company.read" },
+      { label: "Convenções", href: "/convencoes", permission: "agreement.read" },
+    ],
+  },
+  {
+    label: "Financeiro",
+    items: [{ label: "Cobranças", href: "/cobrancas", permission: "finance.read" }],
+  },
+  {
+    label: "Operação",
+    items: [
+      { label: "Equipe", href: "/equipe", permission: "staff.read" },
+      { label: "Escritórios", href: "/escritorios", permission: "office.provision" },
+    ],
   },
 ];
 
-/** Módulo sem permissão não aparece — nunca desabilitado, omitido. */
 export function filterNavSections(grants: UserGrant[], tenantId: string): NavSection[] {
   return NAV_SECTIONS.map((section) => ({
     ...section,

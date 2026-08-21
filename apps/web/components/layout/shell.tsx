@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
+import {
+  isAssociatePortalActor,
+  isCompanyPortalActor,
+  isOfficePortalActor,
+} from "@syntex/permissions";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { filterNavSections } from "./nav-config";
@@ -12,6 +17,9 @@ import { filterNavSections } from "./nav-config";
 export async function Shell({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  if (isAssociatePortalActor(session.grants)) redirect("/associado");
+  if (isOfficePortalActor(session.grants)) redirect("/escritorio");
+  if (isCompanyPortalActor(session.grants)) redirect("/empresa");
 
   const { data: tenant } = await session.supabase
     .from("tenant")
@@ -46,9 +54,9 @@ export async function Shell({ children }: { children: React.ReactNode }) {
         tenantLegalName={tenant?.legal_name ?? ""}
         branchLabel={branchLabel}
       />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Topbar userName={appUser?.full_name ?? ""} userEmail={appUser?.email ?? ""} />
-        <main className="flex-1 overflow-y-auto bg-paper">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto bg-paper">{children}</main>
       </div>
     </div>
   );

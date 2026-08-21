@@ -1,4 +1,11 @@
-export type Scope = "own" | "branch" | "department" | "tenant" | "global";
+export type Scope =
+  | "own"
+  | "branch"
+  | "department"
+  | "company"
+  | "office"
+  | "tenant"
+  | "global";
 
 export type RepresentationStatus =
   | "reivindicada"
@@ -27,6 +34,15 @@ export type DataClassification =
   | "financeiro"
   | "juridico"
   | "saude";
+
+export type MembershipStatus =
+  | "prospect"
+  | "ativo"
+  | "suspenso"
+  | "inadimplente"
+  | "cancelado"
+  | "desfiliado"
+  | "falecido";
 
 export interface UnionRepresentation {
   id: string;

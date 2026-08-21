@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
   if (user && isAuthRoute) {
-    return NextResponse.redirect(new URL("/empresas", request.url));
+    return NextResponse.redirect(new URL("/inicio", request.url));
   }
 
   return response;

@@ -4,11 +4,13 @@ import { useCallback, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SyntexDataTable } from "@/components/ui/syntex-data-table";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
+import { SyntexSelect } from "@/components/ui/syntex-select";
 import { companyColumns } from "./columns";
 import type { CompaniesPage } from "./data";
 
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS = [
+  { value: "", label: "Todos os status" },
   { value: "reconhecida", label: "Reconhecida" },
   { value: "reivindicada", label: "Reivindicada" },
   { value: "disputada", label: "Disputada" },
@@ -83,31 +85,19 @@ export function CompaniesTable({ page, pageIndex, q }: CompaniesTableProps) {
             />
           </form>
 
-          <select
+          <SyntexSelect
+            aria-label="Filtrar por município"
             value={searchParams.get("municipio") ?? ""}
-            onChange={(e) => updateParams({ municipio: e.target.value || null })}
-            className="h-input rounded-sm border border-border bg-surface px-2 text-body text-ink"
-          >
-            <option value="">Todos os municípios</option>
-            {page.municipalityOptions.map((m) => (
-              <option key={m.slug} value={m.slug}>
-                {m.name}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => updateParams({ municipio: value || null })}
+            options={[{ value: "", label: "Todos os municípios" }, ...page.municipalityOptions.map((m) => ({ value: m.slug, label: m.name }))]}
+          />
 
-          <select
+          <SyntexSelect
+            aria-label="Filtrar por status de representação"
             value={searchParams.get("status") ?? ""}
-            onChange={(e) => updateParams({ status: e.target.value || null })}
-            className="h-input rounded-sm border border-border bg-surface px-2 text-body text-ink"
-          >
-            <option value="">Todos os status</option>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => updateParams({ status: value || null })}
+            options={STATUS_OPTIONS}
+          />
         </div>
       }
     />

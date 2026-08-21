@@ -59,7 +59,27 @@ export async function globalSearch(session: Session, rawQuery: string): Promise<
       )
       .eq("tenant_id", session.tenantId)
       .limit(6);
-    establishmentQuery = byCnpj ? establishmentQuery.ilike("cnpj", `%${digits}%`) : establishmentQuery;
+
+    if (byCnpj) {
+      establishmentQuery = establishmentQuery.ilike("cnpj", `%${digits}%`);
+    } else {
+      // PostgREST não filtra de forma confiável em `.ilike()` sobre uma
+      // coluna do recurso embutido (company.legal_name) sem `!inner` — mais
+      // simples e explícito: acha as empresas pelo nome primeiro, depois
+      // restringe os estabelecimentos a elas.
+      const { data: matchingCompanies } = await session.supabase
+        .from("company")
+        .select("id")
+        .eq("tenant_id", session.tenantId)
+        .ilike("legal_name", `%${q}%`)
+        .limit(6);
+      const companyIds = (matchingCompanies ?? []).map((c) => c.id);
+      if (companyIds.length === 0) {
+        return { companies, establishments };
+      }
+      establishmentQuery = establishmentQuery.in("company_id", companyIds);
+    }
+
     const { data: establishmentRows } = await establishmentQuery;
 
     for (const row of establishmentRows ?? []) {

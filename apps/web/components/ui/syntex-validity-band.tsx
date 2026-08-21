@@ -58,8 +58,15 @@ export function SyntexValidityBand({ periods, referenceDate, className }: Syntex
   const from = periods.map((p) => p.from);
   const until = periods.map((p) => p.until ?? referenceDate);
   const domainStart = [...from, referenceDate].sort()[0]!;
-  const domainEnd = [...until, referenceDate].sort().at(-1)!;
-  const domainSpan = toDays(domainEnd) - toDays(domainStart) || 1;
+  const rawDomainEnd = [...until, referenceDate].sort().at(-1)!;
+
+  // Sem isso, uma vigência em aberto preenche 100% da largura e o marcador
+  // cai exatamente na borda — lê como barra de progresso "concluída", o
+  // oposto do que a faixa significa (prompt 02.1 §4). A folga depois da
+  // data de referência é o que separa "até aqui" de "terminou".
+  const rawSpanDays = Math.max(toDays(rawDomainEnd) - toDays(domainStart), 1);
+  const bufferDays = Math.max(60, Math.round(rawSpanDays * 0.12));
+  const domainSpan = rawSpanDays + bufferDays;
 
   const pct = (date: string) => ((toDays(date) - toDays(domainStart)) / domainSpan) * 100;
   const markerPct = Math.min(100, Math.max(0, pct(referenceDate)));
@@ -70,7 +77,7 @@ export function SyntexValidityBand({ periods, referenceDate, className }: Syntex
 
   return (
     <div className={cn("relative h-1.5 w-full", className)} role="img" aria-label={`Vigência: ${summary}`}>
-      <div className="absolute inset-0 flex overflow-hidden rounded-xs bg-surface-2">
+      <div className="absolute inset-0 overflow-hidden rounded-xs bg-surface-2">
         {periods.map((period, i) => {
           const left = pct(period.from);
           const right = pct(period.until ?? referenceDate);

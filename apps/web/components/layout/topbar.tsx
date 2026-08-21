@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { SyntexCommand } from "@/components/ui/syntex-command";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
 import {
@@ -14,7 +14,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { IconBell, IconChevronDown, IconUser } from "@/components/ui/icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { NAV_SECTIONS } from "./nav-config";
 
 export interface TopbarProps {
   userName: string;
@@ -22,17 +21,14 @@ export interface TopbarProps {
 }
 
 /**
- * Topbar 58px (design/SYNTEX-UI.md §8). "Criar" fica de fora desta fatia —
- * não há formulário de criação no escopo do prompt 02, e um botão sem ação
- * real é pior que a ausência dele.
+ * Topbar 58px (design/SYNTEX-UI.md §8). Sem rótulo de seção: o breadcrumb
+ * e o <h1> do SyntexPageHeader já dizem onde o usuário está — repetir aqui
+ * era a mesma palavra três vezes na tela (prompt 02.1 §6). "Criar" fica de
+ * fora desta fatia — não há formulário de criação no escopo do prompt 02,
+ * e um botão sem ação real é pior que a ausência dele.
  */
 export function Topbar({ userName, userEmail }: TopbarProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const activeItem = NAV_SECTIONS.flatMap((s) => s.items).find(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
-  );
-  const sectionLabel = activeItem?.label ?? "Syntex";
 
   async function handleSignOut() {
     const supabase = createSupabaseBrowserClient();
@@ -42,9 +38,7 @@ export function Topbar({ userName, userEmail }: TopbarProps) {
   }
 
   return (
-    <header className="flex h-topbar shrink-0 items-center justify-between gap-4 border-b border-border bg-surface px-4">
-      <p className="text-component font-semibold text-ink">{sectionLabel}</p>
-
+    <header className="flex h-topbar shrink-0 items-center justify-end gap-4 border-b border-border bg-surface px-4">
       <div className="flex-1">
         <SyntexCommand />
       </div>

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@syntex/database";
-import { allowedBranchIds, type UserGrant } from "@syntex/permissions";
+import { allowedBranchIds, allowedCompanyIds, type UserGrant } from "@syntex/permissions";
 import type { DomainState } from "@/components/ui/syntex-status";
 import { computeRepresentationTimeline, type TimelinePeriod } from "@/lib/domain/representation-timeline";
 import { slugify } from "./slug";
@@ -39,7 +39,13 @@ export async function fetchCompaniesPage(
   // isola tenant). "all" = grant de tenant/global; [] = nenhum acesso;
   // lista de ids = restrito às unidades concedidas.
   const branchScope = allowedBranchIds(grants, "company.read");
-  if (branchScope !== "all" && branchScope.length === 0) {
+  const companyScope = allowedCompanyIds(grants, "company.read");
+
+  if (companyScope !== "all") {
+    if (companyScope.length === 0) {
+      return { rows: [], rowCount: 0, municipalityOptions: [] };
+    }
+  } else if (branchScope !== "all" && branchScope.length === 0) {
     return { rows: [], rowCount: 0, municipalityOptions: [] };
   }
 
@@ -49,6 +55,7 @@ export async function fetchCompaniesPage(
     .eq("tenant_id", tenantId)
     .not("municipality_id", "is", null);
   if (branchScope !== "all") municipalityQuery = municipalityQuery.in("branch_id", branchScope);
+  if (companyScope !== "all") municipalityQuery = municipalityQuery.in("id", companyScope);
   const { data: municipalityRows } = await municipalityQuery;
 
   const seen = new Map<string, { id: string; name: string }>();
@@ -81,6 +88,7 @@ export async function fetchCompaniesPage(
     .eq("tenant_id", tenantId)
     .order("legal_name");
   if (branchScope !== "all") query = query.in("branch_id", branchScope);
+  if (companyScope !== "all") query = query.in("id", companyScope);
 
   if (filter.q) {
     const digits = filter.q.replace(/\D/g, "");

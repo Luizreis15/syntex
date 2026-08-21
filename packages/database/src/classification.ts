@@ -32,6 +32,22 @@ export const TABLE_DATA_CLASSIFICATION = {
   collective_agreement: "juridico",
   collective_agreement_territory: "interno",
   contribution_rule: "financeiro",
+  obligation: "financeiro",
+  charge: "financeiro",
+  journal_entry: "financeiro",
+  journal_line: "financeiro",
+  payment_webhook_event: "financeiro",
+  person: "pessoal",
+  worker: "pessoal",
+  employment_relationship: "pessoal",
+  membership: "sensivel",
+  office: "interno",
+  office_company_link: "interno",
+  delegation: "interno",
+  department: "interno",
+  staff_invite: "pessoal",
+  platform_admin: "interno",
+  platform_notification: "interno",
 } as const satisfies Record<string, DataClassification>;
 
 export type AuditableTable = keyof typeof TABLE_DATA_CLASSIFICATION;

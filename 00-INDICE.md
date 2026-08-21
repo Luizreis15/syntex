@@ -1,9 +1,9 @@
 # Syntex — Fundação
 
-Índice dos documentos de fundação. Atualizado em 18/08/2026.
+Índice dos documentos de fundação. Atualizado em 20/08/2026.
 
-**Estágio atual:** nenhum código escrito, discovery não iniciado, equipe/orçamento não declarados.
-**Status da fundação:** conceitualmente madura, **não fechada**. Há sete blocos estruturais faltando (doc 03) e quatro decisões de negócio pendentes (doc 02) que devem ser resolvidas antes do primeiro commit.
+**Estágio atual:** código com Union Domain + shell; execução sob ADR-013 (A → C → B).  
+**Owner de execução:** agente Cursor neste repositório (`fundacao/05-roadmap-execucao.md`).
 
 ---
 
@@ -14,8 +14,10 @@
 | 01 | `01-documento-de-fundacao-v1.md` | Documento canônico de visão, domínios, arquitetura, fases e critérios. 119 seções. Anotado com as ressalvas levantadas nos docs 02 e 03. |
 | 02 | `02-revisao-critica.md` | Revisão crítica de negócio e sequenciamento: riscos que podem matar o projeto, ordem de fases, lacunas regulatórias. |
 | 03 | `03-triagem-revisao-arquitetural.md` | Triagem dos 18 pontos da revisão arquitetural por **irreversibilidade**: o que entra no schema agora, o que vira ADR, o que fica no mapa, o que resistir. |
+| 04 | `04-frontend-design-system.md` | Especificação visual / front (complementada por `design/SYNTEX-UI.md`). |
+| 05 | `05-roadmap-execucao.md` | Lotes de 10 etapas — fonte operacional do que construir agora. |
 
-Leia na ordem 01 → 02 → 03. O doc 03 é o mais acionável.
+Leia na ordem 01 → 02 → 03 → **05**. O doc 05 é o mais acionável no dia a dia. Decisão de ordem: `decisoes/ADR-013-sequenciamento-e-ownership.md`.
 
 ---
 
@@ -36,9 +38,9 @@ Itens irreversíveis. Se descobertos no mês 9, são reescrita e não `ALTER TAB
 - [ ] **Regras temporais** — `valid_from`/`valid_until` + snapshot imutável da regra aplicada em cada obrigação gerada
 - [ ] **Multi-tenancy** — FK composta com `tenant_id`, uniques por tenant, contexto de tenant em jobs
 - [ ] **Transactional Outbox** — sem ele, evento se perde entre commit no Postgres e publish no Redis
-- [ ] **Primitivo de delegação no IAM** — contador/procurador, representante de empresa e impersonation de suporte são a mesma coisa
+- [x] **Primitivo de delegação no IAM** — Lote 10 / ADR-015: tabela `delegation` + office; person/impersonation depois
 - [ ] **Classificação de dado** + dado de saúde e jurídico em tabela separada, não coluna
-- [ ] **`department` / `team` / `staff`** — o escopo `department` da seção 37 é hoje inimplementável
+- [x] **`department` / `team` / `staff`** — `department` + `staff_invite` no Lote 6; escopo `department` implementável
 - [ ] **Subledger de partida dobrada** — `journal_entry` + `journal_line`, invariante débito = crédito no banco
 
 ### ADRs a escrever (doc 03, balde B)
@@ -62,8 +64,6 @@ O produto aparece como **"Veramo Sindicato OS"** no doc 01 e como **Syntex** no 
 
 ---
 
-## Próximo passo proposto
+## Próximo passo
 
-**Adendo estrutural + ERD**, cobrindo os sete blocos novos do balde A. Não uma v2 do documento inteiro — 75–80% do doc 01 permanece válido, e reescrevê-lo consome dias sem produzir decisão. Adendo e ERD devem sair juntos: o Union Domain só fica honesto quando vira tabela.
-
-Antes disso, porém, os quatro itens de negócio acima. Nenhum leva mais que duas semanas e qualquer um deles pode invalidar decisões que o adendo tomaria.
+Executar `fundacao/05-roadmap-execucao.md` — **Lote 1** (CCT aplicável). Decisão de ordem: ADR-013.

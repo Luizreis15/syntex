@@ -26,6 +26,12 @@ export async function deleteTestTenant(tenantId: string) {
   const tables = [
     "audit_log",
     "outbox_event",
+    "payment_webhook_event",
+    "journal_line",
+    "journal_entry",
+    "platform_notification",
+    "charge",
+    "obligation",
     "contribution_rule",
     "collective_agreement_territory",
     "collective_agreement",
@@ -34,6 +40,14 @@ export async function deleteTestTenant(tenantId: string) {
     "union_registration",
     "professional_category",
     "economic_category",
+    "membership",
+    "employment_relationship",
+    "worker",
+    "person",
+    "staff_invite",
+    "delegation",
+    "office_company_link",
+    "department",
     "establishment",
     "company",
     "user_role",
@@ -43,8 +57,11 @@ export async function deleteTestTenant(tenantId: string) {
     "branch",
   ] as const;
   for (const table of tables) {
+    // platform_notification e algumas tabelas usam tenant_id opcional
     await admin.from(table).delete().eq("tenant_id", tenantId);
   }
+  // offices do tenant
+  await admin.from("office").delete().eq("tenant_id", tenantId);
   await admin.from("tenant").delete().eq("id", tenantId);
 }
 

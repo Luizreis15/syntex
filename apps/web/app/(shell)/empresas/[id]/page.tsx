@@ -128,7 +128,7 @@ export default async function CompanyDetailPage({
               {resolution.representation && <p className="text-body">{resolution.evidence}</p>}
 
               {resolution.agreement ? (
-                <div className="border-t border-border pt-3 text-body">
+                <div className="space-y-2 border-t border-border pt-3 text-body">
                   <p className="font-medium">
                     CCT vigente ({resolution.agreement.kind.toUpperCase()}
                     {resolution.agreement.mediador_number
@@ -140,11 +140,28 @@ export default async function CompanyDetailPage({
                     {resolution.agreement.valid_from} → {resolution.agreement.valid_until} · data-base{" "}
                     {resolution.agreement.base_date}
                   </p>
+                  {resolution.contributionRules.length > 0 ? (
+                    <ul className="space-y-1 text-ink-2" data-testid="contribution-rules">
+                      {resolution.contributionRules.map((rule) => (
+                        <li key={rule.id}>
+                          <span className="font-medium text-ink">{rule.type}</span>
+                          {" · "}
+                          {rule.calculation_base}
+                          {" · "}
+                          <span className="font-mono">
+                            {rule.value_type === "percentual" ? `${rule.value}%` : rule.value}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-ink-2">CCT sem regra de contribuição vigente nesta data.</p>
+                  )}
                 </div>
               ) : (
                 resolution.representation && (
                   <p className="border-t border-border pt-3 text-body text-ink-2">
-                    Nenhuma CCT vigente encontrada para esta data.
+                    Nenhuma CCT vigente encontrada para esta data (categorias/território/data).
                   </p>
                 )
               )}

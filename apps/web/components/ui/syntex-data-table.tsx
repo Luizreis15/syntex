@@ -12,7 +12,8 @@ import {
   type RowSelectionState,
 } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
-import { IconChevronDown } from "./icons";
+import { IconCheck, IconChevronDown } from "./icons";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "./dropdown-menu";
 
 const features = tableFeatures({ columnVisibilityFeature, rowSelectionFeature });
 export type SyntexTableFeatures = typeof features;
@@ -114,10 +115,47 @@ export function SyntexDataTable<TData extends RowData>({
   const bodyText = density === "compact" ? "text-dense" : "text-body";
 
   const pageCount = pagination ? Math.max(1, Math.ceil(pagination.rowCount / pagination.pageSize)) : 1;
+  const resultCount = pagination?.rowCount ?? data.length;
+  const hideableColumns = table.getAllLeafColumns().filter((column) => column.id !== "__select__");
 
   return (
     <div role="table" aria-label={ariaLabel} className="flex flex-col gap-3">
       {toolbar}
+
+      <div className="flex items-center justify-between text-label text-ink-3">
+        <span>
+          {resultCount} {resultCount === 1 ? "resultado" : "resultados"}
+        </span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-1 rounded-sm border border-border px-2 py-1 text-label uppercase text-ink-2 hover:bg-surface-2"
+            >
+              Colunas
+              <IconChevronDown size={12} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {hideableColumns.map((column) => {
+              const label = (column.columnDef.meta as { label?: string } | undefined)?.label ?? column.id;
+              return (
+                <button
+                  key={column.id}
+                  type="button"
+                  onClick={() => column.toggleVisibility()}
+                  className="flex w-full items-center gap-2 rounded-xs px-2 py-1.5 text-left text-body text-ink hover:bg-surface-2"
+                >
+                  <span className="flex h-3.5 w-3.5 items-center justify-center">
+                    {column.getIsVisible() && <IconCheck size={14} className="text-petrol-700" />}
+                  </span>
+                  {label}
+                </button>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       <div className="overflow-hidden rounded-md border border-border bg-surface">
         <div className="overflow-x-auto">
@@ -179,10 +217,7 @@ export function SyntexDataTable<TData extends RowData>({
       </div>
 
       {pagination && data.length > 0 && (
-        <div className="flex items-center justify-between text-label text-ink-3">
-          <span>
-            {pagination.rowCount} {pagination.rowCount === 1 ? "resultado" : "resultados"}
-          </span>
+        <div className="flex items-center justify-end text-label text-ink-3">
           <div className="flex items-center gap-3">
             <button
               type="button"
