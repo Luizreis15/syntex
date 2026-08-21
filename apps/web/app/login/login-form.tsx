@@ -1,9 +1,8 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
-import { signInWithPassword, type SignInState } from "./actions";
-
-const initial: SignInState = { error: null };
+import { useFormStatus } from "react-dom";
+import { useSearchParams } from "next/navigation";
+import { signInWithPassword } from "./actions";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -18,11 +17,22 @@ function SubmitButton() {
   );
 }
 
+function errorMessage(code: string | null): string | null {
+  if (!code) return null;
+  if (code === "credentials") return "E-mail ou senha inválidos.";
+  if (code === "missing") return "Informe e-mail e senha.";
+  if (code === "config") {
+    return "Falha de configuração no servidor (Supabase URL/KEY). Confira as variáveis na Vercel.";
+  }
+  return "Não foi possível entrar. Tente de novo.";
+}
+
 export function LoginForm() {
-  const [state, action] = useFormState(signInWithPassword, initial);
+  const searchParams = useSearchParams();
+  const error = errorMessage(searchParams.get("error"));
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={signInWithPassword} className="space-y-4">
       <div className="space-y-1">
         <label htmlFor="email" className="text-label uppercase text-ink-3">
           E-mail
@@ -49,7 +59,7 @@ export function LoginForm() {
           className="h-input w-full rounded-sm border border-border bg-surface px-3 text-body text-ink outline-none focus-visible:border-petrol-600"
         />
       </div>
-      {state.error && <p className="text-body text-danger">{state.error}</p>}
+      {error && <p className="text-body text-danger">{error}</p>}
       <SubmitButton />
     </form>
   );

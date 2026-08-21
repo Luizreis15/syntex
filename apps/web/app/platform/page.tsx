@@ -4,12 +4,22 @@ import { getPlatformSession } from "@/lib/auth/platform-session";
 import { createSupabaseAdminClient } from "@syntex/database";
 import { SyntexPageHeader } from "@/components/ui/syntex-page-header";
 import { fetchPlatformMetrics, formatMetricMoney } from "@/lib/domain/platform-metrics";
+import { PlatformEnvMissing } from "@/features/platform/platform-env-missing";
 
 export default async function PlatformHomePage() {
   const session = await getPlatformSession();
   if (!session) redirect("/login");
 
-  const admin = createSupabaseAdminClient();
+  let admin;
+  try {
+    admin = createSupabaseAdminClient();
+  } catch (err) {
+    return (
+      <PlatformEnvMissing
+        message={err instanceof Error ? err.message : "SERVICE_ROLE ausente no runtime."}
+      />
+    );
+  }
   const metrics = await fetchPlatformMetrics(admin);
 
   const { data: tenants } = await admin
