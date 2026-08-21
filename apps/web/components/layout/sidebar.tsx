@@ -42,20 +42,21 @@ export function Sidebar({ sections, tenantName, tenantLegalName, branchLabel }: 
         <p className="text-body text-shell-ink">{branchLabel}</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
-        {sections.map((section) => (
-          <div key={section.label} className="mb-4">
-            <p className="px-2 pb-1 text-label uppercase text-shell-ink-2">{section.label}</p>
-            <ul className="flex flex-col gap-0.5">
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        {sections.map((section, i) => (
+          <div key={section.label} className={cn(i > 0 && "mt-5")}>
+            <p className="px-2 pb-1.5 text-label uppercase tracking-wide text-shell-ink-2">{section.label}</p>
+            <ul className="flex flex-col gap-px">
               {section.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      aria-current={active ? "page" : undefined}
                       className={cn(
-                        "block rounded-sm px-2 py-1.5 text-body text-shell-ink-2 hover:bg-shell-900 hover:text-shell-ink",
-                        active && "bg-shell-900 text-shell-ink",
+                        "block border-l-2 border-transparent px-2.5 py-1.5 text-body text-shell-ink-2 transition-colors hover:bg-shell-900 hover:text-shell-ink",
+                        active && "border-petrol-600 bg-shell-900 font-medium text-shell-ink",
                       )}
                     >
                       {item.label}

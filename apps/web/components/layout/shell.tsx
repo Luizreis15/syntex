@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import {
@@ -8,6 +9,7 @@ import {
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { filterNavSections } from "./nav-config";
+import { SyntexAsOfBar } from "@/components/ui/syntex-asof-bar";
 
 /**
  * Server Component: resolve sessão, tenant e branch, filtra a navegação por
@@ -56,6 +58,9 @@ export async function Shell({ children }: { children: React.ReactNode }) {
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Topbar userName={appUser?.full_name ?? ""} userEmail={appUser?.email ?? ""} />
+        <Suspense fallback={<div className="h-9 shrink-0 border-b border-border bg-surface-2" />}>
+          <SyntexAsOfBar />
+        </Suspense>
         <main className="min-h-0 flex-1 overflow-y-auto bg-paper">{children}</main>
       </div>
     </div>

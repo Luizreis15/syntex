@@ -147,6 +147,16 @@ export function IconPanelLeft(props: IconProps) {
   );
 }
 
+export function IconCalendar(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <rect x="3.5" y="4.5" width="13" height="11.5" rx="1.4" />
+      <path d="M3.5 8h13" />
+      <path d="M7 3v3M13 3v3" />
+    </svg>
+  );
+}
+
 export function IconBuilding(props: IconProps) {
   return (
     <svg {...base(props)}>
