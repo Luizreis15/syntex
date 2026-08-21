@@ -1,0 +1,11 @@
+import { chromium } from "@playwright/test";
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await page.goto("http://localhost:3100/login");
+await page.getByLabel("E-mail").fill("diretoria@secabc.exemplo.org.br");
+await page.getByLabel("Senha").fill("syntex-dev-2026!");
+await page.getByRole("button", { name: "Entrar" }).click();
+await page.waitForURL("**/painel", { timeout: 15000 });
+await page.waitForTimeout(1000);
+await page.screenshot({ path: "e2e/screenshots/redesign-painel.png" });
+await browser.close();

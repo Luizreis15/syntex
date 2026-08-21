@@ -8,11 +8,11 @@ import { SyntexSelect, type SyntexSelectOption } from "./syntex-select";
  * é o default — só encolha quando o dado tem forma conhecida e fixa.
  */
 const WIDTH: Record<"xs" | "sm" | "md" | "lg" | "full", string> = {
-  xs: "max-w-[7rem]", // UF, código curto
-  sm: "max-w-[11rem]", // CEP, telefone, data
-  md: "max-w-[16rem]", // CNPJ, e-mail, cidade
-  lg: "max-w-[24rem]", // nome de pessoa, logradouro
-  full: "max-w-none",
+  xs: "basis-28 max-w-[7rem]", // UF, código curto
+  sm: "basis-44 max-w-[11rem]", // CEP, telefone, data
+  md: "basis-64 max-w-[16rem]", // CNPJ, e-mail, cidade
+  lg: "basis-96 max-w-[24rem]", // nome de pessoa, logradouro
+  full: "basis-full max-w-none",
 };
 
 interface FieldChromeProps {

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SyntexField } from "@/components/ui/syntex-field";
 
 interface Option {
   id: string;
@@ -10,6 +11,8 @@ interface Option {
 
 /**
  * Cadastro operacional de empresa (área Cadastro) — PT-BR, blocos Veramo.
+ * Todo campo é `SyntexField`: nenhum <input>/<select> local, nenhuma classe
+ * de estilo solta na tela (design/SYNTEX-UI.md §9, prompt 02.2).
  */
 export function CreateCompanyForm({
   branches,
@@ -22,6 +25,8 @@ export function CreateCompanyForm({
   const [error, setError] = useState<string | null>(null);
   const [inviteHint, setInviteHint] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [primaryCnaeId, setPrimaryCnaeId] = useState("");
+  const [branchId, setBranchId] = useState("");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -71,66 +76,72 @@ export function CreateCompanyForm({
     router.refresh();
   }
 
+  const cnaeOptions = [{ value: "", label: "—" }, ...cnaes.map((c) => ({ value: c.id, label: c.label }))];
+  const branchOptions = [{ value: "", label: "—" }, ...branches.map((b) => ({ value: b.id, label: b.label }))];
+
   return (
-    <form onSubmit={onSubmit} className="max-w-2xl space-y-6">
+    <form onSubmit={onSubmit} className="max-w-3xl space-y-10">
       <p className="text-body text-ink-2">
         Cadastro de empresa do setor. O responsável pela conta recebe acesso ao portal da empresa
         (espelho do que o sindicato registra).
       </p>
 
-      <fieldset className="space-y-3">
-        <legend className="text-component font-semibold text-ink">Identificação</legend>
-        <Field label="CNPJ" name="cnpj" required placeholder="00.000.000/0000-00" />
-        <Field label="Razão social" name="legalName" required />
-        <Field label="Nome fantasia" name="tradeName" />
-        <Field label="CNAE principal" name="primaryCnaeId">
-          <select id="primaryCnaeId" name="primaryCnaeId" className={inputClass}>
-            <option value="">—</option>
-            {cnaes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Unidade sindical responsável" name="branchId">
-          <select id="branchId" name="branchId" className={inputClass}>
-            <option value="">—</option>
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </fieldset>
-
-      <fieldset className="space-y-3">
-        <legend className="text-component font-semibold text-ink">Contato e endereço</legend>
-        <Field label="Telefone" name="phone" placeholder="(11) 0000-0000" />
-        <Field label="CEP" name="addressZip" placeholder="00000-000" />
-        <Field label="Logradouro" name="addressStreet" />
-        <Field label="Bairro" name="addressNeighborhood" />
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Cidade" name="addressCity" />
-          <Field label="UF" name="addressState" placeholder="SP" />
-          <div />
+      <section className="space-y-4">
+        <h2 className="text-section font-semibold text-ink">Identificação</h2>
+        <div className="flex flex-wrap gap-4">
+          <SyntexField variant="input" label="CNPJ" name="cnpj" required mono width="md" placeholder="00.000.000/0000-00" />
+          <SyntexField variant="input" label="Razão social" name="legalName" required width="full" />
+          <SyntexField variant="input" label="Nome fantasia" name="tradeName" width="lg" />
+          <SyntexField
+            variant="select"
+            label="CNAE principal"
+            name="primaryCnaeId"
+            value={primaryCnaeId}
+            onValueChange={setPrimaryCnaeId}
+            options={cnaeOptions}
+            width="lg"
+          />
+          <SyntexField
+            variant="select"
+            label="Unidade sindical responsável"
+            name="branchId"
+            value={branchId}
+            onValueChange={setBranchId}
+            options={branchOptions}
+            width="md"
+          />
         </div>
-      </fieldset>
+      </section>
 
-      <fieldset className="space-y-3">
-        <legend className="text-component font-semibold text-ink">Responsável pela conta</legend>
+      <section className="space-y-4">
+        <h2 className="text-section font-semibold text-ink">Contato e endereço</h2>
+        <div className="flex flex-wrap gap-4">
+          <SyntexField variant="input" label="Telefone" name="phone" mono width="sm" placeholder="(11) 0000-0000" />
+          <SyntexField variant="input" label="CEP" name="addressZip" mono width="sm" placeholder="00000-000" />
+          <SyntexField variant="input" label="Logradouro" name="addressStreet" width="full" />
+          <SyntexField variant="input" label="Bairro" name="addressNeighborhood" width="md" />
+          <SyntexField variant="input" label="Cidade" name="addressCity" width="md" />
+          <SyntexField variant="input" label="UF" name="addressState" width="xs" mono placeholder="SP" />
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-section font-semibold text-ink">Responsável pela conta</h2>
         <p className="text-label text-ink-3">
           Pessoa que acessa o portal da empresa. Recebe convite por e-mail (token em DEV).
         </p>
-        <Field label="Nome do responsável" name="accountResponsibleName" required />
-        <Field
-          label="E-mail do responsável"
-          name="accountResponsibleEmail"
-          type="email"
-          required
-        />
-      </fieldset>
+        <div className="flex flex-wrap gap-4">
+          <SyntexField variant="input" label="Nome do responsável" name="accountResponsibleName" required width="lg" />
+          <SyntexField
+            variant="input"
+            label="E-mail do responsável"
+            name="accountResponsibleEmail"
+            type="email"
+            required
+            width="lg"
+          />
+        </div>
+      </section>
 
       <p className="text-label text-ink-3">
         Ao salvar, a matriz é criada automaticamente com o mesmo CNPJ da empresa.
@@ -145,47 +156,10 @@ export function CreateCompanyForm({
       <button
         type="submit"
         disabled={pending}
-        className="h-input rounded-sm bg-petrol-800 px-3 text-body text-shell-ink disabled:opacity-50"
+        className="h-input rounded-sm bg-petrol-800 px-3 text-body text-shell-ink hover:bg-petrol-700 disabled:opacity-50"
       >
         {pending ? "Salvando…" : "Cadastrar empresa"}
       </button>
     </form>
   );
 }
-
-function Field({
-  label,
-  name,
-  type = "text",
-  required,
-  placeholder,
-  children,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  required?: boolean;
-  placeholder?: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1">
-      <label htmlFor={name} className="text-label text-ink-3">
-        {label}
-      </label>
-      {children ?? (
-        <input
-          id={name}
-          name={name}
-          type={type}
-          required={required}
-          placeholder={placeholder}
-          className={inputClass}
-        />
-      )}
-    </div>
-  );
-}
-
-const inputClass =
-  "h-input w-full rounded-sm border border-border bg-surface px-2 text-body text-ink";
