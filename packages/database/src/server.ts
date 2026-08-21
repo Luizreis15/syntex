@@ -1,24 +1,32 @@
 import { createServerClient, type CookieMethodsServer } from "@supabase/ssr";
 import type { Database } from "./types";
 
-function requirePublicSupabaseEnv() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  if (!url || !anon) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY ausentes no runtime. Confira Environment Variables no projeto Vercel do domínio.",
-    );
-  }
+/**
+ * URL/anon no servidor: preferir nomes SEM NEXT_PUBLIC_ (lidos no runtime).
+ * NEXT_PUBLIC_* é inlined no `next build` — se o Build viu vazio, Server Action
+ * fica com "" para sempre até rebuild com as vars presentes.
+ */
+export function getSupabasePublicConfig() {
+  const url = (
+    process.env.SUPABASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
+    ""
+  );
+  const anon = (
+    process.env.SUPABASE_ANON_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    ""
+  );
   return { url, anon };
 }
 
-/**
- * Cliente Supabase para uso em Server Components / Route Handlers.
- * Sempre chave anon + JWT do usuário (cookie de sessão) — nunca service_role.
- * O adapter de cookies é injetado para não acoplar este pacote ao Next.js.
- */
 export function createSupabaseServerClient(cookies: CookieMethodsServer) {
-  const { url, anon } = requirePublicSupabaseEnv();
+  const { url, anon } = getSupabasePublicConfig();
+  if (!url || !anon) {
+    throw new Error(
+      "SUPABASE_URL/ANON_KEY (ou NEXT_PUBLIC_*) ausentes no runtime. Na Vercel do projeto syntex-web, defina SUPABASE_URL e SUPABASE_ANON_KEY.",
+    );
+  }
   return createServerClient<Database>(url, anon, { cookies });
 }
 

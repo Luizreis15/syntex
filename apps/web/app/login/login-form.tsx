@@ -21,8 +21,11 @@ function errorMessage(code: string | null): string | null {
   if (!code) return null;
   if (code === "credentials") return "E-mail ou senha inválidos.";
   if (code === "missing") return "Informe e-mail e senha.";
-  if (code === "config") {
-    return "Falha de configuração no servidor (Supabase URL/KEY). Confira as variáveis na Vercel.";
+  if (code === "config" || code === "config_url") {
+    return "Falta SUPABASE_URL (ou NEXT_PUBLIC_SUPABASE_URL) no runtime da Vercel. Recrie no projeto syntex-web e Redeploy.";
+  }
+  if (code === "config_anon") {
+    return "Falta SUPABASE_ANON_KEY (ou NEXT_PUBLIC_SUPABASE_ANON_KEY) no runtime. Recrie no projeto syntex-web e Redeploy.";
   }
   return "Não foi possível entrar. Tente de novo.";
 }

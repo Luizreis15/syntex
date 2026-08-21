@@ -1,20 +1,27 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function publicConfig() {
+  return {
+    url: process.env.SUPABASE_URL?.trim() || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "",
+    anon:
+      process.env.SUPABASE_ANON_KEY?.trim() ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+      "",
+  };
+}
+
 /**
  * Middleware Edge-safe: usa @supabase/ssr direto.
- * Não importar @syntex/database aqui — o barrel puxa admin/service_role (Node).
+ * Preferir SUPABASE_URL/ANON_KEY (runtime) — NEXT_PUBLIC_* pode ter sido inlined vazio no build.
  */
 export async function middleware(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const { url, anon } = publicConfig();
 
   let response = NextResponse.next({ request });
 
   if (!url || !anon) {
-    console.error(
-      "[middleware] Faltam NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY no ambiente Vercel.",
-    );
+    console.error("[middleware] SUPABASE_URL/ANON_KEY ausentes no runtime.");
     if (!request.nextUrl.pathname.startsWith("/login")) {
       return NextResponse.redirect(new URL("/login", request.url));
     }

@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getSupabasePublicConfig } from "@syntex/database";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
@@ -16,11 +17,12 @@ export async function signInWithPassword(formData: FormData): Promise<void> {
     redirect("/login?error=missing");
   }
 
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
-  ) {
-    redirect("/login?error=config");
+  const { url, anon } = getSupabasePublicConfig();
+  if (!url) {
+    redirect("/login?error=config_url");
+  }
+  if (!anon) {
+    redirect("/login?error=config_anon");
   }
 
   const supabase = getSupabaseServerClient();
