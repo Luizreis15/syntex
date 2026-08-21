@@ -36,12 +36,23 @@ export default async function NovoTrabalhadorPage() {
     .eq("tenant_id", session.tenantId)
     .order("name");
 
+  const { data: establishments } = await session.supabase
+    .from("establishment")
+    .select("id, company_id, cnpj, kind")
+    .eq("tenant_id", session.tenantId)
+    .order("cnpj")
+    .limit(500);
+
   return (
     <div>
       <SyntexPageHeader
         breadcrumbs={[{ label: "Relações" }, { label: "Trabalhadores", href: "/trabalhadores" }, { label: "Novo" }]}
         title="Novo trabalhador"
-        metadata={<span className="text-body text-ink-2">Pessoa · trabalhador · filiação · vínculo</span>}
+        metadata={
+          <span className="text-body text-ink-2">
+            Cadastro · empresa obrigatória · filiação no Atendimento
+          </span>
+        }
       />
       <div className="p-6">
         <CreateWorkerForm
@@ -50,6 +61,11 @@ export default async function NovoTrabalhadorPage() {
             label: `${c.trade_name ?? c.legal_name} · ${c.cnpj}`,
           }))}
           branches={(branches ?? []).map((b) => ({ id: b.id, label: b.name }))}
+          establishments={(establishments ?? []).map((e) => ({
+            id: e.id,
+            companyId: e.company_id,
+            label: `${e.kind} · ${e.cnpj}`,
+          }))}
         />
       </div>
     </div>

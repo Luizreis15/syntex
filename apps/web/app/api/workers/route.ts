@@ -95,6 +95,13 @@ export async function POST(request: NextRequest) {
         resourceId: result.membership.id,
       });
     }
+    await recordAudit(session.supabase, {
+      tenantId: session.tenantId,
+      actorId: session.appUserId,
+      action: "create",
+      table: "employment_relationship",
+      resourceId: result.employment.id,
+    });
 
     return NextResponse.json({ data: result }, { status: 201 });
   } catch (err) {

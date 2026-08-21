@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useMemo, useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface Option {
@@ -8,24 +8,46 @@ interface Option {
   label: string;
 }
 
+interface EstablishmentOption extends Option {
+  companyId: string;
+}
+
+/**
+ * Cadastro operacional (área Cadastro): trabalhador sempre vinculado a uma
+ * empresa do setor. Unidade sindical ≠ sede/matriz da empresa.
+ */
 export function CreateWorkerForm({
   companies,
   branches,
+  establishments,
 }: {
   companies: Option[];
   branches: Option[];
+  establishments: EstablishmentOption[];
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [companyId, setCompanyId] = useState("");
+
+  const establishmentsForCompany = useMemo(
+    () => establishments.filter((e) => e.companyId === companyId),
+    [establishments, companyId],
+  );
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPending(true);
     setError(null);
     const fd = new FormData(e.currentTarget);
+    const selectedCompany = String(fd.get("companyId") || "");
+    if (!selectedCompany) {
+      setPending(false);
+      setError("Selecione a empresa em que a pessoa trabalha.");
+      return;
+    }
+
     const membershipStatus = String(fd.get("membershipStatus") || "");
-    const companyId = String(fd.get("companyId") || "");
     const body = {
       cpf: String(fd.get("cpf")),
       fullName: String(fd.get("fullName")),
@@ -36,7 +58,8 @@ export function CreateWorkerForm({
       registrationNumber: String(fd.get("registrationNumber") || "") || undefined,
       membershipStatus: membershipStatus || undefined,
       membershipValidFrom: String(fd.get("membershipValidFrom") || "") || undefined,
-      companyId: companyId || undefined,
+      companyId: selectedCompany,
+      establishmentId: String(fd.get("establishmentId") || "") || undefined,
       employmentValidFrom: String(fd.get("employmentValidFrom") || "") || undefined,
       jobTitle: String(fd.get("jobTitle") || "") || undefined,
     };
@@ -57,7 +80,62 @@ export function CreateWorkerForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-xl space-y-4">
+    <form onSubmit={onSubmit} className="max-w-xl space-y-6">
+      <p className="text-body text-ink-2">
+        Trabalhador no sindicato parte da <span className="text-ink">empresa do setor</span>. Sem
+        empresa, não há cadastro. Filiação (sócio) é passo do Atendimento e exige esse vínculo.
+      </p>
+
+      <fieldset className="space-y-3">
+        <legend className="text-component font-semibold text-ink">Empresa (obrigatório)</legend>
+        <Field label="Empresa em que trabalha" name="companyId">
+          <select
+            id="companyId"
+            name="companyId"
+            required
+            value={companyId}
+            onChange={(ev) => setCompanyId(ev.target.value)}
+            className={inputClass}
+          >
+            <option value="">Selecione…</option>
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Estabelecimento (matriz/filial, opcional)" name="establishmentId">
+          <select
+            id="establishmentId"
+            name="establishmentId"
+            disabled={!companyId || establishmentsForCompany.length === 0}
+            className={inputClass}
+          >
+            <option value="">
+              {!companyId
+                ? "Selecione a empresa antes"
+                : establishmentsForCompany.length === 0
+                  ? "Nenhum estabelecimento cadastrado"
+                  : "—"}
+            </option>
+            {establishmentsForCompany.map((est) => (
+              <option key={est.id} value={est.id}>
+                {est.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Início do vínculo" name="employmentValidFrom">
+            <input id="employmentValidFrom" name="employmentValidFrom" type="date" className={inputClass} />
+          </Field>
+          <Field label="Cargo" name="jobTitle">
+            <input id="jobTitle" name="jobTitle" className={inputClass} />
+          </Field>
+        </div>
+      </fieldset>
+
       <fieldset className="space-y-3">
         <legend className="text-component font-semibold text-ink">Pessoa</legend>
         <Field label="CPF" name="cpf">
@@ -77,13 +155,20 @@ export function CreateWorkerForm({
             <input id="phone" name="phone" className={inputClass} />
           </Field>
         </div>
+        <Field label="Matrícula sindical (opcional)" name="registrationNumber">
+          <input id="registrationNumber" name="registrationNumber" className={inputClass} />
+        </Field>
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="text-component font-semibold text-ink">Trabalhador</legend>
-        <Field label="Unidade" name="branchId">
+        <legend className="text-component font-semibold text-ink">Unidade sindical</legend>
+        <p className="text-label text-ink-3">
+          Unidade operacional do sindicato (ex.: Santo André). Não confundir com sede/matriz da
+          empresa. Se vazio, herda a unidade responsável pela empresa.
+        </p>
+        <Field label="Unidade do sindicato" name="branchId">
           <select id="branchId" name="branchId" className={inputClass}>
-            <option value="">—</option>
+            <option value="">Herdar da empresa</option>
             {branches.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.label}
@@ -91,13 +176,14 @@ export function CreateWorkerForm({
             ))}
           </select>
         </Field>
-        <Field label="Matrícula (opcional)" name="registrationNumber">
-          <input id="registrationNumber" name="registrationNumber" className={inputClass} />
-        </Field>
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="text-component font-semibold text-ink">Filiação (dado sensível)</legend>
+        <legend className="text-component font-semibold text-ink">Filiação (Atendimento)</legend>
+        <p className="text-label text-ink-3">
+          Dado sensível (LGPD). Sócio precisa trabalhar em empresa do setor e não ter carta de
+          oposição. Pode ficar para o Atendimento depois do cadastro.
+        </p>
         <Field label="Status inicial" name="membershipStatus">
           <select id="membershipStatus" name="membershipStatus" className={inputClass}>
             <option value="">Sem filiação agora</option>
@@ -111,36 +197,19 @@ export function CreateWorkerForm({
         </Field>
       </fieldset>
 
-      <fieldset className="space-y-3">
-        <legend className="text-component font-semibold text-ink">Vínculo empregatício (opcional)</legend>
-        <Field label="Empresa" name="companyId">
-          <select id="companyId" name="companyId" className={inputClass}>
-            <option value="">—</option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Início" name="employmentValidFrom">
-            <input id="employmentValidFrom" name="employmentValidFrom" type="date" className={inputClass} />
-          </Field>
-          <Field label="Cargo" name="jobTitle">
-            <input id="jobTitle" name="jobTitle" className={inputClass} />
-          </Field>
-        </div>
-      </fieldset>
-
       {error && <p className="text-body text-danger">{error}</p>}
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || companies.length === 0}
         className="h-input rounded-sm bg-petrol-800 px-3 text-body text-shell-ink disabled:opacity-50"
       >
         {pending ? "Salvando…" : "Cadastrar trabalhador"}
       </button>
+      {companies.length === 0 && (
+        <p className="text-body text-danger">
+          Cadastre uma empresa antes de cadastrar trabalhador.
+        </p>
+      )}
     </form>
   );
 }
@@ -157,4 +226,4 @@ function Field({ label, name, children }: { label: string; name: string; childre
 }
 
 const inputClass =
-  "h-input w-full rounded-sm border border-border bg-surface px-2 text-body text-ink";
+  "h-input w-full rounded-sm border border-border bg-surface px-2 text-body text-ink disabled:opacity-50";

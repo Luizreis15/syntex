@@ -50,10 +50,18 @@ describe("emitir e aceitar acesso associado", () => {
       .single();
     inviterId = inviter!.id;
 
+    const { data: company, error: companyError } = await admin
+      .from("company")
+      .insert({ tenant_id: tenant.id, cnpj: unique("00"), legal_name: "Empresa Assoc" })
+      .select()
+      .single();
+    if (companyError) throw companyError;
+
     const created = await createWorkerWithPerson(admin, tenant.id, {
       cpf: unique("1").replace(/\D/g, "").padEnd(11, "0").slice(0, 11),
       fullName: "Associado Teste",
       email: `${unique("assoc")}@example.com`,
+      companyId: company.id,
       membershipStatus: "ativo",
       membershipValidFrom: "2026-01-01",
     });

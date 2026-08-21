@@ -111,12 +111,14 @@ export const workerCreateSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().min(8).optional(),
   municipalityId: z.string().uuid().optional(),
+  /** Unidade sindical (branch do tenant) — escopo interno, não é sede da empresa. */
   branchId: z.string().uuid().optional(),
   registrationNumber: z.string().min(1).optional(),
-  /** Filiação inicial opcional — grava em membership (sensível). */
+  /** Filiação inicial opcional — domínio Atendimento; sensível LGPD. */
   membershipStatus: z.enum(MEMBERSHIP_STATUSES).optional(),
   membershipValidFrom: isoDate.optional(),
-  companyId: z.string().uuid().optional(),
+  /** Obrigatório: trabalhador existe na relação sindical via empresa do setor. */
+  companyId: z.string().uuid(),
   establishmentId: z.string().uuid().optional(),
   employmentValidFrom: isoDate.optional(),
   jobTitle: z.string().min(1).optional(),

@@ -90,8 +90,10 @@ describe("person / worker / membership (Lote 4)", () => {
   it("CPF duplicado no tenant é rejeitado", async () => {
     const root = String(200_000_000 + (Date.now() % 700_000_000)).slice(0, 9);
     const cpf = cpfFromRoot(root);
-    await createWorkerWithPerson(admin, tenant.id, { cpf, fullName: "Primeiro" });
-    await expect(createWorkerWithPerson(admin, tenant.id, { cpf, fullName: "Segundo" })).rejects.toBeTruthy();
+    await createWorkerWithPerson(admin, tenant.id, { cpf, fullName: "Primeiro", companyId });
+    await expect(
+      createWorkerWithPerson(admin, tenant.id, { cpf, fullName: "Segundo", companyId }),
+    ).rejects.toBeTruthy();
   });
 
   it("employment não sobrepõe mesmo worker+empresa", async () => {
@@ -122,6 +124,7 @@ describe("person / worker / membership (Lote 4)", () => {
     const { person } = await createWorkerWithPerson(admin, tenant.id, {
       cpf,
       fullName: "Ana Filiação",
+      companyId,
       membershipStatus: "ativo",
       membershipValidFrom: "2023-01-01",
     });
