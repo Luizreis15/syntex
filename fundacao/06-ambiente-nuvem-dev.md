@@ -12,7 +12,8 @@ Objetivo: testar o Syntex em `https://syntex.veramo.com.br` com o mesmo ritmo de
 | `RESEND_API_KEY` | não | e-mail; vazio = sem envio |
 | `ASAAS_*` / `BRIDGE_*` / `ITAU_*` | não | gateways; stub/mock se vazios |
 
-Depois de criar/alterar env: **Redeploy** (env nova não entra no deploy antigo).
+Depois de criar/alterar **qualquer** `NEXT_PUBLIC_*`: **Redeploy sem Build Cache**.
+Essas variáveis são **embutidas no JS no build** — se o deploy anterior rodou sem elas, o client fica com `createBrowserClient("","")` e o login “pensa” para sempre. Confirme no Network: request para `*.supabase.co` (não URL vazia).
 
 Root do monorepo na Vercel: install na raiz; build `npm run build --workspace=web` (ou equivalente).
 
