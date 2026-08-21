@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { IconBell, IconChevronDown, IconUser } from "@/components/ui/icons";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { signOut } from "@/app/login/sign-out";
 
 export interface TopbarProps {
   userName: string;
@@ -29,13 +29,6 @@ export interface TopbarProps {
  */
 export function Topbar({ userName, userEmail }: TopbarProps) {
   const router = useRouter();
-
-  async function handleSignOut() {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
-  }
 
   return (
     <header className="flex h-topbar shrink-0 items-center justify-end gap-4 border-b border-border bg-surface px-4">
