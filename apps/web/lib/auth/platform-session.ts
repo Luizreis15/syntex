@@ -1,5 +1,4 @@
 import "server-only";
-import { createSupabaseAdminClient } from "@syntex/database";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface PlatformSession {
@@ -10,8 +9,9 @@ export interface PlatformSession {
 }
 
 /**
- * Sessão de control plane. platform_admin não tem tenant —
- * usa admin client só para ler a própria linha (RLS sem policy).
+ * Sessão de control plane. platform_admin não tem tenant.
+ * Lê a própria linha via RLS (policy select_own) — sem service_role.
+ * Operações cross-tenant do /platform ainda usam admin client nas rotas.
  */
 export async function getPlatformSession(): Promise<PlatformSession | null> {
   const supabase = getSupabaseServerClient();
@@ -20,8 +20,7 @@ export async function getPlatformSession(): Promise<PlatformSession | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const admin = createSupabaseAdminClient();
-  const { data, error } = await admin
+  const { data, error } = await supabase
     .from("platform_admin")
     .select("id, email, full_name")
     .eq("auth_user_id", user.id)

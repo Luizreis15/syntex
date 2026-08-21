@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export function LoginForm() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -16,19 +14,26 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
 
-    const supabase = createSupabaseBrowserClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-    setLoading(false);
-    if (signInError) {
-      setError("E-mail ou senha inválidos.");
-      return;
+      if (signInError) {
+        setError("E-mail ou senha inválidos.");
+        return;
+      }
+
+      // Full navigation garante cookies de sessão no middleware (mais estável que
+      // router.push em produção / domínio custom).
+      window.location.assign("/inicio");
+    } catch {
+      setError("Não foi possível conectar ao servidor de autenticação. Tente de novo.");
+    } finally {
+      setLoading(false);
     }
-    router.push("/inicio");
-    router.refresh();
   }
 
   return (
