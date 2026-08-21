@@ -4,11 +4,11 @@ Objetivo: testar o Syntex em `https://syntex.veramo.com.br` com o mesmo ritmo de
 
 ## 1. Vercel — variáveis (Production + Preview)
 
-| Variável | Obrigatória | Notas |
-|----------|-------------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | sim | `https://bsacszrmjueqfjhavkbi.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | sim | chave anon do dashboard |
-| `SUPABASE_SERVICE_ROLE_KEY` | sim* | *necessária para `/platform` (listar tenants, provisionar, cobranças cross-tenant). Nunca no client. |
+| Variável | Obrigatória | Sensitive? | Notas |
+|----------|-------------|------------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | sim | **não** | Precisa no **Build**. Sensitive na Vercel = só runtime → bundle fica `""`. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | sim | **não** | Idem. Anon é pública por design (browser). |
+| `SUPABASE_SERVICE_ROLE_KEY` | sim* | sim | *necessária para `/platform`. Nunca no client. |
 | `RESEND_API_KEY` | não | e-mail; vazio = sem envio |
 | `ASAAS_*` / `BRIDGE_*` / `ITAU_*` | não | gateways; stub/mock se vazios |
 
