@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { SyntexCommand } from "@/components/ui/syntex-command";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
 import {
@@ -28,8 +27,6 @@ export interface TopbarProps {
  * e um botão sem ação real é pior que a ausência dele.
  */
 export function Topbar({ userName, userEmail }: TopbarProps) {
-  const router = useRouter();
-
   return (
     <header className="flex h-topbar shrink-0 items-center justify-end gap-4 border-b border-border bg-surface px-4">
       <div className="flex-1">
@@ -72,7 +69,13 @@ export function Topbar({ userName, userEmail }: TopbarProps) {
               <span className="normal-case text-ink-3">{userEmail}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={handleSignOut}>Sair</DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                void signOut();
+              }}
+            >
+              Sair
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
