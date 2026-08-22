@@ -34,3 +34,9 @@ Isto **emenda** a consequência de ADR-013 sobre “sem menu-fantasma”: fantas
 1. **Itens `built: false` em produção** — hoje permanecem visíveis (inertes) para comunicar o mapa do produto. Podem ficar visíveis **apenas em desenvolvimento**; em produção devem ser ocultados ou condicionados explicitamente a feature/module availability. Sem isso, a chrome de produção promete módulos que não existem.
 2. **Temporalidade após remoção do `SyntexAsOfBar`** — a remoção da barra full-width não elimina o conceito de domínio “vigente em”. **Competência** (mês/ano, pill na topbar, `?competencia=`) e **data de vigência** (as-of de entidades temporais) são conceitos distintos. O padrão de composição será redefinido nas telas temporais (Fases seguintes), não no shell.
 3. **P0 segurança (fora da migração visual)** — falha pré-existente: tabela `platform_notification` sem RLS (teste `structural.test.ts`). Tratar como pendência de segurança separada; não misturar com o trabalho de Visual System v2.
+
+## Congelamento do Shell (aprovado)
+
+Commit de referência em `origin/main`: **`9aeff69`**.
+
+O App Shell v2 (sidebar/7 grupos, topbar, command, competência, unidade, perfil, tokens, tipografia, iconografia Lucide, nav permission-aware) está **congelado**. Fases seguintes (a partir do Dashboard) não alteram esses artefatos incidentalmente. Se for necessário tocar no shell ou em tokens globais, o agente **para, justifica e espera aprovação**. Regra espelhada em `.cursor/rules/syntex-visual-v2-shell-freeze.mdc`.

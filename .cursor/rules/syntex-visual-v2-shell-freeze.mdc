@@ -1,0 +1,45 @@
+---
+description: Shell Visual System v2 congelado — não alterar incidentalmente em fases seguintes
+alwaysApply: true
+---
+
+# Syntex Visual System v2 — Shell aprovado (congelado)
+
+Ponto de retorno oficial: commit `9aeff69` em `origin/main`
+(`feat(web): consolidate Syntex Visual System v2 app shell`).
+
+## Congelado — não “melhorar” de passagem
+
+Nas fases seguintes (Dashboard, Empresa 360, Trabalhador, etc.), **é proibido**
+alterar o App Shell ou a fundação visual global de forma incidental.
+
+Inclui, sem autorização explícita do usuário nesta conversa:
+
+- `apps/web/components/layout/sidebar.tsx`
+- `apps/web/components/layout/topbar.tsx`
+- `apps/web/components/layout/shell.tsx`
+- `apps/web/components/layout/nav-config.ts` (estrutura dos 7 grupos / built flags)
+- `apps/web/components/ui/syntex-command.tsx` (chrome da busca)
+- `apps/web/components/ui/syntex-competence-scope.tsx`
+- `apps/web/app/globals.css` (tokens globais)
+- `apps/web/tailwind.config.ts` (mapeamento de tokens do sistema)
+- `apps/web/app/layout.tsx` (Manrope / JetBrains Mono)
+- `design/SYNTEX-UI.md` (lei visual v2 — só se a mudança for de produto, não estética ad hoc)
+
+## Se achar que precisa tocar no Shell
+
+**Pare.** Justifique em uma mensagem curta (por quê, o que, impacto) e espere
+aprovação. Não reinterpretar o design system a cada módulo.
+
+## O que permanece válido dentro do congelamento
+
+- Consumir tokens/classes já existentes no conteúdo das telas
+- Corrigir bug comprovado que quebra o shell (com menção explícita)
+- Itens de nav `built: false` → `true` ao ligar um módulo real (href + permission),
+  sem redesign visual
+
+## Referência aprovada do Shell
+
+Sidebar (7 grupos) · topbar · busca global permission-aware · competência ·
+unidade · perfil · Manrope + JetBrains Mono · navy/teal · Lucide ·
+navegação permission-aware · workspace claro com sidebar command dark.
