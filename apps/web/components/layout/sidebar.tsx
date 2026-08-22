@@ -2,8 +2,53 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
+import {
+  BarChart3,
+  Briefcase,
+  Building2,
+  CalendarDays,
+  ChevronDown,
+  FileCheck2,
+  Gauge,
+  Gavel,
+  HeartHandshake,
+  LayoutGrid,
+  LifeBuoy,
+  Megaphone,
+  ReceiptText,
+  Scale,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  UserCog,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { NavSection } from "./nav-config";
+import type { NavIconKey, NavSection } from "./nav-config";
+
+const NAV_ICON: Record<NavIconKey, LucideIcon> = {
+  "layout-grid": LayoutGrid,
+  users: Users,
+  "building-2": Building2,
+  scale: Scale,
+  "file-check-2": FileCheck2,
+  "life-buoy": LifeBuoy,
+  "calendar-days": CalendarDays,
+  "shield-check": ShieldCheck,
+  gauge: Gauge,
+  gavel: Gavel,
+  wallet: Wallet,
+  "receipt-text": ReceiptText,
+  "bar-chart-3": BarChart3,
+  megaphone: Megaphone,
+  sparkles: Sparkles,
+  "heart-handshake": HeartHandshake,
+  "user-cog": UserCog,
+  briefcase: Briefcase,
+  settings: Settings,
+};
 
 export interface SidebarProps {
   sections: NavSection[];
@@ -12,42 +57,73 @@ export interface SidebarProps {
   branchLabel: string;
 }
 
+function initials(label: string): string {
+  return label.slice(0, 2).toUpperCase();
+}
+
 /**
- * Sidebar 248px em --shell-950 (design/SYNTEX-UI.md §8). Tenant switcher e
- * branch switcher desta fatia são informativos, não interativos: um único
- * auth user pertence a um único tenant no schema atual, e não há mecanismo
- * de escopo por unidade ligado a nada ainda — um chevron clicável aqui
- * prometeria uma troca que não existe.
+ * Sidebar command dark (Visual System v2). Tenant/branch switcher continua
+ * informativo: um auth user ↔ um tenant no schema atual; sem mecanismo de
+ * troca de unidade — `<div>` com cara de controle da referência, não botão morto.
  */
 export function Sidebar({ sections, tenantName, tenantLegalName, branchLabel }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-screen w-shell shrink-0 flex-col bg-shell-950 text-shell-ink">
-      <div className="border-b border-shell-border px-4 py-4">
-        <p className="font-serif text-component font-semibold text-shell-ink">Syntex</p>
+    <aside className="surface-command flex h-screen w-shell shrink-0 flex-col text-shell-ink">
+      <div className="flex items-center gap-2.5 border-b border-shell-border px-5 py-4">
+        <span className="relative flex size-8 shrink-0 items-center justify-center rounded-sm bg-petrol-600">
+          <span className="pointer-events-none absolute inset-0 rounded-sm bg-teal/40 mix-blend-screen" />
+          <span className="relative text-component font-black text-shell-ink">S</span>
+        </span>
+        <span className="leading-none">
+          <span className="block text-component font-black tracking-tight text-shell-ink">SYNTEX</span>
+          <span className="mt-0.5 block text-label font-bold uppercase tracking-widest text-shell-ink-2">
+            Soluções Sindicais
+          </span>
+        </span>
       </div>
 
-      <div className="border-b border-shell-border px-4 py-3">
-        <p className="truncate text-component font-semibold text-shell-ink" title={tenantLegalName}>
-          {tenantName}
-        </p>
-        <p className="truncate text-label text-shell-ink-2" title={tenantLegalName}>
-          {tenantLegalName}
-        </p>
+      <div
+        role="group"
+        aria-label="Tenant e unidade atuais"
+        className="mx-3 mt-3 flex items-center gap-3 rounded-sm border border-shell-border bg-shell-ink/[0.06] px-3 py-2.5"
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-xs bg-petrol-700 font-mono text-label text-shell-ink">
+          {initials(tenantName)}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-label font-extrabold text-shell-ink" title={tenantLegalName}>
+            {tenantName}
+          </span>
+          <span className="block truncate text-label text-shell-ink-2">{branchLabel}</span>
+        </span>
+        <ChevronDown size={14} className="shrink-0 text-shell-ink-2" aria-hidden />
       </div>
 
-      <div className="border-b border-shell-border px-4 py-3">
-        <p className="text-label uppercase text-shell-ink-2">Unidade sindical</p>
-        <p className="text-body text-shell-ink">{branchLabel}</p>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {sections.map((section, i) => (
-          <div key={section.label} className={cn(i > 0 && "mt-5")}>
-            <p className="px-2 pb-1.5 text-label uppercase tracking-wide text-shell-ink-2">{section.label}</p>
-            <ul className="flex flex-col gap-px">
+      <nav className="mt-4 flex-1 overflow-y-auto px-3 pb-6">
+        {sections.map((section) => (
+          <div key={section.label} className="mb-5">
+            <p className="px-2 pb-1.5 text-label font-bold uppercase tracking-wide text-shell-ink-2/70">
+              {section.label}
+            </p>
+            <ul className="flex flex-col gap-0.5">
               {section.items.map((item) => {
+                const Icon = NAV_ICON[item.icon];
+                if (!item.built) {
+                  return (
+                    <li key={item.label}>
+                      <span
+                        aria-disabled="true"
+                        className="flex w-full cursor-default items-center gap-2.5 rounded-sm px-2 py-1.5 text-dense font-semibold text-shell-ink-2/45"
+                      >
+                        <Icon size={15} className="shrink-0" aria-hidden />
+                        <span className="truncate">{item.label}</span>
+                      </span>
+                    </li>
+                  );
+                }
+
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <li key={item.href}>
@@ -55,11 +131,21 @@ export function Sidebar({ sections, tenantName, tenantLegalName, branchLabel }: 
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "block border-l-2 border-transparent px-2.5 py-1.5 text-body text-shell-ink-2 transition-colors hover:bg-shell-900 hover:text-shell-ink",
-                        active && "border-petrol-600 bg-shell-900 font-medium text-shell-ink",
+                        "relative flex w-full items-center gap-2.5 rounded-sm px-2 py-1.5 text-dense font-semibold transition-colors",
+                        active
+                          ? "bg-shell-active text-shell-ink"
+                          : "text-shell-ink-2 hover:bg-shell-ink/[0.08] hover:text-shell-ink",
                       )}
                     >
-                      {item.label}
+                      {active ? (
+                        <span className="absolute inset-y-1.5 -left-3 w-[3px] rounded-r bg-teal" aria-hidden />
+                      ) : null}
+                      <Icon
+                        size={15}
+                        className={cn("shrink-0", active ? "text-teal" : "text-shell-ink-2")}
+                        aria-hidden
+                      />
+                      <span className="truncate">{item.label}</span>
                     </Link>
                   </li>
                 );

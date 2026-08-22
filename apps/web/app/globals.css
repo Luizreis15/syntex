@@ -3,44 +3,58 @@
 @tailwind utilities;
 
 /*
- * Tokens do Syntex UI — fonte única: design/SYNTEX-UI.md.
+ * Tokens do Syntex UI — fonte única: design/SYNTEX-UI.md (Visual System v2).
  * Nenhum valor aqui é decoração: cada um está documentado na lei do
  * front-end. Não adicione token novo sem editar o documento primeiro.
+ *
+ * v2 (21/08/2026): paleta e tipografia migradas da referência visual
+ * aprovada (Lovable/syntex-vital-core), mantendo os NOMES de v1 — só o
+ * valor mudou. Isso é deliberado: todo componente que já consome
+ * `bg-petrol-800`/`text-ink-3`/etc. herda o novo visual sem precisar ser
+ * tocado. Domínio jurídico (--st-*) é lei de produto, não estética — não
+ * veio da referência e não mudou.
  */
 :root {
-  /* §1 Superfícies e tinta — base neutra levemente quente */
-  --paper: #f6f5f3;
-  --surface: #ffffff;
-  --surface-2: #edebe7;
-  --border: #ddd9d3;
-  --border-strong: #c6c1b8;
+  /* §1 Superfícies — oklch, neutro frio (era neutro quente em v1) */
+  --paper: oklch(0.968 0.006 240);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.945 0.008 240);
+  --border: oklch(0.885 0.011 243);
+  --border-strong: oklch(0.78 0.016 243);
 
-  --ink: #1a1815;
-  --ink-2: #4b4741;
-  --ink-3: #7a756c;
+  --ink: oklch(0.24 0.037 252);
+  --ink-2: oklch(0.4 0.03 250);
+  --ink-3: oklch(0.53 0.026 248);
 
-  /* §2 Petrol — cor de ação: navegação, seleção, foco, vínculo */
-  --petrol-900: #0c303a;
-  --petrol-800: #0f3d4a;
-  --petrol-700: #155263;
-  --petrol-600: #1c6b80;
-  --petrol-100: #e4eef1;
+  /* §2 Petrol — mantém o nome, agora é a escala "syntex" da referência.
+     petrol-600 é a cor de ação (botão primário, link, foco, seleção). */
+  --petrol-900: oklch(0.19 0.035 254); /* midnight */
+  --petrol-800: oklch(0.26 0.049 250); /* navy */
+  --petrol-700: oklch(0.32 0.052 249); /* navy-2 */
+  --petrol-600: oklch(0.56 0.115 236); /* syntex — ação */
+  --petrol-100: oklch(0.93 0.02 234); /* tint de seleção/hover */
 
-  /* Cromo da sidebar (shell) */
-  --shell-950: #14171a;
-  --shell-900: #1c2126;
-  --shell-border: #262b30;
-  --shell-ink: #e7e5e1;
-  --shell-ink-2: #9c9990;
+  /* Accent secundário — rail do item ativo, segunda cor de dado (gráfico) */
+  --teal: oklch(0.7 0.109 187);
+
+  /* Cromo da sidebar (shell) — mesma escala midnight/navy do petrol */
+  --shell-950: oklch(0.19 0.035 254);
+  --shell-900: oklch(0.26 0.049 250);
+  --shell-border: oklch(1 0 0 / 9%);
+  --shell-ink: oklch(0.97 0.006 240);
+  --shell-ink-2: oklch(0.73 0.023 240);
+  --shell-active: color-mix(in oklab, var(--petrol-600) 26%, transparent);
 
   /* §3 Estado de sistema — o software funcionou ou não */
-  --success: #15754e;
-  --warning: #b07208;
-  --danger: #b3372c;
-  --info: #1c6b80;
+  --success: oklch(0.63 0.126 158);
+  --warning: oklch(0.76 0.135 78);
+  --danger: oklch(0.6 0.171 22);
+  --info: oklch(0.7 0.109 187);
 
-  /* §3 Estado de domínio — a situação jurídica da coisa no mundo.
-     Nunca compartilha cor com o bloco acima: 'disputada' não é 'danger'. */
+  /* §3 Estado de domínio — a situação jurídica da coisa no mundo. Lei de
+     produto, inalterada pela migração visual — a referência não define
+     domínio. Nunca compartilha cor com o bloco acima: 'disputada' não é
+     'danger'. */
   --st-reconhecida: #15754e;
   --st-reconhecida-bg: #e8f2ed;
   --st-reivindicada: #b07208;
@@ -52,18 +66,16 @@
   --st-sensivel: #6b3f8c;
   --st-sensivel-bg: #f5f0f8;
 
-  /* §6 Forma — nunca 16/20/24 */
-  --r-xs: 3px;
-  --r-sm: 5px;
-  --r-md: 7px;
-  --shadow-sm: 0 1px 2px rgba(26, 24, 21, 0.05);
-  /* Elevação real só para drawer/modal (§6: "o resto, não"). Mesma base de
-     cor do shadow-sm, mais forte — não é uma cor nova, é a mesma tinta. */
-  --shadow-elevated: 0 12px 32px rgba(26, 24, 21, 0.16), 0 2px 6px rgba(26, 24, 21, 0.08);
-  /* Scrim atrás de drawer/modal/command — mesma tinta de --shell-950, só em
-     rgba() porque o modificador de opacidade do Tailwind (bg-shell-950/40)
-     não funciona sobre uma var() que guarda hex puro. */
-  --overlay: rgba(20, 23, 26, 0.4);
+  /* §6 Forma — v2 amplia o teto de v1 (nunca 16/20/24 permanece válido;
+     3/5/7 vira 4/6/8, seguindo a referência aprovada) */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 6%);
+  /* Elevação real só para drawer/modal (§6: "o resto, não"). */
+  --shadow-elevated: 0 12px 32px oklch(0 0 0 / 14%), 0 2px 6px oklch(0 0 0 / 7%);
+  /* Scrim atrás de drawer/modal/command — mesma tinta de --shell-950. */
+  --overlay: oklch(0.19 0.035 254 / 45%);
 
   /* §4 Tipografia — piso de legibilidade 11.5px / 4.5:1, inegociável */
   --text-page-title: 26px;
@@ -97,6 +109,13 @@
 }
 
 @layer base {
+  :root {
+    /* v2 remove a serifa da UI funcional: font-serif (wordmark, <h1> de
+       página em SyntexPageHeader) vira um alias da sans — nenhum
+       componente que já usa `font-serif` precisa ser tocado. */
+    --font-serif: var(--font-sans);
+  }
+
   * {
     border-color: var(--border);
   }
@@ -121,5 +140,28 @@
      que é onde identificador e valor tabular vivem. */
   .font-mono {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Indicador "ao vivo" — notificação com pendência (topbar). Respeita
+   prefers-reduced-motion: sem pulso, fica só o ponto sólido. */
+@keyframes syntex-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(1.35); }
+}
+.live-dot {
+  animation: syntex-live-pulse 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+}
+
+/* Sidebar command — única superfície deep do shell (Visual System v2). */
+@layer utilities {
+  .surface-command {
+    background: linear-gradient(180deg, var(--shell-900) 0%, var(--shell-950) 100%);
+    color: var(--shell-ink);
   }
 }

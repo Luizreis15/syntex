@@ -62,11 +62,13 @@ export function SyntexCommand() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-input w-full max-w-md items-center gap-2 rounded-sm border border-border bg-surface px-3 text-body text-ink-3 hover:border-border-strong"
+        className="flex h-input w-full max-w-lg items-center gap-2.5 rounded-sm border border-border bg-paper px-3 text-dense font-medium text-ink-3 transition-colors hover:border-petrol-600"
       >
         <IconSearch size={16} />
-        <span className="flex-1 text-left">Buscar empresa, CNPJ, estabelecimento…</span>
-        <kbd className="rounded-xs border border-border px-1.5 py-0.5 font-mono text-label text-ink-3">⌘K</kbd>
+        <span className="flex-1 text-left">Buscar trabalhador, empresa, CPF, CNPJ…</span>
+        <kbd className="hidden rounded-xs border border-border px-1.5 py-0.5 font-mono text-label text-ink-3 sm:inline">
+          ⌘K
+        </kbd>
       </button>
 
       <Command.Dialog

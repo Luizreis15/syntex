@@ -1,74 +1,89 @@
-# Syntex UI — Sistema de Interface
+# Syntex UI — Visual System v2
 
 Lei do front-end. Toda tela do Syntex obedece a este documento. Se algo aqui conflita com um impulso estético no meio de uma tarefa, este documento vence.
+
+**Referência visual aprovada:** implementação Lovable (`syntex-vital-core`) — soberana para linguagem visual. A arquitetura Syntex (domínio, Supabase, RLS, permissões, Server Components, feature ownership) permanece soberana para engenharia. Não copie mocks, APIs ou estrutura de dados da referência.
 
 ---
 
 ## 0. A tese
 
-O Syntex é um **registro de estados jurídicos ao longo do tempo**. Não é um dashboard, não é um CRM, não é um ERP maquiado.
+O Syntex é um **registro de estados jurídicos ao longo do tempo**. Não é um dashboard genérico, não é um CRM, não é um ERP maquiado.
 
-Isso tem consequência visual direta:
+Consequência visual:
 
-> **A distinção do Syntex vive na estrutura, não na cor.**
+> **A distinção do Syntex vive na estrutura e no contraste funcional — não em decoração.**
 
-Cor um concorrente troca numa tarde. As quatro assinaturas abaixo exigem entender o domínio antes de imitar — e por isso são o ativo de marca:
+Assinaturas de produto (v2):
 
-1. **A faixa de vigência** aparece em toda entidade que tem prazo — representação, CCT, regra de contribuição, filiação, vínculo.
-2. **A barra "Vigência em"** é moldura permanente do produto, não um seletor escondido. Tudo na tela é o que valia naquela data.
+1. **Temporalidade na chrome** — competência (mês/ano) e escopo de unidade na topbar; entidades com vigência continuam com faixa/banda no conteúdo.
+2. **Sidebar command dark** — única grande superfície deep por viewport no shell; o workspace é claro.
 3. **Mono em todo identificador** — CNPJ, CPF, processo, Mediador, competência, protocolo, valor.
 4. **Dois sistemas de cor separados**, nunca misturados (ver §3).
+
+### Princípio dark / light
+
+Aplicação predominantemente clara (~70% superfícies claras · ~20% superfícies profundas · ~10% accent/status).
+
+Áreas escuras têm função (sidebar command, hero de dashboard, Intelligence `hero-dark`). Empresa 360 e Trabalhador 360 usam cabeçalhos claros. Não voltar a fundo bege, estética editorial ou serifa em UI funcional.
 
 ---
 
 ## 1. Superfícies e tinta
 
-Base neutra levemente quente. **Não é bege, não é creme, e não é o cinza-azulado padrão de SaaS.**
+Neutro **frio** (oklch). Não é bege, não é creme editorial.
 
 ```css
---paper:        #F6F5F3;   /* fundo da aplicação */
---surface:      #FFFFFF;   /* painéis, tabelas, drawers */
---surface-2:    #EDEBE7;   /* cabeçalho de tabela, campos, zebra */
---border:       #DDD9D3;
---border-strong:#C6C1B8;
+--paper:         oklch(0.968 0.006 240); /* fundo do workspace */
+--surface:       oklch(1 0 0);           /* painéis, tabelas, drawers */
+--surface-2:     oklch(0.945 0.008 240); /* cabeçalho de tabela, zebra, hover */
+--border:        oklch(0.885 0.011 243);
+--border-strong: oklch(0.78 0.016 243);
 
---ink:   #1A1815;   /* texto principal — contraste 15:1 */
---ink-2: #4B4741;   /* secundário — 8:1 */
---ink-3: #7A756C;   /* meta e rótulo — nunca para texto de leitura */
+--ink:   oklch(0.24 0.037 252); /* texto principal */
+--ink-2: oklch(0.4 0.03 250);   /* secundário */
+--ink-3: oklch(0.53 0.026 248); /* meta / rótulo — nunca corpo de leitura */
 ```
 
-## 2. Cor de ação — Petrol
+## 2. Cor de ação — escala Syntex (nome de token: petrol)
 
-Azul-petróleo profundo. Comunica confiança sem ser o cobalto que todo B2B usa, e fica longe o suficiente do verde de estado.
+Os nomes `petrol-*` permanecem por compatibilidade com o código existente; os valores são a escala navy/syntex da referência aprovada.
 
 ```css
---petrol-900:#0C303A;
---petrol-800:#0F3D4A;   /* botão primário, nav ativa */
---petrol-700:#155263;
---petrol-600:#1C6B80;   /* link, foco */
---petrol-100:#E4EEF1;   /* seleção, hover suave */
+--petrol-900: oklch(0.19 0.035 254); /* midnight */
+--petrol-800: oklch(0.26 0.049 250); /* navy */
+--petrol-700: oklch(0.32 0.052 249); /* navy-2 */
+--petrol-600: oklch(0.56 0.115 236); /* ação: botão, link, foco, seleção */
+--petrol-100: oklch(0.93 0.02 234);  /* tint suave */
+
+--teal: oklch(0.7 0.109 187); /* rail do item ativo, accent secundário */
 ```
 
-**Nunca** em grandes superfícies. Petrol é ação, navegação, seleção, foco e vínculo — não é preenchimento.
-
-Cromo escuro da sidebar:
+Cromo da sidebar (command surface):
 
 ```css
---shell-950:#14171A;
---shell-900:#1C2126;
+--shell-950: oklch(0.19 0.035 254);
+--shell-900: oklch(0.26 0.049 250);
+--shell-border: oklch(1 0 0 / 9%);
+--shell-ink: oklch(0.97 0.006 240);
+--shell-ink-2: oklch(0.73 0.023 240);
+--shell-active: color-mix(in oklab, var(--petrol-600) 26%, transparent);
 ```
+
+Fundo da sidebar: gradiente vertical `navy → midnight` (utilitário `surface-command` em CSS). Petrol/syntex em grandes áreas só quando a superfície dark tem função (sidebar, hero).
 
 ## 3. Os dois sistemas de cor
-
-Esta é a regra mais importante do documento e a mais fácil de violar por descuido.
 
 **Estado de sistema** — o software funcionou ou não:
 
 ```css
---success:#15754E;  --warning:#B07208;  --danger:#B3372C;  --info:#1C6B80;
+--success: oklch(0.63 0.126 158);
+--warning: oklch(0.76 0.135 78);
+--danger:  oklch(0.6 0.171 22);
+--info:    oklch(0.7 0.109 187);
 ```
 
-**Estado de domínio** — a situação jurídica da coisa no mundo:
+**Estado de domínio** — a situação jurídica da coisa no mundo (lei de produto; independente da estética v2):
 
 ```css
 --st-reconhecida:#15754E;  --st-reconhecida-bg:#E8F2ED;
@@ -78,128 +93,134 @@ Esta é a regra mais importante do documento e a mais fácil de violar por descu
 --st-sensivel:#6B3F8C;     --st-sensivel-bg:#F5F0F8;
 ```
 
-**`disputada` não é `danger`.** Disputa de base é situação legítima e frequente, não erro do sistema. Vermelho puro fica reservado para ação destrutiva e falha real. Se um dia os dois sistemas colidirem numa tela, o de domínio recua para variação de peso e ícone — nunca se pinta de vermelho.
+**`disputada` não é `danger`.** Disputa de base é situação legítima, não erro do sistema. Vermelho puro fica para ação destrutiva e falha real.
 
-**Estado nunca depende só de cor.** Sempre cor + ícone + texto (WCAG 2.2 AA, e há daltônicos em qualquer diretoria).
+**Estado nunca depende só de cor.** Sempre cor + ícone + texto (WCAG 2.2 AA).
 
 ## 4. Tipografia
 
 ```
-UI e corpo    Inter
-Display       Source Serif 4   — apenas wordmark e título de página
-Identificador IBM Plex Mono
+UI e display   Manrope (sans)
+Identificador  JetBrains Mono
 ```
 
-A serifa é assinatura, **não é tipografia funcional**. Ela aparece em exatamente dois lugares: o wordmark e o `<h1>` da página, no máximo a 28px. Título gigante ocupando 20% da tela é vaidade editorial — o Syntex é ferramenta operacional.
+Source Serif / Inter / IBM Plex **fora** da UI funcional. `font-serif` no CSS é alias de `font-sans` para não quebrar classes legadas.
 
 ```
-Page title    26–28px / 600 / -0.02em    Source Serif 4
-Section       17–18px / 600              Inter
-Component     14–15px / 600              Inter
-Body          14px    / 400              Inter
-Dense body    13px    / 400              Inter   (só em tabela compacta)
-Label         11.5px  / 500 / 0.055em uppercase
+Page title    26px / 700 / -0.02em    Manrope
+Section       18px / 600              Manrope
+Component     15px / 600              Manrope
+Body          14px / 400              Manrope
+Dense body    13px / 400              Manrope   (tabela compacta)
+Label         11.5px / 500 / 0.055em uppercase
 ```
 
-**Piso de legibilidade, inegociável:** nada abaixo de 11.5px, nada abaixo de 4.5:1 de contraste. Quem opera tem 30 anos; quem assina o contrato tem 65. Os dois precisam enxergar.
+**Piso de legibilidade, inegociável:** nada abaixo de 11.5px, nada abaixo de 4.5:1. Quem opera tem 30 anos; quem assina tem 65.
 
-`font-variant-numeric: tabular-nums` em **todo** número que aparece em coluna, comparação ou identificador.
+`font-variant-numeric: tabular-nums` em todo número em coluna, comparação ou identificador.
 
 ## 5. Densidade
 
-Dois modos, tokenizados desde o início:
+- **Comfortable** (padrão) — linha 44px, input 40px, body 14px.
+- **Compact** — linha 36px, input 36px, body 13px.
 
-- **Comfortable** (padrão) — linha de tabela 44px, input 40px, body 14px. Telas de diretoria, ficha de entidade, overview.
-- **Compact** — linha 36px, input 36px, body 13px. Tabelas operacionais grandes: empresas, cobranças, arrecadação.
-
-O usuário alterna. O padrão de cada tela é decidido por quem a usa mais.
+Enterprise-tech: menos vazio editorial; hierarquia por peso tipográfico e agrupamento, não por whitespace excessivo.
 
 ## 6. Forma
 
 ```css
---r-xs:3px; --r-sm:5px; --r-md:7px;   /* nunca 16, 20, 24 */
---shadow-sm:0 1px 2px rgba(26,24,21,.05);
+--r-xs: 4px; --r-sm: 6px; --r-md: 8px;   /* nunca 16, 20, 24 no chrome */
+--shadow-sm: 0 1px 2px oklch(0 0 0 / 6%);
+--shadow-elevated: 0 12px 32px oklch(0 0 0 / 14%), 0 2px 6px oklch(0 0 0 / 7%);
+--overlay: oklch(0.19 0.035 254 / 45%);
 ```
 
-Hierarquia por **borda, superfície e espaçamento** — não por sombra. Drawer e modal podem ter elevação real; o resto, não.
+Hierarquia por borda, superfície e espaçamento — sombra só em drawer/modal/command.
 
 Espaçamento base 4px: `4 8 12 16 20 24 32 40 48`.
 
-`z-index` nomeado desde já: `base · sticky · dropdown · popover · drawer · modal · command · toast`. Nunca um número literal no componente.
+`z-index` nomeado: `base · sticky · dropdown · popover · drawer · modal · command · toast`.
 
 ## 7. Cards
 
-Card existe quando há **agrupamento semântico real**. Um dado não vira um card. Cinco métricas não viram cinco cards — viram uma summary bar com divisores.
+Card existe quando há **agrupamento semântico real**. Um dado não vira card. Cinco métricas não viram cinco cards — viram summary bar com divisores. Proibido template-card.
 
-Transformar tudo em card é a assinatura de interface gerada por template. É proibido.
-
-## 8. Layout
-
-Sem `max-width` centralizado. O Syntex usa a área disponível — é sistema operacional, não site.
+## 8. Layout — App Shell
 
 ```
-Sidebar   248px  (compacta 68px)
-Topbar    58px
+Sidebar   240px  (compacta 68px) — surface-command dark
+Topbar    64px   — surface clara / blur
+Workspace — paper claro
 ```
 
-Anatomia obrigatória de todo workspace de entidade:
+Anatomia do shell:
+
+```
+SyntexAppShell
+├── SyntexSidebar
+│   ├── SyntexBrand
+│   ├── TenantScope (informativo até existir troca real)
+│   ├── NavigationGroup / NavigationItem
+├── SyntexTopbar
+│   ├── SyntexCommand (permission-aware)
+│   ├── CompetenceScope (?competencia=)
+│   ├── BranchScope
+│   ├── Notifications
+│   └── UserMenu
+└── Workspace
+```
+
+Navegação por sete grupos (mapa aprovado). Item `built: false` aparece inerte (sem href); item `built: true` some se faltar permissão. Existência visual ≠ acesso. Ver ADR-017.
+
+Anatomia de workspace de entidade (conteúdo — fases seguintes):
 
 ```
 breadcrumb → título + status → metadata → ações
-summary bar
-tabs de contexto
-conteúdo
+summary bar · tabs · conteúdo
 ```
 
 ## 9. Contratos de componente
 
-O agente **compõe primitives, não inventa**. Todo componente novo nasce como `Syntex*` em `components/ui`, com variants tokenizadas.
+O agente **compõe primitives `Syntex*`, não inventa**.
 
 ```
 <SyntexPageHeader />   <SyntexDataTable />   <SyntexMetric />
 <SyntexStatus />       <SyntexValidityBand /> <SyntexTimeline />
 <SyntexDrawer />       <SyntexCommand />     <SyntexEmptyState />
 <SyntexConfirm />      <SyntexField />       <SyntexSensitive />
+<SyntexCompetenceScope />
 ```
 
-`SyntexValidityBand` e `SyntexStatus` são os dois que carregam a identidade — tratar com cuidado.
+Iconografia do shell: `lucide-react` alinhada à referência. Não adicionar outra lib de ícones.
 
 ## 10. O que o agente NÃO pode fazer
 
 Sem perguntar antes, é proibido:
 
 - inventar cor, radius, sombra, espaçamento ou escala tipográfica fora dos tokens
-- criar um novo estilo de card ou de botão
-- usar gradiente, ilustração decorativa ou emoji em UI
-- adicionar biblioteca visual (ícone, animação, componente) fora da stack
-- usar `shadcn add` e ficar com o default — o primitive é base, não produto
+- criar novo estilo de card ou botão
+- usar ilustração decorativa ou emoji em UI
+- adicionar biblioteca visual fora da stack sem necessidade demonstrada
+- usar `shadcn add` e ficar com o default
 - pôr número literal de cor, tamanho ou z-index em componente
+- copiar mocks/APIs/dados da referência Lovable
+- `if (tenant === 'secabc')` em qualquer camada
 
-Se a tela pede algo que os tokens não cobrem, **pare e pergunte**. É sinal de token faltando ou de tela mal pensada — nunca de exceção justificada.
+Gradiente é permitido **somente** nas superfícies dark funcionais documentadas (sidebar command, hero Intelligence) — não como decoração de card.
 
 ## 11. Estados obrigatórios
 
-Tela não está pronta sem: **loading (skeleton estrutural, não spinner central) · empty contextual · error · sem permissão · teclado · foco visível**.
-
-Empty state descreve o que apareceria ali e oferece a próxima ação. Sem ilustração fofa.
+Tela não está pronta sem: **loading (skeleton) · empty contextual · error · sem permissão · teclado · foco visível**.
 
 ## 12. Confirmação de ação destrutiva
 
-Nunca "Tem certeza?". A confirmação mostra **o que exatamente vai acontecer**, com os dados concretos, e exige motivo quando a ação entra em auditoria.
-
-```
-Cancelar cobrança
-Cobrança  #C-84921   ·   Empresa  XPTO Ltda.   ·   Valor  R$ 4.812,00
-O cancelamento fica registrado permanentemente na auditoria.
-Motivo *  [                    ]
-[Voltar]  [Cancelar cobrança]
-```
+Nunca "Tem certeza?". Mostra o que acontece com dados concretos; exige motivo quando entra em auditoria.
 
 ## 13. Linguagem
 
-O texto é design. `"Cobrança criada."` e não `"Processo executado com sucesso."`. `"Não conseguimos registrar o pagamento. Tente novamente."` e não `"Não foi possível realizar a operação solicitada."`
+`"Cobrança criada."` — não `"Processo executado com sucesso."`
 
-Formatação brasileira — CPF, CNPJ, CEP, telefone, moeda, percentual, data, competência — vive em `lib/formatters`. **Nunca** formatada à mão dentro de um componente.
+Formatação brasileira (CPF, CNPJ, CEP, telefone, moeda, data, competência) vive em `lib/formatters`. Nunca à mão no componente.
 
 ## 14. Organização
 
@@ -207,17 +228,13 @@ Formatação brasileira — CPF, CNPJ, CEP, telefone, moeda, percentual, data, c
 apps/web/
   features/<dominio>/   components · queries · actions · schemas · permissions
   components/ui/        primitives Syntex
-  components/layout/    shell, sidebar, topbar
-  lib/formatters/       CPF, CNPJ, moeda, data, competência
+  components/layout/    shell, sidebar, topbar, nav-config
+  lib/formatters/
   lib/permissions/      <Can permission="..."> — UI não é fonte de segurança
 ```
 
-Server Components por padrão. Client apenas onde há interação real: DataTable, filtros, formulário, command palette.
-
-Estado: servidor em TanStack Query · filtro em `searchParams` (URL é estado, para poder compartilhar e salvar view) · UI local em React · formulário em RHF. Store global só com necessidade concreta demonstrada.
+Server Components por padrão. URL é estado (`searchParams`). Autorização rica na aplicação; RLS só isolamento de tenant.
 
 ## 15. Fora de escopo agora
 
-Nomeado para não voltar como sugestão a cada prompt: Storybook · visual regression / Chromatic · dark mode · PWA · ECharts · virtualização · density switcher na UI (os tokens existem, o controle não) · white label configurável.
-
-Tudo isso é correto e entra depois. Nenhum é pré-requisito da demo.
+Storybook · visual regression · dark mode global · PWA · ECharts · virtualização · density switcher na UI · white label · redesenho de Dashboard/Empresa/Trabalhador nesta fase de shell.

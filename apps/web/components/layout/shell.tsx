@@ -1,15 +1,26 @@
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import {
   isAssociatePortalActor,
   isCompanyPortalActor,
   isOfficePortalActor,
+  type RoleName,
 } from "@syntex/permissions";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { filterNavSections } from "./nav-config";
-import { SyntexAsOfBar } from "@/components/ui/syntex-asof-bar";
+
+const ROLE_LABEL: Record<RoleName, string> = {
+  admin: "Administração",
+  diretoria: "Diretoria",
+  atendimento: "Atendimento",
+  financeiro: "Financeiro",
+  company_master: "Responsável pela conta",
+  company_user: "Empresa",
+  associate: "Associado",
+  office_master: "Escritório",
+  office_user: "Escritório",
+};
 
 /**
  * Server Component: resolve sessão, tenant e branch, filtra a navegação por
@@ -47,6 +58,8 @@ export async function Shell({ children }: { children: React.ReactNode }) {
   }
 
   const sections = filterNavSections(session.grants, session.tenantId);
+  const firstRole = session.grants[0]?.role;
+  const roleLabel = (firstRole && ROLE_LABEL[firstRole]) ?? "Sindicato";
 
   return (
     <div className="flex h-screen">
@@ -57,10 +70,12 @@ export async function Shell({ children }: { children: React.ReactNode }) {
         branchLabel={branchLabel}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <Topbar userName={appUser?.full_name ?? ""} userEmail={appUser?.email ?? ""} />
-        <Suspense fallback={<div className="h-9 shrink-0 border-b border-border bg-surface-2" />}>
-          <SyntexAsOfBar />
-        </Suspense>
+        <Topbar
+          userName={appUser?.full_name ?? ""}
+          userEmail={appUser?.email ?? ""}
+          roleLabel={roleLabel}
+          branchLabel={branchLabel}
+        />
         <main className="min-h-0 flex-1 overflow-y-auto bg-paper">{children}</main>
       </div>
     </div>
