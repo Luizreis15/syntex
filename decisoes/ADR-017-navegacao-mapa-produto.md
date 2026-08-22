@@ -39,4 +39,10 @@ Isto **emenda** a consequência de ADR-013 sobre “sem menu-fantasma”: fantas
 
 Commit de referência em `origin/main`: **`9aeff69`**.
 
-O App Shell v2 (sidebar/7 grupos, topbar, command, competência, unidade, perfil, tokens, tipografia, iconografia Lucide, nav permission-aware) está **congelado**. Fases seguintes (a partir do Dashboard) não alteram esses artefatos incidentalmente. Se for necessário tocar no shell ou em tokens globais, o agente **para, justifica e espera aprovação**. Regra espelhada em `.cursor/rules/syntex-visual-v2-shell-freeze.mdc`.
+O App Shell v2 (sidebar/7 grupos, topbar, command, competência, unidade, perfil, tokens, tipografia, iconografia Lucide, nav permission-aware) está **congelado**. Fases seguintes não alteram esses artefatos incidentalmente. Se for necessário tocar no shell ou em tokens globais, o agente **para, justifica e espera aprovação**. Regra espelhada em `.cursor/rules/syntex-visual-v2-shell-freeze.mdc`.
+
+## Congelamento do Dashboard / Command Center (aprovado)
+
+Commit: **`b7ca674`** — `feat(web): consolidate Syntex command center dashboard` (Fases 2–2.4).
+
+`/painel` (Command Header, métricas reais permission-aware, painel de cobranças, rail de ações, empty states, zero mocks) é a **referência congelada** do Visual System v2 para o Command Center. Alterações futuras no Command Header, na Sidebar ou na base do Dashboard devem ser deliberadas, não incidentais. Regra espelhada em `.cursor/rules/syntex-visual-v2-shell-freeze.mdc`.

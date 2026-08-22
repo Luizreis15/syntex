@@ -1,45 +1,47 @@
 ---
-description: Shell Visual System v2 congelado — não alterar incidentalmente em fases seguintes
+description: Shell + Dashboard Visual System v2 congelados — não alterar incidentalmente
 alwaysApply: true
 ---
 
-# Syntex Visual System v2 — Shell aprovado (congelado)
+# Syntex Visual System v2 — Shell e Dashboard congelados
 
-Ponto de retorno oficial: commit `9aeff69` em `origin/main`
-(`feat(web): consolidate Syntex Visual System v2 app shell`).
+## Pontos de retorno
+
+- **App Shell:** `9aeff69` (`feat(web): consolidate Syntex Visual System v2 app shell`)
+- **Dashboard / Command Center:** `b7ca674` (`feat(web): consolidate Syntex command center dashboard`)
 
 ## Congelado — não “melhorar” de passagem
 
-Nas fases seguintes (Dashboard, Empresa 360, Trabalhador, etc.), **é proibido**
-alterar o App Shell ou a fundação visual global de forma incidental.
+É proibido alterar estes artefatos de forma incidental. Mudança exige pedido
+explícito e justificativa.
 
-Inclui, sem autorização explícita do usuário nesta conversa:
+### Shell
 
 - `apps/web/components/layout/sidebar.tsx`
 - `apps/web/components/layout/topbar.tsx`
 - `apps/web/components/layout/shell.tsx`
-- `apps/web/components/layout/nav-config.ts` (estrutura dos 7 grupos / built flags)
-- `apps/web/components/ui/syntex-command.tsx` (chrome da busca)
+- `apps/web/components/layout/nav-config.ts` (exceção: `built: false` → `true` ao ligar módulo)
+- `apps/web/components/ui/syntex-command.tsx`
 - `apps/web/components/ui/syntex-competence-scope.tsx`
-- `apps/web/app/globals.css` (tokens globais)
-- `apps/web/tailwind.config.ts` (mapeamento de tokens do sistema)
-- `apps/web/app/layout.tsx` (Manrope / JetBrains Mono)
-- `design/SYNTEX-UI.md` (lei visual v2 — só se a mudança for de produto, não estética ad hoc)
+- `apps/web/app/globals.css` (tokens / `surface-command`)
+- `apps/web/tailwind.config.ts`
+- `apps/web/app/layout.tsx`
+- `design/SYNTEX-UI.md` (só com decisão de produto)
 
-## Se achar que precisa tocar no Shell
+### Dashboard / Command Center
 
-**Pare.** Justifique em uma mensagem curta (por quê, o que, impacto) e espere
-aprovação. Não reinterpretar o design system a cada módulo.
+- `apps/web/app/(shell)/painel/page.tsx`
+- `apps/web/features/dashboard/**`
 
-## O que permanece válido dentro do congelamento
+Command Header, métricas flat, painel de cobranças, rail de ações e empty
+states aprovados. Não reinterpretar composição para o próximo módulo.
 
-- Consumir tokens/classes já existentes no conteúdo das telas
-- Corrigir bug comprovado que quebra o shell (com menção explícita)
-- Itens de nav `built: false` → `true` ao ligar um módulo real (href + permission),
-  sem redesign visual
+## Se achar que precisa tocar
 
-## Referência aprovada do Shell
+**Pare.** Justifique (por quê, o que, impacto) e espere aprovação.
 
-Sidebar (7 grupos) · topbar · busca global permission-aware · competência ·
-unidade · perfil · Manrope + JetBrains Mono · navy/teal · Lucide ·
-navegação permission-aware · workspace claro com sidebar command dark.
+## Permitido sem unfreeze
+
+- Consumir tokens/classes existentes em telas novas
+- Bug comprovado que quebra shell/dashboard (mencionar explicitamente)
+- Nav: `built: false` → `true` + href + permission, sem redesign visual
