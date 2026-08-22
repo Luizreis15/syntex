@@ -1,20 +1,26 @@
 /**
  * Seed de desenvolvimento/demonstração — tenant SECABC.
  *
- * Todo CNPJ, nome de empresa, número de carta sindical e número de processo
- * abaixo é FICTÍCIO, criado só para exercitar o domínio e demonstrar a
- * densidade real de uma base sindical. Nenhum dado real do SECABC foi usado
- * (não temos acesso a ele nesta fatia). Os CNPJs têm dígito verificador
- * válido (módulo 11) — plausíveis, nunca reais.
+ * Todo CNPJ, nome de empresa, número de carta sindical, CPF, e-mail e
+ * processo abaixo é FICTÍCIO (DEV). Nenhum dado real do SECABC.
+ * CNPJs/CPFs: dígito verificador válido (módulo 11), gerados
+ * deterministicamente — exclusivamente para DEV.
  *
- * Roda com service_role (bypassa RLS) porque precisa popular auth.users —
- * nunca use este cliente fora de scripts server-only.
+ * Roda com service_role (bypassa RLS) porque precisa popular auth.users e
+ * reconstruir o cenário DEMO — nunca use este cliente fora de scripts
+ * server-only. Após o seed, use apenas as contas DEMO impressas no final;
+ * estado manual no tenant é descartado no reset.
  */
 import { createSupabaseAdminClient } from "@syntex/database";
 import { PERMISSIONS, ROLE_PERMISSIONS, type RoleName } from "@syntex/permissions";
 import { DEMO_COMPANIES, type Scenario } from "./data/demo-companies";
-
-const supabase = createSupabaseAdminClient();
+import { assertSeedEnvironmentAllowed, resolveSeedReferenceDate } from "./lib/seed-safety";
+import {
+  describeDemoVolumes,
+  seedDemoFinance,
+  seedDemoWorkforce,
+  type SeededCompanyRef,
+} from "./seed-demo-workforce";
 
 const ADMIN_EMAIL = "admin@secabc.exemplo.org.br";
 const ADMIN_PASSWORD = "syntex-dev-2026!";
@@ -25,7 +31,25 @@ const DIRETORIA_PASSWORD = "syntex-dev-2026!";
 const PLATFORM_EMAIL = "platform@syntex.exemplo.org.br";
 const PLATFORM_PASSWORD = "syntex-dev-2026!";
 
+let supabase: ReturnType<typeof createSupabaseAdminClient>;
+
 async function main() {
+  const safety = assertSeedEnvironmentAllowed();
+  const referenceDate = resolveSeedReferenceDate();
+  const volumes = describeDemoVolumes(DEMO_COMPANIES.length);
+
+  console.log("============================================================");
+  console.log("ATENÇÃO: este seed apaga e recria dados DEMO do tenant SECABC neste ambiente.");
+  console.log("Após o seed, use apenas as contas DEMO criadas por este script.");
+  console.log(`Supabase host: ${safety.supabaseUrlHost}${safety.isRemote ? " (remoto DEV)" : " (local)"}`);
+  console.log(`Referência temporal: ${referenceDate}`);
+  console.log(
+    `Volumes planejados: ${volumes.employmentActive} vínculos ativos, ${volumes.membershipActive} filiações ativas, ${volumes.chargesOpen} cobranças abertas, ${volumes.companies} empresas.`,
+  );
+  console.log("============================================================");
+
+  supabase = createSupabaseAdminClient();
+
   console.log("Seed: municípios e CNAEs (referência global)");
   const municipalities = await seedMunicipalities();
   const cnaes = await seedCnaes();
@@ -65,13 +89,44 @@ async function main() {
   const registration = await seedRegistration(tenant.id, categories, municipalities, branches);
   const rivalRegistration = await seedRivalRegistration(tenant.id, categories);
   const agreements = await seedAgreements(tenant.id, categories);
-  await seedContributionRules(tenant.id, agreements);
+  const rules = await seedContributionRules(tenant.id, agreements);
 
-  console.log("Seed: empresas de exemplo (mínimo 40, densidade real de demonstração)");
+  console.log("Seed: empresas de exemplo (lista curada, densidade real de demonstração)");
   const ctx: CompanySeedContext = { tenantId: tenant.id, branches, municipalities, cnaes, registration, rivalRegistration, decidedBy: adminUser.appUserId };
-  const created = await seedCompanies(ctx);
+  const companies = await seedCompanies(ctx);
 
-  console.log(`\nSeed concluído. ${created} empresas criadas.`);
+  console.log("Seed: pessoas, trabalhadores, vínculos e filiações (DEMO sintético)");
+  const workforce = await seedDemoWorkforce({
+    admin: supabase,
+    tenantId: tenant.id,
+    companies,
+    branches,
+    municipalities,
+    referenceDate,
+  });
+
+  const agreement2025 = agreements.find((a) => a.valid_from === "2025-05-01");
+  const rule2025 = rules.find((r) => r.collective_agreement_id === agreement2025?.id);
+  if (!agreement2025 || !rule2025) {
+    throw new Error("Seed DEMO: CCT/regra 2025 não encontrada para obrigações.");
+  }
+
+  console.log("Seed: obrigações e cobranças em aberto (sem conciliação falsa)");
+  const finance = await seedDemoFinance({
+    admin: supabase,
+    tenantId: tenant.id,
+    companies,
+    rule: rule2025,
+    agreement: agreement2025,
+    referenceDate,
+  });
+
+  console.log(`\nSeed concluído.`);
+  console.log(`  Empresas:              ${companies.length}`);
+  console.log(`  Pessoas/workers:       ${workforce.people}`);
+  console.log(`  Vínculos ativos:       ${workforce.activeEmployment}`);
+  console.log(`  Filiações ativas:      ${workforce.activeMembership}`);
+  console.log(`  Obrigações / cobranças:${finance.obligations} / ${finance.charges}`);
   console.log(`Login admin:        ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
   console.log(`Login atendimento:  ${ATENDIMENTO_MAUA_EMAIL} / ${ATENDIMENTO_MAUA_PASSWORD} (escopo: Mauá)`);
   console.log(`Login diretoria:    ${DIRETORIA_EMAIL} / ${DIRETORIA_PASSWORD} (demonstração, permissão ampla)`);
@@ -237,18 +292,41 @@ async function seedRoles(tenantId: string) {
   return Object.fromEntries(roleRows.map((r) => [r.name, r])) as unknown as Record<RoleName, { id: string }>;
 }
 
-async function seedPlatformAdmin() {
-  const { data: existing } = await supabase.auth.admin.listUsers();
-  let authUserId = existing.users.find((u) => u.email === PLATFORM_EMAIL)?.id;
-  if (!authUserId) {
-    const { data, error } = await supabase.auth.admin.createUser({
-      email: PLATFORM_EMAIL,
-      password: PLATFORM_PASSWORD,
-      email_confirm: true,
-    });
+/** listUsers pagina em 50 por default — paginar para reaproveitar Auth existente. */
+async function findAuthUserIdByEmail(email: string): Promise<string | null> {
+  const normalized = email.toLowerCase();
+  const perPage = 200;
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
     if (error) throw error;
-    authUserId = data.user.id;
+    const found = data.users.find((u) => u.email?.toLowerCase() === normalized);
+    if (found) return found.id;
+    if (data.users.length < perPage) return null;
   }
+  return null;
+}
+
+async function ensureAuthUser(email: string, password: string): Promise<string> {
+  const existingId = await findAuthUserIdByEmail(email);
+  if (existingId) return existingId;
+
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (!error && data.user) return data.user.id;
+
+  // Corrida / paginação: e-mail já existe mas não apareceu na varredura.
+  if (error && (error.code === "email_exists" || error.status === 422)) {
+    const retryId = await findAuthUserIdByEmail(email);
+    if (retryId) return retryId;
+  }
+  throw error ?? new Error(`Falha ao garantir auth user para ${email}`);
+}
+
+async function seedPlatformAdmin() {
+  const authUserId = await ensureAuthUser(PLATFORM_EMAIL, PLATFORM_PASSWORD);
 
   const { error } = await supabase.from("platform_admin").upsert(
     {
@@ -262,18 +340,7 @@ async function seedPlatformAdmin() {
 }
 
 async function seedUser(tenantId: string, email: string, password: string, fullName: string) {
-  const { data: existing } = await supabase.auth.admin.listUsers();
-  let authUserId = existing.users.find((u) => u.email === email)?.id;
-
-  if (!authUserId) {
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
-    if (error) throw error;
-    authUserId = data.user.id;
-  }
+  const authUserId = await ensureAuthUser(email, password);
 
   const { data: appUser, error } = await supabase
     .from("app_user")
@@ -405,18 +472,30 @@ async function seedAgreements(
   return data;
 }
 
-async function seedContributionRules(tenantId: string, agreements: { id: string; valid_from: string }[]) {
+async function seedContributionRules(
+  tenantId: string,
+  agreements: {
+    id: string;
+    kind: string;
+    mediador_number: string | null;
+    valid_from: string;
+    valid_until: string;
+    base_date: string;
+  }[],
+) {
   const rows = agreements.map((agreement) => ({
     tenant_id: tenantId,
     collective_agreement_id: agreement.id,
     type: "mensalidade" as const,
     valid_from: agreement.valid_from,
+    valid_until: agreement.valid_until,
     calculation_base: "salário base mensal",
     value_type: "percentual" as const,
     value: 1,
   }));
-  const { error } = await supabase.from("contribution_rule").insert(rows);
+  const { data, error } = await supabase.from("contribution_rule").insert(rows).select();
   if (error) throw error;
+  return data;
 }
 
 // ---------------------------------------------------------------------------
@@ -613,8 +692,8 @@ function representationForScenario(
   }
 }
 
-async function seedCompanies(ctx: CompanySeedContext): Promise<number> {
-  let created = 0;
+async function seedCompanies(ctx: CompanySeedContext): Promise<SeededCompanyRef[]> {
+  const seeded: SeededCompanyRef[] = [];
 
   for (let i = 0; i < DEMO_COMPANIES.length; i++) {
     const demo = DEMO_COMPANIES[i]!;
@@ -654,6 +733,10 @@ async function seedCompanies(ctx: CompanySeedContext): Promise<number> {
     const { error: repError } = await supabase.from("union_representation").insert(matrizRows);
     if (repError) throw repError;
 
+    let filialEstablishmentId: string | null = null;
+    let filialBranchName: string | null = null;
+    let filialBranchId: string | null = null;
+
     if (demo.filial) {
       const filialCnae = demo.filial.cnae ?? demo.cnae;
       const filialCnpj = generateCnpj(root, 2);
@@ -676,12 +759,24 @@ async function seedCompanies(ctx: CompanySeedContext): Promise<number> {
       const filialRows = representationForScenario(ctx, filial.id, "stable", i + 100);
       const { error: filialRepError } = await supabase.from("union_representation").insert(filialRows);
       if (filialRepError) throw filialRepError;
+
+      filialEstablishmentId = filial.id;
+      filialBranchName = demo.filial.branch;
+      filialBranchId = ctx.branches[demo.filial.branch]!.id;
     }
 
-    created += 1;
+    seeded.push({
+      id: company.id,
+      branchName: demo.branch,
+      branchId: ctx.branches[demo.branch]!.id,
+      matrizEstablishmentId: matriz.id,
+      filialEstablishmentId,
+      filialBranchName,
+      filialBranchId,
+    });
   }
 
-  return created;
+  return seeded;
 }
 
 main().catch((error) => {
