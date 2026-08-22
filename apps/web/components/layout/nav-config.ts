@@ -1,4 +1,5 @@
 import { can, type PermissionKey, type UserGrant } from "@syntex/permissions";
+import { DASHBOARD_METRIC_PERMISSIONS } from "@/features/dashboard/data";
 
 /**
  * Chave de ícone, não o componente — NAV_SECTIONS atravessa a fronteira
@@ -44,6 +45,14 @@ export type NavIconKey =
  */
 export type NavItem =
   | { label: string; built: true; href: string; permission: PermissionKey; icon: NavIconKey }
+  | {
+      label: string;
+      built: true;
+      href: string;
+      /** Qualquer uma basta (OR) — alinhado ao gate da página. */
+      permissions: readonly PermissionKey[];
+      icon: NavIconKey;
+    }
   | { label: string; built: false; icon: NavIconKey };
 
 export interface NavSection {
@@ -54,7 +63,15 @@ export interface NavSection {
 export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Visão geral",
-    items: [{ label: "Painel", built: true, href: "/painel", permission: "company.read", icon: "layout-grid" }],
+    items: [
+      {
+        label: "Painel",
+        built: true,
+        href: "/painel",
+        permissions: DASHBOARD_METRIC_PERMISSIONS,
+        icon: "layout-grid",
+      },
+    ],
   },
   {
     label: "Relações",
@@ -111,9 +128,18 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
+export function isBuiltNavItemVisible(
+  item: Extract<NavItem, { built: true }>,
+  grants: UserGrant[],
+  tenantId: string,
+): boolean {
+  const keys = "permissions" in item ? item.permissions : [item.permission];
+  return keys.some((permission) => can(grants, permission, tenantId, { tenantId }));
+}
+
 export function filterNavSections(grants: UserGrant[], tenantId: string): NavSection[] {
   return NAV_SECTIONS.map((section) => ({
     ...section,
-    items: section.items.filter((item) => !item.built || can(grants, item.permission, tenantId, { tenantId })),
+    items: section.items.filter((item) => !item.built || isBuiltNavItemVisible(item, grants, tenantId)),
   })).filter((section) => section.items.length > 0);
 }

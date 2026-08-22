@@ -14,9 +14,9 @@ export async function fetchChargesPage(
     .select(
       `
       id, amount, due_date, status, paid_at, payment_method, created_at, obligation_id,
-      obligation:obligation_id(
+      obligation(
         id, competence, status, company_id,
-        company:company_id(id, legal_name, trade_name, cnpj)
+        company(id, legal_name, trade_name, cnpj)
       )
     `,
     )
@@ -42,10 +42,10 @@ export async function fetchChargeDetail(supabase: Client, tenantId: string, id: 
     .select(
       `
       *,
-      obligation:obligation_id(
+      obligation(
         *,
-        company:company_id(id, legal_name, trade_name, cnpj),
-        contribution_rule:contribution_rule_id(type, value_type, value, calculation_base)
+        company(id, legal_name, trade_name, cnpj),
+        contribution_rule(type, value_type, value, calculation_base)
       )
     `,
     )
