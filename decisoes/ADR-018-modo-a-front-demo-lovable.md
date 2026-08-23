@@ -2,7 +2,8 @@
 
 ## Status
 
-Aceito (2026-08-23)
+Aceito (2026-08-23) · **Precedência de fase/frontend: supersedido por ADR-020**  
+(Modo A de redesign global encerrado; documento permanece como histórico.)
 
 ## Contexto
 

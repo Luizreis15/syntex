@@ -1,43 +1,41 @@
----
-description: Modo A — front Lovable-like com mocks DEMO autorizados
-alwaysApply: true
----
+# Syntex — Fase operacional (após frontend aprovado)
 
-# Syntex — Modo visual DEMO (decisão A)
+A fundação de domínio está em `_arquivo_fundacao/`.
+A lei visual rígida / freeze histórico está em `_arquivo_design/`.
 
-A fundação de domínio foi arquivada em `_arquivo_fundacao/`.
-A lei visual rígida / freeze de shell+dashboard foi arquivada em `_arquivo_design/`.
+## Precedência
+
+1. Código atual  
+2. ADRs recentes — **ADR-020** governa fase + frontend  
+3. `docs/OPERATIONAL-BASELINE.md`
+
+`_arquivo_*` = histórico, não lei.
 
 ## Objetivo agora
 
-Entregar front **funcional e premium**, visualmente igual ou muito próximo das
-referências Lovable do projeto (`_ref_syntex-vital-core` e screenshots anexados).
+**Operação real** via vertical slices. Frontend premium está **congelado**
+(`d31dcc1` / `docs/FRONTEND-APPROVED-BASELINE.md`).
 
-Prioridade: **impacto visual e densidade de Command Center / 360**.
+## Autorizado
 
-## Autorizado nesta fase
+- Domínio, API, migrations incrementais, testes, permissões de fatia
+- Substituir DEV_DEMO por queries reais **módulo a módulo** (slice explícito)
+- Novas UIs de módulo **reutilizando** Visual System existente
 
-- Redesign de `/painel`, Empresa 360, Trabalhador 360 e listagens
-- Alterar shell (sidebar/topbar) se a referência Lovable exigir
-- Usar **mocks / dados sintéticos de UI** para completar a composição visual
-  (gráficos, alertas, operação agora, intelligence, tendências)
-- Cards, tints, rails, charts (CSS/SVG; lib de chart só se necessário e pedida)
-- Gradientes e superfícies dark/light como na referência
+## Proibido (sem aprovação PO / ADR)
 
-## Ainda proibido
-
+- Redesign de shell, topbar, sidebar, tokens globais, linguagem visual
+- Novos mocks DEV_DEMO silenciosos em capabilities operacionais
 - `if (tenant === 'secabc')`
-- Quebrar isolamento de tenant / RLS / usar `service_role` no client
-- Commitar secrets
-- Apagar `_arquivo_fundacao` ou histórico git sem pedido explícito
+- Quebrar isolamento tenant / RLS / `service_role` no client
+- Apagar `_arquivo_*` ou histórico git sem pedido explícito
+- Camada de IA operacional nesta fase
 
-## Contrato dos mocks
+## Contrato dos DEMOs já existentes
 
-- Mock de UI deve viver em `features/*/demo-*.ts` ou equivalente claro
-- Comentário no topo: `DEMO UI — substituir por dados reais depois`
-- Preferir misturar seed DEV real + mock só onde faltar dado para o layout
+- Só onde já identificados (Painel / 360s); comentário `DEMO UI — …`
+- Seed DEV ≠ mock (seed é REAL persistido)
 
-## Quando a fase DEMO acabar
+## Próximo domínio
 
-Reativar regras em `_arquivo_design/` e substituir mocks por queries reais,
-módulo a módulo.
+Representação sindical — ver `docs/OPERATIONAL-BASELINE.md`.

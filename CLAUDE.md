@@ -1,22 +1,63 @@
 # Syntex — Contexto do Projeto
 
-Plataforma SaaS multi-tenant de gestão sindical. Cliente fundador: Sindicato dos Comerciários do ABC (SECABC). O produto não é um ERP com telas para sindicato — é a infraestrutura que modela a **relação sindical** entre trabalhador, empresa e entidade.
+Plataforma SaaS multi-tenant de gestão sindical. Cliente fundador: Sindicato dos
+Comerciários do ABC (SECABC). O produto modela a **relação sindical** entre
+trabalhador, empresa e entidade — não é um ERP genérico.
 
-Documentação de fundação arquivada em `_arquivo_fundacao/fundacao/` (não é lei ativa do agente nesta fase).
+## Fontes de verdade (duas camadas)
 
-### Decisão ativa — Modo A (front DEMO / Lovable)
+Não confundir **estado atual** com **norma**.
 
-Objetivo imediato: front funcional e **premium**, visualmente igual ou muito próximo das referências Lovable. Nesta fase é **autorizado** mock de UI no Painel / 360 / listagens. Usar seed DEV real quando existir; mock preenche o restante. Freeze visual e `SYNTEX-UI` rígido estão em `_arquivo_design/`.
+### Implementation truth — “o que existe hoje”
 
-Invariantes de **backend** (tenant, RLS, auth, LGPD no schema) continuam abaixo. A austeridade visual **não** está ativa.
+Evidência do produto real, nesta ordem:
+
+1. Schema / migrations aplicadas  
+2. Código atual  
+3. Testes executáveis  
+4. `docs/OPERATIONAL-BASELINE.md` como **mapa consolidado** do estado observado  
+
+O baseline descreve capability status e prioridades.  
+**Não** substitui schema/código/testes como evidência do que está implementado.
+
+### Normative truth — “como o produto deve funcionar”
+
+Regras vigentes, nesta ordem:
+
+1. Decisão explícita do Product Owner  
+2. ADR mais recente e **aplicável ao assunto**  
+3. Este `CLAUDE.md` / invariantes ativos  
+4. Documentação operacional complementar (baseline, freeze frontend, etc.)  
+
+Código que diverge de um ADR aplicável **não** invalida o ADR.  
+Isso é um **GAP**: registrar e resolver explicitamente (slice/ADR), não “seguir o código”.
+
+### Histórico
+
+`_arquivo_fundacao/` e `_arquivo_design/` = histórico/contexto.  
+Não são norma vigente, salvo referência explícita de documento ativo.  
+Auditorias em `docs/audits/` não são norma.
+
+---
+
+### Decisão ativa — Fase Operacional (Operational Core v1)
+
+**ADR-020.** Frontend premium aprovado e congelado (`d31dcc1` + freeze `3409cdc`).  
+Prioridade: vertical slices de domínio real. **Não** redesenhar shell/painel/360
+incidentalmente. Modo A (ADR-018) encerrou o redesign global.
+
+Mapa do produto: `docs/OPERATIONAL-BASELINE.md`.  
+Próximo domínio de produto: **Representação sindical**.
 
 ---
 
 ## Regra número um
 
-> **Antes de escrever qualquer coisa, pergunte: isso é necessidade sindical, configuração ou particularidade do SECABC?**
+> **Antes de escrever qualquer coisa, pergunte: isso é necessidade sindical,
+> configuração ou particularidade do SECABC?**
 >
-> Necessidade sindical → CORE · Varia entre sindicatos → CONFIGURATION · Específico → FEATURE FLAG · **Nunca** → código customizado.
+> Necessidade sindical → CORE · Varia entre sindicatos → CONFIGURATION ·
+> Específico → FEATURE FLAG · **Nunca** → código customizado.
 
 Não existe `if (tenant === 'secabc')` neste código. Em nenhuma hipótese.
 
@@ -28,106 +69,136 @@ Estes valem para todo código, sempre. Violação é bug, não escolha de estilo
 
 ### 1. Isolamento de tenant
 
-- Toda tabela de tenant tem `tenant_id uuid NOT NULL`.
+- Toda **tabela de tenant** tem `tenant_id uuid NOT NULL`.
 - Toda tabela de tenant tem `UNIQUE (id, tenant_id)`.
-- **Toda FK entre tabelas de tenant é composta:** `FOREIGN KEY (parent_id, tenant_id) REFERENCES parent (id, tenant_id)`. Isso faz o *banco* recusar referência cross-tenant. RLS protege leitura; FK composta protege integridade. As duas coisas são necessárias.
-- Tabelas globais (dados de referência: municípios, CNAE) não têm `tenant_id` e são read-only para a aplicação.
+- **Toda FK entre tabelas de tenant é composta:**
+  `FOREIGN KEY (parent_id, tenant_id) REFERENCES parent (id, tenant_id)`.
+- Tabelas globais (municípios, CNAE) não têm `tenant_id` e são read-only para a app.
 - RLS habilitada em **todas** as tabelas, sem exceção.
+- **Exceção nominal (ADR-019):** `platform_notification` é **control-plane-scoped**.
+  `tenant_id` é filtro/contexto opcional (`NULL` = global do CP), **não** ownership.
+  Nullable `tenant_id` em outras tabelas **não** é permitido sem ADR + allowlist
+  `control_plane_nullable_tenant_allowlist()`.
 
 ### 2. Autorização
 
-- **A autorização rica vive na camada de aplicação**, tipada e testável: role → permission → scope (`own` | `branch` | `department` | `tenant` | `global`).
-- **RLS carrega apenas o isolamento de tenant.** Simples, barata, e é a garantia que nunca pode falhar. Não replique regra de negócio em policy SQL — regra em dois lugares diverge.
-- A aplicação web usa a chave `anon` + JWT do usuário. **Nunca** `service_role`.
-- Workers recebem conexão com contexto de tenant explícito. `service_role` genérica fazendo query livre em todos os tenants é proibida.
-- `worker.read` não implica `worker.export`. Exportação e operação em massa são permissões próprias.
+- **A autorização rica vive na camada de aplicação**, tipada e testável:
+  role → permission → scope (`own` | `branch` | `department` | `tenant` | `global`).
+- **RLS carrega apenas o isolamento de tenant.**
+- A aplicação web usa a chave `anon` + JWT do usuário. **Nunca** `service_role`
+  no client. Control plane usa admin client **só** após `getPlatformSession`.
+- Workers recebem conexão com contexto de tenant explícito.
+- `worker.read` não implica `worker.export`.
+
+**Padrão real de permission no código (não existe `<Can permission>`):**
+
+| Camada | Mecanismo |
+|--------|-----------|
+| API | `requireSession` + `checkPermission` / `can` |
+| Pages RSC | `hasAnyGrant` / `getPlatformSession` / actors de portal |
+| Nav | `can` / `filterNavSections` em `nav-config.ts` |
+
+Gate de UI **não** substitui autorização no server + RLS.
 
 ### 3. Temporalidade
 
-Regras sindicais são temporais por natureza. Uma CCT de 2026 não sobrescreve a de 2025.
-
-- Entidades com vigência usam `valid_from timestamptz NOT NULL` e `valid_until timestamptz NULL` (null = vigente).
-- Sobreposição de vigência é impedida no banco com `EXCLUDE USING gist` (requer `btree_gist`).
-- **Toda obrigação gerada carrega um snapshot imutável da regra que a originou** (JSONB). Guia emitida precisa ser reproduzível mesmo depois de a regra mudar.
+- Entidades com vigência: `valid_from` / `valid_until` (null = vigente).
+- Sobreposição impedida com `EXCLUDE USING gist` (`btree_gist`).
+- Obrigação gerada carrega **snapshot imutável** da regra (JSONB).
 
 ### 4. Eventos e consistência
 
-- Todo write que produz efeito externo grava um `outbox_event` **na mesma transação**. Sem outbox, o evento se perde entre o commit no Postgres e o publish na fila.
-- Consumidores são idempotentes. Webhook duplicado nunca gera efeito duplo.
+- Write com efeito externo → `outbox_event` na mesma transação.
+- Consumidores idempotentes.
 
 ### 5. Auditoria e dado sensível
 
-- **Filiação sindical é dado pessoal sensível pela LGPD** (art. 5º, II). Dado de saúde e jurídico também. Isso não é compliance — é requisito de schema.
-- Toda tabela e coluna tem classificação: `publico` | `interno` | `pessoal` | `sensivel` | `financeiro` | `juridico` | `saude`.
-- **O audit log registra a classificação do dado acessado.** Sem isso é impossível responder, no prazo de 3 dias úteis da ANPD, quais titulares e quais categorias de dado foram expostos.
-- Dado de saúde e jurídico ficam em **tabela separada**, nunca como coluna em `person`. Tabela separada = policy separada = auditoria trivial.
-- Audit log é append-only. Sem UPDATE, sem DELETE.
+- Filiação sindical = dado sensível (LGPD). Saúde/jurídico em tabelas separadas.
+- Classificação de dados; audit log append-only; classificação no acesso.
 
 ### 6. Migrations
 
-- Todas versionadas em git, em SQL puro. Nunca alteradas manualmente no painel.
+- SQL puro versionado em git. Nunca editar migration histórica aplicada.
 - Fluxo: migration → PR → review → staging → produção.
 
 ---
 
 ## Definition of Done
 
-Uma feature não está pronta quando a tela funciona. Está pronta quando tem:
-
-UX · permissão · validação · migration · audit · evento · testes · tratamento de erro · observabilidade · documentação
+UX · permissão · validação · migration · audit · evento · testes · erro ·
+observabilidade · documentação
 
 ---
 
 ## Stack
 
-- **Web:** Next.js (App Router), TypeScript, Tailwind, shadcn/ui (Radix como base de primitive, nunca como produto final — ver `design/SYNTEX-UI.md`), React Hook Form, Zod
-- **Estado:** TanStack Query (estado de servidor), TanStack Table (`SyntexDataTable`), URL/`searchParams` para filtro e view salva
+- **Web:** Next.js (App Router), TypeScript, Tailwind, primitives Syntex (Radix
+  só como base), React Hook Form, Zod (`@syntex/validation`)
+- **Estado:** TanStack Query / Table; URL `searchParams` para filtro
 - **Dados:** Supabase / PostgreSQL, RLS, Storage, Auth
-- **Migrations:** SQL puro via Supabase CLI. Não use gerador de migration de ORM — RLS, policies e constraints `EXCLUDE` são mais claros e mais corretos em SQL escrito à mão.
-- **Tipos:** gerados do schema (`supabase gen types typescript`)
-- **Testes:** Vitest (unit/integration), Playwright (e2e)
+- **Migrations:** SQL via Supabase CLI
+- **Tipos:** `supabase gen types typescript`
+- **Testes:** Vitest · Playwright (e2e ainda fino)
 - **E-mail:** Resend
 
 Não adicione dependência fora desta lista sem perguntar antes.
+
+**Design system:** tokens e lei visual histórica em `_arquivo_design/`
+(`SYNTEX-UI-v2.1.md`). O **baseline visual aprovado** é o código em `d31dcc1`
++ `docs/FRONTEND-APPROVED-BASELINE.md` + **ADR-020**. Não redesenhar shell,
+topbar, sidebar, tokens globais ou linguagem visual em slices operacionais
+sem aprovação explícita do PO.
 
 ---
 
 ## O que NÃO construir agora
 
-Resistir explicitamente, mesmo que pareça útil no momento:
+Resistir explicitamente:
 
-- Workflow engine genérico — implemente máquinas de estado concretas primeiro
-- Plataforma de integração com circuit breaker e health — defina só a interface da porta; a maquinaria entra no segundo provedor
+- Workflow engine genérico — máquinas de estado concretas primeiro
+- Plataforma de integração com circuit breaker/health prematura
 - Tesouraria / contas a pagar — integrar, não construir
-- Portais externos, control plane, camada de IA, model registry
-- Abstração para variação que ainda não foi observada duas vezes
+- **Syntex Intelligence / camada operacional de IA** não faz parte do Operational
+  Core atual e **não deve ser expandida incidentalmente** (só após processos reais
+  suficientes e decisão explícita). Model registry prematuro: evitar.
+- Abstração para variação observada uma única vez
 
-Regra: hardcode com fronteira limpa até aparecer a **segunda** evidência de variação. Um `if` isolado atrás de uma interface bem nomeada é mais barato de generalizar depois do que uma engine genérica é de simplificar.
+### Já existentes — não “construir do zero”; não expandir sem slice
+
+| Superfície | Estado |
+|------------|--------|
+| Portais `/associado`, `/empresa`, `/escritorio` | **Já fazem parte da arquitetura** |
+| Control plane `/platform` | **Já existe** (tenants, cobranças, notificações, gateway) |
+
+Expandir portais ou control plane só com vertical slice explícito.
+
+Regra: hardcode com fronteira limpa até a **segunda** evidência de variação.
 
 ---
 
 ## Ambientes e segredos
 
-- O projeto Supabase atual é **DEV**. Produção será um projeto separado. Não aponte código para produção.
-- Segredos em `.env.local`, que está no `.gitignore`. `.env.example` só com placeholders.
-- `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` são públicas por design — podem ir para o client.
-- `SUPABASE_SERVICE_ROLE_KEY` e `RESEND_API_KEY` são secretas. Nunca no client, nunca em commit, nunca em log.
+- Supabase atual = **DEV**. Produção = projeto separado.
+- Segredos em `.env.local` (gitignored). `.env.example` só placeholders.
+- `NEXT_PUBLIC_*` Supabase = públicos por design.
+- `SUPABASE_SERVICE_ROLE_KEY` / `RESEND_API_KEY` = secretas. Nunca no client/commit/log.
 
 ---
 
-## Front-end — modo DEMO (Lovable)
+## Front-end na fase operacional
 
-Referência visual soberana nesta fase: telas Lovable do projeto (`_ref_syntex-vital-core` + screenshots). Tokens/arquivos em `_arquivo_design/` são histórico, não bloqueio.
-
-Prioridades:
-
-- Densidade e acabamento premium (Command Center, Empresa 360, Trabalhador 360)
-- Cards, tints, rails, dark surfaces, charts SVG/CSS — autorizados
-- Mock de UI marcado com `DEMO UI — substituir por dados reais depois`
-- Formatação BR continua em `lib/formatters`
-- Feature ownership em `features/<dominio>/`
-- `<Can permission="...">` na UI; autorização real permanece na API/banco
-- Piso de legibilidade: ≥ 11.5px · contraste legível
+- Baseline congelado: ver ADR-020 e `docs/FRONTEND-APPROVED-BASELINE.md`.
+- Novos módulos **reutilizam** Visual System e patterns existentes.
+- Blocos **DEV_DEMO** já identificados (Painel / 360s) podem permanecer até
+  slice de substituição; **não** criar novos DEMOs silenciosos em capabilities
+  operacionais.
+- Taxonomia: `REAL` | `DEV_DEMO` | `NOT_IMPLEMENTED` | `PLANNED`
+  (definições em `docs/OPERATIONAL-BASELINE.md`). **Seed ≠ mock**
+  (seed = dado persistido no modelo real).
+- Formatação BR: `lib/formatters`. Features: `features/<dominio>/`.
+- Nav: `built:true` / `built:false` (ADR-017). Atendimento → `/filiacao` é
+  **placeholder** (`NOT_IMPLEMENTED`) — corrigir em Slice 0.3; não alterar nav
+  neste documento.
 
 Não inventar `if (tenant === 'secabc')`.
 
@@ -135,7 +206,9 @@ Não inventar `if (tenant === 'secabc')`.
 
 ## Como trabalhar
 
-- **Vertical slice, não camada por camada.** Uma fatia fina que atravessa UX → API → permissão → banco → audit → evento → teste vale mais que um backend completo sem tela.
-- **Pare e pergunte** quando: houver duas modelagens defensáveis para uma entidade de domínio; for preciso uma dependência nova; a tarefa exigir decisão de negócio que não está nos docs.
-- **Escreva o ADR quando tomar a decisão**, em `decisoes/ADR-NNN-titulo.md`. Não deixe decisão estrutural viver só na memória do commit.
-- Commits pequenos e descritivos. Um conceito por commit.
+- **Vertical slice**, não camada por camada.
+- Pare e pergunte em modelagem ambígua, dependência nova, ou decisão de negócio
+  ausente dos docs.
+- Toda decisão estrutural → ADR em `decisoes/ADR-NNN-titulo.md`.
+- Commits pequenos; um conceito por commit.
+- Ordem de construção: ver `docs/OPERATIONAL-BASELINE.md` (WAVEs 0–6).

@@ -38,14 +38,22 @@ Isto **emenda** a consequência de ADR-013 sobre “sem menu-fantasma”: fantas
    A falha real do `structural.test.ts` era: helper tratava qualquer coluna `tenant_id` como tabela de tenant e exigia `UNIQUE (id, tenant_id)`, mas `platform_notification` é **control-plane-scoped** (`tenant_id` nullable = contexto opcional / global).  
    Correção: exceção **nominal** na allowlist `control_plane_nullable_tenant_allowlist()` (só `platform_notification`); tabelas com `tenant_id NOT NULL` seguem exigindo UNIQUE; qualquer outro `tenant_id` nullable fora da allowlist falha o structural.
 
-## Congelamento do Shell (aprovado)
+## Congelamento do Shell (histórico)
 
-Commit de referência em `origin/main`: **`9aeff69`**.
+Commit de referência original: **`9aeff69`**.  
+**Precedência atual de freeze visual:** ADR-020 + `docs/FRONTEND-APPROVED-BASELINE.md`
+(`d31dcc1` / `3409cdc`). ADR-018 interrompeu temporariamente este freeze; ADR-020
+reestabelece o congelamento após aprovação do PO.
 
-O App Shell v2 (sidebar/7 grupos, topbar, command, competência, unidade, perfil, tokens, tipografia, iconografia Lucide, nav permission-aware) está **congelado**. Fases seguintes não alteram esses artefatos incidentalmente. Se for necessário tocar no shell ou em tokens globais, o agente **para, justifica e espera aprovação**. Regra espelhada em `.cursor/rules/syntex-visual-v2-shell-freeze.mdc`.
+O App Shell (sidebar/7 grupos, topbar, command, competência, unidade, perfil, tokens,
+tipografia, iconografia Lucide, nav permission-aware) não deve ser alterado
+incidentalmente em slices operacionais. Se for necessário tocar no shell ou em
+tokens globais: **parar, justificar e obter aprovação do PO** (ADR-020).
 
-## Congelamento do Dashboard / Command Center (aprovado)
+## Congelamento do Dashboard / Command Center (histórico)
 
-Commit: **`b7ca674`** — `feat(web): consolidate Syntex command center dashboard` (Fases 2–2.4).
+Commit original: **`b7ca674`**. Superfície atual aprovada está em **`d31dcc1`**
+(inclui Modo A / DEMO rotulado no Painel). **Precedência:** ADR-020.
 
-`/painel` (Command Header, métricas reais permission-aware, painel de cobranças, rail de ações, empty states, zero mocks) é a **referência congelada** do Visual System v2 para o Command Center. Alterações futuras no Command Header, na Sidebar ou na base do Dashboard devem ser deliberadas, não incidentais. Regra espelhada em `.cursor/rules/syntex-visual-v2-shell-freeze.mdc`.
+Alterações no Command Center / shell em fase operacional: deliberadas + aprovação PO.
+DEV_DEMO no Painel permanece até slice de substituição (não criar novos DEMOs).
