@@ -1,17 +1,46 @@
 import { notFound, redirect } from "next/navigation";
+import { hasAnyGrant } from "@syntex/permissions";
 import { getSession } from "@/lib/auth/session";
 import { resolveRepresentation } from "@/lib/domain/resolve-representation";
+import type { DomainState } from "@/components/ui/syntex-status";
+import {
+  buildEmpresaSummary,
+  buildWorkerMix,
+  fetchEmpresa360Stats,
+} from "@/features/companies/empresa-360-data";
+import { Empresa360Header } from "@/features/companies/components/empresa-360-header";
+import { Empresa360Tabs } from "@/features/companies/components/empresa-360-tabs";
+import {
+  buildRailFromTimeline,
+  Empresa360StatusRail,
+} from "@/features/companies/components/empresa-360-status-rail";
+import { Empresa360Arrecadacao } from "@/features/companies/components/empresa-360-arrecadacao";
+import { Empresa360Workers } from "@/features/companies/components/empresa-360-workers";
+import { Empresa360Pendencias } from "@/features/companies/components/empresa-360-pendencias";
+import { Empresa360Intelligence } from "@/features/companies/components/empresa-360-intelligence";
+import { Empresa360Timeline } from "@/features/companies/components/empresa-360-timeline";
+import { Empresa360Representacao } from "@/features/companies/components/empresa-360-representacao";
 
-/**
- * Tela ainda crua (prompt 02 §"Não faz parte deste prompt": Empresa 360 é
- * prompt 03). Só trocado aqui o suficiente para não quebrar visualmente com
- * a troca de tokens — cor, raio e espaçonto literais nunca, mesmo numa tela
- * que continua feia de propósito.
- */
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function asDomainState(status: string | null | undefined): DomainState | null {
+  if (
+    status === "reconhecida" ||
+    status === "reivindicada" ||
+    status === "disputada" ||
+    status === "perdida" ||
+    status === "sensivel"
+  ) {
+    return status;
+  }
+  return null;
+}
+
+/**
+ * Empresa 360 — Modo A (Lovable-like): seed real + DEMO UI rotulado.
+ */
 export default async function CompanyDetailPage({
   params,
   searchParams,
@@ -22,11 +51,24 @@ export default async function CompanyDetailPage({
   const session = await getSession();
   if (!session) redirect("/login");
 
+  if (!hasAnyGrant(session.grants, "company.read")) {
+    return (
+      <div className="px-6 py-12">
+        <p className="text-component font-semibold text-ink">Empresa indisponível</p>
+        <p className="mt-2 max-w-lg text-body text-ink-2">
+          Seu perfil não tem permissão para visualizar empresas.
+        </p>
+      </div>
+    );
+  }
+
   const date = searchParams.date ?? todayIso();
 
   const { data: company } = await session.supabase
     .from("company")
-    .select("*")
+    .select(
+      "*, municipality:municipality_id(name, state_code), cnae:primary_cnae_id(code, description)",
+    )
     .eq("tenant_id", session.tenantId)
     .eq("id", params.id)
     .single();
@@ -39,180 +81,155 @@ export default async function CompanyDetailPage({
     .eq("company_id", company.id)
     .order("kind");
 
-  const matriz = (establishments ?? []).find((e) => e.kind === "matriz") ?? establishments?.[0] ?? null;
+  const matriz =
+    (establishments ?? []).find((e) => e.kind === "matriz") ?? establishments?.[0] ?? null;
 
-  const resolution = matriz
-    ? await resolveRepresentation(session.supabase, session.tenantId, matriz.id, date)
+  const [resolution, stats, timelineRes] = await Promise.all([
+    matriz
+      ? resolveRepresentation(session.supabase, session.tenantId, matriz.id, date)
+      : Promise.resolve(null),
+    fetchEmpresa360Stats(session.supabase, session.tenantId, company.id),
+    matriz
+      ? session.supabase
+          .from("union_representation")
+          .select("id, status, basis, valid_from, valid_until, evidence")
+          .eq("tenant_id", session.tenantId)
+          .eq("establishment_id", matriz.id)
+          .order("valid_from", { ascending: true })
+      : Promise.resolve({
+          data: [] as {
+            id: string;
+            status: string;
+            basis: string | null;
+            valid_from: string;
+            valid_until: string | null;
+            evidence: string | null;
+          }[],
+        }),
+  ]);
+
+  const timeline = timelineRes.data ?? [];
+  const domainStatus = asDomainState(resolution?.status ?? null);
+  const displayName = company.trade_name ?? company.legal_name;
+  const municipality = company.municipality as unknown as {
+    name: string;
+    state_code: string;
+  } | null;
+  const cnae = company.cnae as unknown as { code: string; description: string } | null;
+  const cityLabel = municipality
+    ? `${municipality.name}/${municipality.state_code}`
+    : company.address_city && company.address_state
+      ? `${company.address_city}/${company.address_state}`
+      : null;
+
+  const summary = buildEmpresaSummary(stats);
+  const workerMix = buildWorkerMix(stats);
+  const railStops = buildRailFromTimeline(timeline, resolution?.status ?? null);
+  const sinceLabel =
+    timeline.find((r) => r.valid_until === null)?.valid_from?.slice(0, 10) ?? null;
+  const sinceFmt = sinceLabel
+    ? sinceLabel.slice(8, 10) + "/" + sinceLabel.slice(5, 7) + "/" + sinceLabel.slice(0, 4)
     : null;
 
-  const { data: timeline } = matriz
-    ? await session.supabase
-        .from("union_representation")
-        .select("*")
-        .eq("tenant_id", session.tenantId)
-        .eq("establishment_id", matriz.id)
-        .order("valid_from", { ascending: false })
-    : { data: [] };
+  const matrizMunicipality = matriz
+    ? ((matriz as unknown as { municipality: { name: string; state_code: string } | null })
+        .municipality)
+    : null;
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 p-6">
-      <div>
-        <p className="text-label uppercase text-ink-3">Cadastro · Empresas</p>
-        <h1 className="text-component font-semibold text-ink">{company.trade_name ?? company.legal_name}</h1>
-        <p className="font-mono text-body text-ink-2">{company.cnpj}</p>
-        {company.legal_name && company.trade_name ? (
-          <p className="text-body text-ink-2">{company.legal_name}</p>
-        ) : null}
-      </div>
+    <div className="min-h-full bg-paper">
+      <Empresa360Header
+        companyId={company.id}
+        name={displayName}
+        legalName={company.trade_name ? company.legal_name : null}
+        cnpj={company.cnpj}
+        cityLabel={
+          matrizMunicipality
+            ? `${matrizMunicipality.name}/${matrizMunicipality.state_code}`
+            : cityLabel
+        }
+        cnaeLabel={cnae?.code ?? null}
+        establishmentCount={(establishments ?? []).length}
+        domainStatus={domainStatus}
+        summary={summary}
+      />
 
-      <section className="rounded-sm border border-border bg-surface p-4">
-        <h2 className="mb-2 text-component font-semibold text-ink">Contato e endereço</h2>
-        <dl className="grid gap-2 text-body sm:grid-cols-2">
-          <div>
-            <dt className="text-label text-ink-3">Telefone</dt>
-            <dd>{company.phone ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-label text-ink-3">CEP</dt>
-            <dd className="font-mono">{company.address_zip ?? "—"}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-label text-ink-3">Endereço</dt>
-            <dd>
-              {[company.address_street, company.address_neighborhood, company.address_city, company.address_state]
-                .filter(Boolean)
-                .join(" · ") || "—"}
-            </dd>
-          </div>
-        </dl>
-      </section>
+      <Empresa360Tabs
+        visaoGeral={
+          <>
+            <Empresa360StatusRail
+              stops={railStops}
+              domainStatus={domainStatus}
+              sinceLabel={sinceFmt}
+              showClaimSplit={domainStatus === "disputada" || domainStatus === "reivindicada"}
+            />
 
-      <section className="rounded-sm border border-border bg-surface p-4">
-        <h2 className="mb-2 text-component font-semibold text-ink">Estabelecimentos</h2>
-        <div className="space-y-2">
-          {(establishments ?? []).map((e) => (
-            <div key={e.id} className="flex items-center justify-between text-body">
-              <span>
-                {e.kind === "matriz" ? "Matriz" : "Filial"} — {e.cnpj}
-              </span>
-              <span className="text-ink-2">
-                {(e as unknown as { municipality: { name: string; state_code: string } | null }).municipality
-                  ?.name ?? "—"}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
+            <Empresa360Representacao
+              date={date}
+              establishments={(establishments ?? []).map((e) => {
+                const m = (e as unknown as { municipality: { name: string } | null }).municipality;
+                return {
+                  id: e.id,
+                  kind: e.kind,
+                  cnpj: e.cnpj,
+                  municipalityName: m?.name ?? null,
+                };
+              })}
+              resolution={resolution}
+              timeline={timeline.map((r) => ({
+                id: r.id,
+                status: r.status,
+                basis: r.basis,
+                valid_from: r.valid_from,
+                valid_until: r.valid_until,
+                evidence: r.evidence,
+              }))}
+              mode="compact"
+            />
 
-      <section className="rounded-md border border-border bg-surface p-4" data-testid="representation-resolution">
-        <h2 className="mb-2 text-component font-semibold text-ink">Representação na data</h2>
-        <div className="space-y-4">
-          <form className="flex items-end gap-2">
-            <div className="flex-1 space-y-1">
-              <label htmlFor="date" className="text-label text-ink-3">
-                Data de referência
-              </label>
-              <input
-                id="date"
-                name="date"
-                type="date"
-                defaultValue={date}
-                className="h-input w-full rounded-sm border border-border bg-surface px-2 text-body text-ink"
-              />
-            </div>
-            <button type="submit" className="h-input rounded-sm border border-border-strong px-3 text-body text-ink">
-              Consultar
-            </button>
-          </form>
-
-          {resolution && (
-            <div className="space-y-3 rounded-sm border border-border p-4">
-              <div className="flex items-center gap-2 text-body">
-                <span className="font-semibold">{resolution.status}</span>
-                {resolution.basis && <span className="text-ink-2">base: {resolution.basis}</span>}
+            <div className="grid gap-5 xl:grid-cols-3">
+              <div className="xl:col-span-2">
+                <Empresa360Arrecadacao companyId={company.id} />
               </div>
-
-              {resolution.status === "disputada" && resolution.conflicts.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-body font-medium">Representações concorrentes nesta data:</p>
-                  {resolution.conflicts.map((c) => (
-                    <div key={c.id} className="rounded-sm bg-surface-2 p-2 text-body">
-                      <span className="font-semibold">{c.status}</span>{" "}
-                      <span className="font-mono text-ink-2">
-                        {c.valid_from} → {c.valid_until ?? "atual"}
-                      </span>
-                      <p className="mt-1">{c.evidence}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {resolution.status === "sem_representacao" && (
-                <p className="text-body text-ink-2">Nenhuma representação vigente nesta data.</p>
-              )}
-
-              {resolution.representation && <p className="text-body">{resolution.evidence}</p>}
-
-              {resolution.agreement ? (
-                <div className="space-y-2 border-t border-border pt-3 text-body">
-                  <p className="font-medium">
-                    CCT vigente ({resolution.agreement.kind.toUpperCase()}
-                    {resolution.agreement.mediador_number
-                      ? ` · Mediador ${resolution.agreement.mediador_number}`
-                      : ""}
-                    )
-                  </p>
-                  <p className="font-mono text-ink-2">
-                    {resolution.agreement.valid_from} → {resolution.agreement.valid_until} · data-base{" "}
-                    {resolution.agreement.base_date}
-                  </p>
-                  {resolution.contributionRules.length > 0 ? (
-                    <ul className="space-y-1 text-ink-2" data-testid="contribution-rules">
-                      {resolution.contributionRules.map((rule) => (
-                        <li key={rule.id}>
-                          <span className="font-medium text-ink">{rule.type}</span>
-                          {" · "}
-                          {rule.calculation_base}
-                          {" · "}
-                          <span className="font-mono">
-                            {rule.value_type === "percentual" ? `${rule.value}%` : rule.value}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-ink-2">CCT sem regra de contribuição vigente nesta data.</p>
-                  )}
-                </div>
-              ) : (
-                resolution.representation && (
-                  <p className="border-t border-border pt-3 text-body text-ink-2">
-                    Nenhuma CCT vigente encontrada para esta data (categorias/território/data).
-                  </p>
-                )
-              )}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="rounded-md border border-border bg-surface p-4">
-        <h2 className="mb-2 text-component font-semibold text-ink">Linha do tempo da representação</h2>
-        <div className="space-y-2">
-          {(timeline ?? []).map((r) => (
-            <div key={r.id} className="flex items-center justify-between text-body">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">{r.status}</span>
-                <span>{r.basis}</span>
+              <div className="space-y-5">
+                <Empresa360Workers
+                  total={stats.workersActive}
+                  source={workerMix.source}
+                  rows={workerMix.rows}
+                />
+                <Empresa360Pendencias charges={stats.openCharges} />
               </div>
-              <span className="font-mono text-ink-2">
-                {r.valid_from} → {r.valid_until ?? "atual"}
-              </span>
             </div>
-          ))}
-          {(timeline ?? []).length === 0 && <p className="text-body text-ink-2">Sem histórico de representação.</p>}
-        </div>
-      </section>
-    </main>
+
+            <Empresa360Intelligence workersHint={stats.workersActive} />
+            <Empresa360Timeline />
+          </>
+        }
+        representacao={
+          <Empresa360Representacao
+            date={date}
+            establishments={(establishments ?? []).map((e) => {
+              const m = (e as unknown as { municipality: { name: string } | null }).municipality;
+              return {
+                id: e.id,
+                kind: e.kind,
+                cnpj: e.cnpj,
+                municipalityName: m?.name ?? null,
+              };
+            })}
+            resolution={resolution}
+            timeline={timeline.map((r) => ({
+              id: r.id,
+              status: r.status,
+              basis: r.basis,
+              valid_from: r.valid_from,
+              valid_until: r.valid_until,
+              evidence: r.evidence,
+            }))}
+            mode="tab"
+          />
+        }
+      />
+    </div>
   );
 }

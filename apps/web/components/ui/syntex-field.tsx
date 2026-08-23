@@ -44,7 +44,7 @@ function FieldChrome({ label, required, hint, error, width = "full", className, 
 }
 
 const inputBase =
-  "h-input w-full rounded-sm border border-border bg-surface px-2.5 text-body text-ink outline-none placeholder:text-ink-3 focus-visible:border-petrol-600 disabled:bg-surface-2 disabled:text-ink-3";
+  "h-input w-full rounded-control border border-border bg-surface px-2.5 text-body text-ink outline-none placeholder:text-ink-3 transition-colors hover:border-border-strong focus-visible:border-petrol-600 disabled:bg-surface-2 disabled:text-ink-3";
 
 type BaseFieldProps = Pick<FieldChromeProps, "label" | "required" | "hint" | "error" | "width" | "className">;
 

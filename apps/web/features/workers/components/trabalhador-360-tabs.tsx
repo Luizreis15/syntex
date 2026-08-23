@@ -1,0 +1,59 @@
+"use client";
+
+import { useState, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import {
+  TRABALHADOR_360_TABS,
+  type Trabalhador360Tab,
+} from "@/features/workers/demo-trabalhador-360";
+
+export function Trabalhador360Tabs({
+  visaoGeral,
+  associacao,
+  vinculos,
+}: {
+  visaoGeral: ReactNode;
+  associacao: ReactNode;
+  vinculos: ReactNode;
+}) {
+  const [tab, setTab] = useState<Trabalhador360Tab>("Visão geral");
+
+  return (
+    <>
+      <div className="sticky top-0 z-10 border-b border-border bg-surface/90 px-6 backdrop-blur-md xl:px-8">
+        <div className="flex gap-1 overflow-x-auto">
+          {TRABALHADOR_360_TABS.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={cn(
+                "relative shrink-0 px-3 py-3.5 text-[0.8rem] font-bold transition-colors",
+                tab === t ? "text-ink" : "text-ink-3 hover:text-ink",
+              )}
+            >
+              {t}
+              {tab === t ? (
+                <span className="absolute inset-x-2 bottom-0 h-[2.5px] rounded-t bg-petrol-600" />
+              ) : null}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-6 py-6 xl:px-8">
+        {tab === "Visão geral" ? visaoGeral : null}
+        {tab === "Associação" ? associacao : null}
+        {tab === "Vínculos" ? vinculos : null}
+        {tab !== "Visão geral" && tab !== "Associação" && tab !== "Vínculos" ? (
+          <div className="surface-raised px-6 py-12 text-center">
+            <p className="text-component font-semibold text-ink">{tab}</p>
+            <p className="mt-2 text-body text-ink-2">
+              Superfície DEMO — conteúdo desta aba entra na próxima fatia.
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </>
+  );
+}

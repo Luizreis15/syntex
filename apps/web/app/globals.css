@@ -3,19 +3,15 @@
 @tailwind utilities;
 
 /*
- * Tokens do Syntex UI — fonte única: design/SYNTEX-UI.md (Visual System v2).
- * Nenhum valor aqui é decoração: cada um está documentado na lei do
- * front-end. Não adicione token novo sem editar o documento primeiro.
+ * Tokens do Syntex UI — fonte única: design/SYNTEX-UI.md
+ * Visual System v2.1 — Premium Surface Language (22/08/2026).
  *
- * v2 (21/08/2026): paleta e tipografia migradas da referência visual
- * aprovada (Lovable/syntex-vital-core), mantendo os NOMES de v1 — só o
- * valor mudou. Isso é deliberado: todo componente que já consome
- * `bg-petrol-800`/`text-ink-3`/etc. herda o novo visual sem precisar ser
- * tocado. Domínio jurídico (--st-*) é lei de produto, não estética — não
- * veio da referência e não mudou.
+ * Nomes de v1/v2 preservados onde possível; aliases semânticos
+ * (--r-control, --shadow-raised, --tint-*) são a gramática nova.
+ * Domínio jurídico (--st-*) não muda.
  */
 :root {
-  /* §1 Superfícies — oklch, neutro frio (era neutro quente em v1) */
+  /* §1 Superfícies — oklch, neutro frio */
   --paper: oklch(0.972 0.007 245);
   --surface: oklch(1 0 0);
   --surface-2: oklch(0.952 0.008 245);
@@ -26,18 +22,16 @@
   --ink-2: oklch(0.4 0.03 250);
   --ink-3: oklch(0.53 0.026 248);
 
-  /* §2 Petrol — mantém o nome, agora é a escala "syntex" da referência.
-     petrol-600 é a cor de ação (botão primário, link, foco, seleção). */
-  --petrol-900: oklch(0.19 0.035 254); /* midnight */
-  --petrol-800: oklch(0.26 0.049 250); /* navy */
-  --petrol-700: oklch(0.32 0.052 249); /* navy-2 */
-  --petrol-600: oklch(0.56 0.115 236); /* syntex — ação */
-  --petrol-100: oklch(0.93 0.02 234); /* tint de seleção/hover */
+  /* §2 Petrol / ação */
+  --petrol-900: oklch(0.19 0.035 254);
+  --petrol-800: oklch(0.26 0.049 250);
+  --petrol-700: oklch(0.32 0.052 249);
+  --petrol-600: oklch(0.56 0.115 236);
+  --petrol-100: oklch(0.93 0.02 234);
 
-  /* Accent secundário — rail do item ativo, segunda cor de dado (gráfico) */
   --teal: oklch(0.7 0.109 187);
 
-  /* Cromo da sidebar (shell) — mesma escala midnight/navy do petrol */
+  /* Cromo da sidebar */
   --shell-950: oklch(0.19 0.035 254);
   --shell-900: oklch(0.26 0.049 250);
   --shell-border: oklch(1 0 0 / 9%);
@@ -45,16 +39,13 @@
   --shell-ink-2: oklch(0.73 0.023 240);
   --shell-active: color-mix(in oklab, var(--petrol-600) 26%, transparent);
 
-  /* §3 Estado de sistema — o software funcionou ou não */
+  /* §3 Estado de sistema */
   --success: oklch(0.63 0.126 158);
   --warning: oklch(0.76 0.135 78);
   --danger: oklch(0.6 0.171 22);
   --info: oklch(0.7 0.109 187);
 
-  /* §3 Estado de domínio — a situação jurídica da coisa no mundo. Lei de
-     produto, inalterada pela migração visual — a referência não define
-     domínio. Nunca compartilha cor com o bloco acima: 'disputada' não é
-     'danger'. */
+  /* §3 Estado de domínio — inalterado */
   --st-reconhecida: #15754e;
   --st-reconhecida-bg: #e8f2ed;
   --st-reivindicada: #b07208;
@@ -66,26 +57,53 @@
   --st-sensivel: #6b3f8c;
   --st-sensivel-bg: #f5f0f8;
 
-  /* §6 Forma — v2 amplia o teto de v1 (nunca 16/20/24 permanece válido;
-     3/5/7 vira 4/6/8, seguindo a referência aprovada) */
+  /* § Semantic tints — ~6–8% da cor base (selected / attention / tracks) */
+  --tint-teal: color-mix(in oklab, var(--teal) 8%, transparent);
+  --tint-blue: color-mix(in oklab, var(--petrol-600) 7%, transparent);
+  --tint-green: color-mix(in oklab, var(--success) 7%, transparent);
+  --tint-amber: color-mix(in oklab, var(--warning) 8%, transparent);
+  --tint-red: color-mix(in oklab, var(--danger) 7%, transparent);
+
+  /* Accent rail strokes (sólidos discretos) */
+  --rail-teal: var(--teal);
+  --rail-blue: var(--petrol-600);
+  --rail-green: var(--success);
+  --rail-amber: var(--warning);
+  --rail-red: var(--danger);
+
+  /* § Forma — radius semântico v2.1 (aliases xs/sm/md preservados) */
   --r-xs: 4px;
-  --r-sm: 6px;
-  --r-md: 8px;
-  --shadow-sm: 0 1px 2px oklch(0.24 0.037 252 / 3%);
-  /* Elevação real só para drawer/modal (§6: "o resto, não"). */
-  --shadow-elevated: 0 12px 32px oklch(0 0 0 / 14%), 0 2px 6px oklch(0 0 0 / 7%);
-  /* Scrim atrás de drawer/modal/command — mesma tinta de --shell-950. */
+  --r-sm: 8px; /* control */
+  --r-md: 12px; /* panel */
+  --r-lg: 14px; /* feature / command */
+  --r-control: var(--r-sm);
+  --r-panel: var(--r-md);
+  --r-feature: var(--r-lg);
+
+  /* Elevation — 3 níveis (sem Material pesado) */
+  --shadow-surface: 0 0 0 0 transparent;
+  --shadow-raised:
+    0 1px 2px oklch(0.24 0.037 252 / 4%),
+    0 8px 24px oklch(0.24 0.037 252 / 5%);
+  --shadow-overlay:
+    0 4px 12px oklch(0.19 0.035 254 / 10%),
+    0 16px 40px oklch(0.19 0.035 254 / 12%);
+  /* Compat v2 */
+  --shadow-sm: var(--shadow-raised);
+  --shadow-elevated: var(--shadow-overlay);
+
   --overlay: oklch(0.19 0.035 254 / 45%);
 
-  /* §4 Tipografia — piso de legibilidade 11.5px / 4.5:1, inegociável */
+  /* Tipografia — presença sem bold excessivo */
   --text-page-title: 26px;
   --text-section: 18px;
   --text-component: 15px;
   --text-body: 14px;
   --text-dense: 13px;
   --text-label: 11.5px;
+  --text-metric: 28px;
+  --text-metric-sm: 20px;
 
-  /* §6 z-index nomeado — nunca número literal em componente */
   --z-base: 0;
   --z-sticky: 10;
   --z-dropdown: 20;
@@ -95,11 +113,13 @@
   --z-command: 60;
   --z-toast: 70;
 
-  /* §5 Densidade — dois modos tokenizados desde já, 'comfortable' ativo.
-     O controle na UI fica para depois; a variável não. */
   --row-h: 44px;
   --input-h: 40px;
   --density-body: var(--text-body);
+
+  /* Progress track */
+  --track: var(--surface-2);
+  --track-dark: oklch(1 0 0 / 10%);
 }
 
 [data-density="compact"] {
@@ -110,9 +130,6 @@
 
 @layer base {
   :root {
-    /* v2 remove a serifa da UI funcional: font-serif (wordmark, <h1> de
-       página em SyntexPageHeader) vira um alias da sans — nenhum
-       componente que já usa `font-serif` precisa ser tocado. */
     --font-serif: var(--font-sans);
   }
 
@@ -135,16 +152,11 @@
     outline-offset: 2px;
   }
 
-  /* §4 "font-variant-numeric: tabular-nums em todo número que aparece em
-     coluna, comparação ou identificador" — aplicado globalmente à mono,
-     que é onde identificador e valor tabular vivem. */
   .font-mono {
     font-variant-numeric: tabular-nums;
   }
 }
 
-/* Indicador "ao vivo" — notificação com pendência (topbar). Respeita
-   prefers-reduced-motion: sem pulso, fica só o ponto sólido. */
 @keyframes syntex-live-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.45; transform: scale(1.35); }
@@ -158,8 +170,40 @@
   }
 }
 
-/* Sidebar command — degradê vertical quase imperceptível (Fase 2.3). */
+/*
+ * Surface language v2.1 — hierarquia reutilizável.
+ * Preferir estas classes a inventar bg/border/shadow locais.
+ */
 @layer utilities {
+  .surface-base {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .surface-raised {
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    border-radius: var(--r-panel);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .surface-inset {
+    background: var(--surface-2);
+    color: var(--ink);
+    border-radius: var(--r-control);
+  }
+
+  .surface-selected {
+    background: var(--tint-blue);
+    color: var(--ink);
+  }
+
+  .surface-attention {
+    background: var(--tint-amber);
+    color: var(--ink);
+  }
+
   .surface-command {
     background: linear-gradient(
       180deg,
@@ -169,4 +213,61 @@
     );
     color: var(--shell-ink);
   }
+
+  .surface-dark {
+    background: linear-gradient(
+      165deg,
+      oklch(0.2 0.042 252) 0%,
+      oklch(0.165 0.036 252) 100%
+    );
+    color: var(--shell-ink);
+    border: 1px solid var(--shell-border);
+    border-radius: var(--r-panel);
+    box-shadow: var(--shadow-raised);
+  }
+
+  /* Header de entidade 360 — identidade clara com tint petrol */
+  .surface-identity {
+    background: linear-gradient(
+      100deg,
+      color-mix(in oklab, var(--petrol-600) 7%, var(--surface)),
+      var(--surface) 55%
+    );
+  }
+
+  .hairline-grid-light {
+    background-image:
+      linear-gradient(
+        to right,
+        color-mix(in oklab, var(--petrol-600) 10%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--petrol-600) 10%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 44px 44px;
+  }
+
+  /* Row language — listas / tabelas */
+  .row-hover {
+    transition: background-color 120ms ease;
+  }
+  .row-hover:hover {
+    background: var(--surface-2);
+  }
+  .row-selected {
+    background: var(--tint-blue);
+  }
+  .row-attention {
+    background: var(--tint-amber);
+  }
+
+  /* Tint fills */
+  .bg-tint-teal { background-color: var(--tint-teal); }
+  .bg-tint-blue { background-color: var(--tint-blue); }
+  .bg-tint-green { background-color: var(--tint-green); }
+  .bg-tint-amber { background-color: var(--tint-amber); }
+  .bg-tint-red { background-color: var(--tint-red); }
 }

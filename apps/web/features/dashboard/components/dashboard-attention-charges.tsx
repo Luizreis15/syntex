@@ -5,6 +5,9 @@ import { formatData } from "@/lib/formatters/data";
 import { formatCnpj } from "@/lib/formatters/cnpj";
 import { cn } from "@/lib/utils";
 import { DashboardPanel } from "@/features/dashboard/components/dashboard-panel";
+import { DashboardChargeSummaryStrip } from "@/features/dashboard/components/dashboard-charge-summary-strip";
+import { DashboardDueDistribution } from "@/features/dashboard/components/dashboard-due-distribution";
+import type { ChargeIntel } from "@/features/dashboard/charge-intel";
 
 export interface AttentionChargeRow {
   id: string;
@@ -24,49 +27,58 @@ const STATUS_LABEL: Record<string, string> = {
 
 function ChargeList({ rows }: { rows: AttentionChargeRow[] }) {
   return (
-    <ul className="divide-y divide-border/60">
-      {rows.map((row) => (
-        <li key={row.id}>
-          <Link
-            href={`/cobrancas/${row.id}`}
-            className="flex items-center gap-4 px-5 py-2.5 transition-colors hover:bg-surface-2"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-dense font-semibold text-ink">{row.companyName}</span>
-              {row.companyCnpj ? (
-                <span className="font-mono text-label text-ink-3">{formatCnpj(row.companyCnpj)}</span>
-              ) : null}
-            </span>
-            <span className="hidden text-right sm:block">
-              <span className="block font-mono text-dense font-semibold text-ink">
-                {formatMoeda(row.amount)}
-              </span>
-              <span className="font-mono text-label text-ink-3">venc. {formatData(row.dueDate)}</span>
-            </span>
-            <span
+    <ul className="divide-y divide-border/40">
+      {rows.map((row) => {
+        const overdue = row.status === "vencido";
+        return (
+          <li key={row.id}>
+            <Link
+              href={`/cobrancas/${row.id}`}
               className={cn(
-                "shrink-0 rounded-xs px-2 py-0.5 text-label font-semibold uppercase",
-                row.status === "vencido" && "bg-danger/10 text-danger",
-                row.status === "pendente" && "bg-warning/10 text-warning",
-                row.status === "pago" && "bg-success/10 text-success",
-                row.status === "cancelado" && "bg-surface-2 text-ink-3",
+                "row-hover relative flex items-center gap-3 px-5 py-2.5",
+                overdue && "bg-tint-red",
               )}
             >
-              {STATUS_LABEL[row.status] ?? row.status}
-            </span>
-          </Link>
-        </li>
-      ))}
+              {overdue ? (
+                <span className="absolute bottom-2 left-0 top-2 w-0.5 rounded-full bg-rail-red" aria-hidden />
+              ) : null}
+              <span className="min-w-0 flex-1 pl-1">
+                <span className="block truncate text-dense font-semibold text-ink">{row.companyName}</span>
+                {row.companyCnpj ? (
+                  <span className="font-mono text-label text-ink-3">{formatCnpj(row.companyCnpj)}</span>
+                ) : null}
+              </span>
+              <span className="hidden shrink-0 text-right sm:block">
+                <span className="block font-mono text-dense font-semibold tabular-nums text-ink">
+                  {formatMoeda(row.amount)}
+                </span>
+                <span className="font-mono text-label text-ink-3">venc. {formatData(row.dueDate)}</span>
+              </span>
+              <span
+                className={cn(
+                  "shrink-0 rounded-control px-2 py-0.5 text-label font-semibold uppercase tracking-wide",
+                  overdue && "bg-tint-red text-danger",
+                  row.status === "pendente" && "bg-tint-amber text-warning",
+                  row.status === "pago" && "bg-tint-green text-success",
+                  row.status === "cancelado" && "bg-surface-2 text-ink-3",
+                )}
+              >
+                {STATUS_LABEL[row.status] ?? row.status}
+              </span>
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }
 
 function ChargesEmptyPremium({ canOpenList }: { canOpenList: boolean }) {
   return (
-    <div className="px-5 py-3.5">
+    <div className="px-5 py-4">
       <div className="flex items-start gap-2.5">
-        <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-xs bg-petrol-100 text-petrol-600">
-          <Receipt size={13} aria-hidden />
+        <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-control bg-tint-blue text-petrol-600">
+          <Receipt size={14} aria-hidden />
         </div>
         <div className="min-w-0">
           <p className="text-dense font-semibold text-ink">Nenhuma cobrança exige atenção agora</p>
@@ -89,20 +101,24 @@ function ChargesEmptyPremium({ canOpenList }: { canOpenList: boolean }) {
 }
 
 /**
- * Painel principal — dados reais ou empty state premium (só após query zero).
+ * Painel principal — raised + rail de atenção + strip tintada + distribuição.
  */
 export function DashboardAttentionCharges({
   openRows,
   recentRows,
+  intel,
 }: {
   openRows: AttentionChargeRow[];
   recentRows: AttentionChargeRow[];
+  intel: ChargeIntel | null;
 }) {
   if (openRows.length > 0) {
     return (
       <DashboardPanel
+        variant="raised"
+        rail="amber"
         title="Cobranças que pedem atenção"
-        subtitle="Pendentes e vencidas · por vencimento"
+        subtitle="Pendentes, vencidas e próximas do vencimento"
         action={
           <Link
             href="/cobrancas"
@@ -112,6 +128,8 @@ export function DashboardAttentionCharges({
           </Link>
         }
       >
+        {intel ? <DashboardChargeSummaryStrip intel={intel} /> : null}
+        {intel ? <DashboardDueDistribution buckets={intel.buckets} /> : null}
         <ChargeList rows={openRows} />
       </DashboardPanel>
     );
@@ -120,6 +138,7 @@ export function DashboardAttentionCharges({
   if (recentRows.length > 0) {
     return (
       <DashboardPanel
+        variant="raised"
         title="Cobranças recentes"
         subtitle="Fila em aberto vazia · últimos registros"
         action={
@@ -137,7 +156,7 @@ export function DashboardAttentionCharges({
   }
 
   return (
-    <DashboardPanel title="Cobranças" subtitle="Consulta realizada nesta sessão">
+    <DashboardPanel variant="raised" title="Cobranças" subtitle="Consulta realizada nesta sessão">
       <ChargesEmptyPremium canOpenList />
     </DashboardPanel>
   );

@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
 import { hasAnyGrant } from "@syntex/permissions";
 import { getSession } from "@/lib/auth/session";
-import { SyntexPageHeader } from "@/components/ui/syntex-page-header";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
-import { fetchCompaniesPage } from "@/features/companies/data";
+import {
+  fetchCompaniesPage,
+  fetchCompaniesStatusSummary,
+} from "@/features/companies/data";
 import { CompaniesTable } from "@/features/companies/companies-table";
+import { EmpresasListHeader } from "@/features/companies/components/empresas-list-header";
 
 const PAGE_SIZE = 20;
 
@@ -18,49 +21,39 @@ export default async function EmpresasPage({
 
   if (!hasAnyGrant(session.grants, "company.read")) {
     return (
-      <div>
-        <SyntexPageHeader breadcrumbs={[{ label: "Cadastro" }, { label: "Empresas" }]} title="Empresas" />
-        <div className="p-6">
-          <SyntexEmptyState
-            title="Sem permissão para ver empresas"
-            description="Sua conta não tem a permissão company.read. Peça a um administrador para conceder acesso."
-          />
-        </div>
+      <div className="px-6 py-12">
+        <SyntexEmptyState
+          title="Sem permissão para ver empresas"
+          description="Sua conta não tem a permissão company.read. Peça a um administrador para conceder acesso."
+        />
       </div>
     );
   }
 
   const pageIndex = Math.max(0, Number(searchParams.page ?? "1") - 1);
-  const page = await fetchCompaniesPage(session.supabase, session.tenantId, session.grants, {
-    q: searchParams.q,
-    municipio: searchParams.municipio,
-    status: searchParams.status,
-    pageIndex,
-    pageSize: PAGE_SIZE,
-  });
-
   const canCreate =
     hasAnyGrant(session.grants, "company.master.provision") ||
     hasAnyGrant(session.grants, "company.write");
 
+  const [page, summary] = await Promise.all([
+    fetchCompaniesPage(session.supabase, session.tenantId, session.grants, {
+      q: searchParams.q,
+      municipio: searchParams.municipio,
+      status: searchParams.status,
+      pageIndex,
+      pageSize: PAGE_SIZE,
+    }),
+    fetchCompaniesStatusSummary(session.supabase, session.tenantId, session.grants),
+  ]);
+
   return (
-    <div>
-      <SyntexPageHeader
-        breadcrumbs={[{ label: "Cadastro" }, { label: "Empresas" }]}
-        title="Empresas"
-        metadata={<span className="text-body text-ink-2">{page.rowCount} registro(s)</span>}
-        actions={
-          canCreate ? (
-            <a
-              href="/empresas/nova"
-              className="inline-flex h-input items-center rounded-sm bg-petrol-800 px-3 text-body text-shell-ink"
-            >
-              Nova empresa
-            </a>
-          ) : null
-        }
+    <div className="min-h-full bg-paper">
+      <EmpresasListHeader
+        summary={summary}
+        activeStatus={searchParams.status ?? null}
+        canCreate={canCreate}
       />
-      <div className="p-6">
+      <div className="px-6 py-5 xl:px-8">
         <CompaniesTable page={page} pageIndex={pageIndex} q={searchParams.q ?? ""} />
       </div>
     </div>

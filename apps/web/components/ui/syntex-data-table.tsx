@@ -40,6 +40,8 @@ export interface SyntexDataTableProps<TData extends RowData> {
   enableRowSelection?: boolean;
   onRowSelectionChange?: (selectedIds: string[]) => void;
   density?: "comfortable" | "compact";
+  /** Sem caixa própria — útil quando a tabela já vive dentro de um panel. */
+  bare?: boolean;
   "aria-label": string;
 }
 
@@ -61,6 +63,7 @@ export function SyntexDataTable<TData extends RowData>({
   enableRowSelection,
   onRowSelectionChange,
   density = "comfortable",
+  bare = false,
   "aria-label": ariaLabel,
 }: SyntexDataTableProps<TData>) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -157,16 +160,21 @@ export function SyntexDataTable<TData extends RowData>({
         </DropdownMenu>
       </div>
 
-      <div className="overflow-hidden rounded-md border border-border bg-surface">
+      <div
+        className={cn(
+          "overflow-hidden",
+          bare ? "rounded-none border-0 bg-transparent" : "rounded-md border border-border bg-surface",
+        )}
+      >
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               {table.getHeaderGroups().map((group) => (
-                <tr key={group.id} className="border-b border-border bg-surface-2">
+                <tr key={group.id} className={cn("border-b border-border/50", bare ? "bg-surface-2/60" : "bg-surface-2")}>
                   {group.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="whitespace-nowrap px-3 py-2 text-left text-label uppercase text-ink-3"
+                      className="whitespace-nowrap px-3 py-2.5 text-left text-label font-bold uppercase tracking-[0.06em] text-ink-3"
                     >
                       {header.isPlaceholder ? null : <table.FlexRender header={header} />}
                     </th>
@@ -199,9 +207,9 @@ export function SyntexDataTable<TData extends RowData>({
                   <tr
                     key={row.id}
                     className={cn(
-                      "border-b border-border last:border-b-0 hover:bg-surface-2",
+                      "border-b border-border/40 last:border-b-0 row-hover",
                       rowHeight,
-                      row.getIsSelected() && "bg-petrol-100",
+                      row.getIsSelected() && "row-selected",
                     )}
                   >
                     {row.getVisibleCells().map((cell) => (

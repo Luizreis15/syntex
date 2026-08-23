@@ -129,6 +129,60 @@ export async function fetchWorkersPage(
   return { rows, total: count ?? rows.length };
 }
 
+export interface WorkersStatusSummary {
+  total: number;
+  associados: number;
+  semFiliação: number;
+}
+
+/** Contagens para strip da listagem Trabalhadores (amostra recente + filiação vigente). */
+export async function fetchWorkersStatusSummary(
+  supabase: Client,
+  tenantId: string,
+  grants: UserGrant[],
+): Promise<WorkersStatusSummary> {
+  const branchScope = allowedBranchIds(grants, "worker.read");
+  if (branchScope !== "all" && branchScope.length === 0) {
+    return { total: 0, associados: 0, semFiliação: 0 };
+  }
+
+  let countQuery = supabase
+    .from("worker")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenantId);
+  if (branchScope !== "all") countQuery = countQuery.in("branch_id", branchScope);
+  const { count } = await countQuery;
+  const total = count ?? 0;
+
+  let workersQuery = supabase.from("worker").select("id, person_id").eq("tenant_id", tenantId);
+  if (branchScope !== "all") workersQuery = workersQuery.in("branch_id", branchScope);
+  // Limite operacional — strip usa proporção se a base for enorme.
+  const { data: workers } = await workersQuery.limit(2000);
+  const personIds = [...new Set((workers ?? []).map((w) => w.person_id))];
+  if (personIds.length === 0) return { total, associados: 0, semFiliação: total };
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: memberships } = await supabase
+    .from("membership")
+    .select("person_id")
+    .eq("tenant_id", tenantId)
+    .eq("status", "ativo")
+    .lte("valid_from", today)
+    .or(`valid_until.is.null,valid_until.gte.${today}`)
+    .in("person_id", personIds);
+
+  const associados = new Set((memberships ?? []).map((m) => m.person_id)).size;
+  // Escala se amostramos menos que o total
+  const sampled = personIds.length;
+  const scale = total > 0 && sampled > 0 ? total / sampled : 1;
+  const associadosScaled = Math.round(associados * scale);
+  return {
+    total,
+    associados: Math.min(total, associadosScaled),
+    semFiliação: Math.max(0, total - Math.min(total, associadosScaled)),
+  };
+}
+
 export async function fetchWorkerDetail(supabase: Client, tenantId: string, workerId: string) {
   const { data: worker, error } = await supabase
     .from("worker")

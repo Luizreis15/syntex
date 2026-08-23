@@ -143,6 +143,67 @@ export async function fetchCompaniesPage(
   return { rows, rowCount: count ?? 0, municipalityOptions };
 }
 
+export type CompanyStatusKey =
+  | "reconhecida"
+  | "reivindicada"
+  | "disputada"
+  | "perdida"
+  | "sem_representacao";
+
+export interface CompaniesStatusSummary {
+  total: number;
+  byStatus: Record<CompanyStatusKey, number>;
+}
+
+/** Contagens de representação atual — strip da listagem Empresas. */
+export async function fetchCompaniesStatusSummary(
+  supabase: SupabaseClient<Database>,
+  tenantId: string,
+  grants: UserGrant[],
+): Promise<CompaniesStatusSummary> {
+  const branchScope = allowedBranchIds(grants, "company.read");
+  const companyScope = allowedCompanyIds(grants, "company.read");
+
+  const empty: CompaniesStatusSummary = {
+    total: 0,
+    byStatus: {
+      reconhecida: 0,
+      reivindicada: 0,
+      disputada: 0,
+      perdida: 0,
+      sem_representacao: 0,
+    },
+  };
+
+  if (companyScope !== "all" && companyScope.length === 0) return empty;
+  if (companyScope === "all" && branchScope !== "all" && branchScope.length === 0) return empty;
+
+  let companiesQuery = supabase.from("company").select("id").eq("tenant_id", tenantId);
+  if (branchScope !== "all") companiesQuery = companiesQuery.in("branch_id", branchScope);
+  if (companyScope !== "all") companiesQuery = companiesQuery.in("id", companyScope);
+  const { data: companies } = await companiesQuery;
+  const ids = (companies ?? []).map((c) => c.id);
+  if (ids.length === 0) return empty;
+
+  const { data: statusRows } = await supabase
+    .from("company_current_representation")
+    .select("company_id, status")
+    .eq("tenant_id", tenantId)
+    .in("company_id", ids);
+
+  const byStatus = { ...empty.byStatus };
+  const seen = new Set<string>();
+  for (const row of statusRows ?? []) {
+    if (!row.company_id || !row.status) continue;
+    seen.add(row.company_id);
+    const key = row.status as CompanyStatusKey;
+    if (key in byStatus) byStatus[key] += 1;
+  }
+  byStatus.sem_representacao = ids.length - seen.size;
+
+  return { total: ids.length, byStatus };
+}
+
 /** Faixa de vigência da coluna reduzida — vigência do estabelecimento matriz de cada empresa da página. */
 async function fetchValidityTimelines(
   supabase: SupabaseClient<Database>,

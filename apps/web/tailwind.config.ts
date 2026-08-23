@@ -1,10 +1,8 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Nenhum valor de cor, raio, sombra, tipografia ou z-index é definido aqui
- * diretamente — tudo lê de app/globals.css, que por sua vez é a tradução
- * literal de design/SYNTEX-UI.md. Editar aqui sem editar lá é o bug que o
- * teste de conformidade de tokens existe para pegar.
+ * Tokens via CSS vars em app/globals.css ← design/SYNTEX-UI.md (v2.1).
+ * Não defina cor/raio/sombra/tipo aqui sem espelhar no doc e no CSS.
  */
 const config: Config = {
   darkMode: "class",
@@ -48,6 +46,24 @@ const config: Config = {
       danger: "var(--danger)",
       info: "var(--info)",
       overlay: "var(--overlay)",
+      tint: {
+        teal: "var(--tint-teal)",
+        blue: "var(--tint-blue)",
+        green: "var(--tint-green)",
+        amber: "var(--tint-amber)",
+        red: "var(--tint-red)",
+      },
+      rail: {
+        teal: "var(--rail-teal)",
+        blue: "var(--rail-blue)",
+        green: "var(--rail-green)",
+        amber: "var(--rail-amber)",
+        red: "var(--rail-red)",
+      },
+      track: {
+        DEFAULT: "var(--track)",
+        dark: "var(--track-dark)",
+      },
       status: {
         reconhecida: "var(--st-reconhecida)",
         "reconhecida-bg": "var(--st-reconhecida-bg)",
@@ -73,16 +89,26 @@ const config: Config = {
       body: ["var(--text-body)", { lineHeight: "1.45" }],
       dense: ["var(--text-dense)", { lineHeight: "1.4" }],
       label: ["var(--text-label)", { lineHeight: "1.3", letterSpacing: "0.055em" }],
+      metric: ["var(--text-metric)", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
+      "metric-sm": ["var(--text-metric-sm)", { lineHeight: "1.15", letterSpacing: "-0.015em" }],
     },
     borderRadius: {
       none: "0",
       xs: "var(--r-xs)",
       sm: "var(--r-sm)",
       md: "var(--r-md)",
+      lg: "var(--r-lg)",
+      control: "var(--r-control)",
+      panel: "var(--r-panel)",
+      feature: "var(--r-feature)",
       full: "9999px",
     },
     boxShadow: {
       none: "none",
+      surface: "var(--shadow-surface)",
+      raised: "var(--shadow-raised)",
+      overlay: "var(--shadow-overlay)",
+      /* Compat v2 */
       sm: "var(--shadow-sm)",
       elevated: "var(--shadow-elevated)",
     },

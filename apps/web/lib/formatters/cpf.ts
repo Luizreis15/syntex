@@ -4,6 +4,12 @@ export function formatCpf(value: string): string {
   return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 }
 
+/** Máscara de exibição em headers 360 — preserva bloco intermediário. */
+export function formatCpfMasked(value: string): string {
+  const digits = value.replace(/\D/g, "").padStart(11, "0");
+  return `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`;
+}
+
 /** Valida o dígito verificador do CPF (módulo 11). */
 export function isValidCpf(value: string): boolean {
   const digits = value.replace(/\D/g, "");

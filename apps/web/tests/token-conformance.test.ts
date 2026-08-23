@@ -50,10 +50,15 @@ describe("conformidade de tokens (design/SYNTEX-UI.md)", () => {
     expect(content, `${relative}: z-index arbitrário — use z-base/sticky/dropdown/popover/drawer/modal/command/toast`).not.toMatch(
       ARBITRARY_Z,
     );
-    expect(content, `${relative}: border-radius arbitrário — use rounded-xs/sm/md`).not.toMatch(ARBITRARY_RADIUS);
+    expect(content, `${relative}: border-radius arbitrário — use rounded-xs/sm/md/lg/control/panel/feature`).not.toMatch(
+      ARBITRARY_RADIUS,
+    );
     expect(content, `${relative}: espaçamento arbitrário — use a escala 4/8/12/16/20/24/32/40/48`).not.toMatch(
       ARBITRARY_SPACING,
     );
-    expect(content, `${relative}: shadow arbitrária — use shadow-sm/elevated`).not.toMatch(ARBITRARY_SHADOW);
+    expect(
+      content,
+      `${relative}: shadow arbitrária — use shadow-surface/raised/overlay (ou sm/elevated compat)`,
+    ).not.toMatch(ARBITRARY_SHADOW);
   });
 });

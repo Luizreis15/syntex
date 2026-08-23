@@ -2,7 +2,13 @@
 
 Plataforma SaaS multi-tenant de gestão sindical. Cliente fundador: Sindicato dos Comerciários do ABC (SECABC). O produto não é um ERP com telas para sindicato — é a infraestrutura que modela a **relação sindical** entre trabalhador, empresa e entidade.
 
-Documentação de fundação em `fundacao/`. Leia `00-INDICE.md` primeiro. O doc `03-triagem-revisao-arquitetural.md` é o mais acionável: ele define o que é irreversível e o que pode esperar.
+Documentação de fundação arquivada em `_arquivo_fundacao/fundacao/` (não é lei ativa do agente nesta fase).
+
+### Decisão ativa — Modo A (front DEMO / Lovable)
+
+Objetivo imediato: front funcional e **premium**, visualmente igual ou muito próximo das referências Lovable. Nesta fase é **autorizado** mock de UI no Painel / 360 / listagens. Usar seed DEV real quando existir; mock preenche o restante. Freeze visual e `SYNTEX-UI` rígido estão em `_arquivo_design/`.
+
+Invariantes de **backend** (tenant, RLS, auth, LGPD no schema) continuam abaixo. A austeridade visual **não** está ativa.
 
 ---
 
@@ -109,19 +115,21 @@ Regra: hardcode com fronteira limpa até aparecer a **segunda** evidência de va
 
 ---
 
-## Front-end — lei resumida
+## Front-end — modo DEMO (Lovable)
 
-A lei completa está em **`design/SYNTEX-UI.md`**. Leia antes de tocar em qualquer tela. O que nunca se esquece:
+Referência visual soberana nesta fase: telas Lovable do projeto (`_ref_syntex-vital-core` + screenshots). Tokens/arquivos em `_arquivo_design/` são histórico, não bloqueio.
 
-- **A distinção do Syntex vive na estrutura, não na cor.** As quatro assinaturas: faixa de vigência, barra "Vigência em" como moldura permanente, mono em todo identificador, e dois sistemas de cor separados.
-- **`disputada` não é `danger`.** Estado de domínio (situação jurídica) e estado de sistema (funcionou ou não) são conjuntos de cor distintos e não se misturam. Estado nunca é comunicado só por cor.
-- **O agente compõe primitives `Syntex*`, não inventa.** É proibido, sem perguntar antes: cor, raio, sombra, espaçamento ou escala fora dos tokens; novo estilo de card ou botão; gradiente; biblioteca visual nova; `shadcn add` com default. Número literal de cor, tamanho ou z-index em componente é bug.
-- **Card só com agrupamento semântico real.** Um dado não vira card. Transformar tudo em card é assinatura de template.
-- **Piso de legibilidade:** nada abaixo de 11.5px nem de 4.5:1. Quem opera tem 30 anos, quem assina tem 65.
-- **Formatação brasileira** (CPF, CNPJ, moeda, data, competência) vive em `lib/formatters`. Nunca à mão num componente.
-- **Feature ownership:** cada domínio tem seus componentes, queries, actions, schemas e permissions em `features/<dominio>/`. Nada de pasta global com `CompanyAlgo.tsx` ao lado de `FinanceOutraCoisa.tsx`.
-- Server Components por padrão. URL é estado — filtro relevante vai para `searchParams`.
-- `<Can permission="...">` na UI, nunca `if (role === ...)`. E UI não é fonte de segurança: a autorização real continua na API e no banco.
+Prioridades:
+
+- Densidade e acabamento premium (Command Center, Empresa 360, Trabalhador 360)
+- Cards, tints, rails, dark surfaces, charts SVG/CSS — autorizados
+- Mock de UI marcado com `DEMO UI — substituir por dados reais depois`
+- Formatação BR continua em `lib/formatters`
+- Feature ownership em `features/<dominio>/`
+- `<Can permission="...">` na UI; autorização real permanece na API/banco
+- Piso de legibilidade: ≥ 11.5px · contraste legível
+
+Não inventar `if (tenant === 'secabc')`.
 
 ---
 

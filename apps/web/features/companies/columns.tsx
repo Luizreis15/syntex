@@ -14,20 +14,20 @@ export const companyColumns = [
     header: "Empresa",
     meta: { label: "Empresa" },
     cell: ({ row }) => (
-      <Link href={`/empresas/${row.original.id}`} className="font-medium text-ink hover:text-petrol-700">
-        {row.original.tradeName ?? row.original.legalName}
+      <Link href={`/empresas/${row.original.id}`} className="group block min-w-0 py-0.5">
+        <span className="block truncate text-dense font-bold text-ink group-hover:text-petrol-700">
+          {row.original.tradeName ?? row.original.legalName}
+        </span>
+        <span className="font-mono text-label text-ink-3">{formatCnpj(row.original.cnpj)}</span>
       </Link>
     ),
-  }),
-  helper.accessor("cnpj", {
-    header: "CNPJ",
-    meta: { label: "CNPJ" },
-    cell: ({ getValue }) => <span className="font-mono text-ink-2">{formatCnpj(getValue())}</span>,
   }),
   helper.accessor("municipalityName", {
     header: "Município",
     meta: { label: "Município" },
-    cell: ({ getValue }) => <span className="text-ink-2">{getValue() ?? "—"}</span>,
+    cell: ({ getValue }) => (
+      <span className="text-dense font-medium text-ink-2">{getValue() ?? "—"}</span>
+    ),
   }),
   helper.accessor("status", {
     header: "Representação",
@@ -44,7 +44,7 @@ export const companyColumns = [
     header: "Vigência",
     meta: { label: "Vigência" },
     cell: ({ getValue }) => (
-      <div className="w-32">
+      <div className="w-36">
         <SyntexValidityBand periods={getValue()} referenceDate={today} />
       </div>
     ),

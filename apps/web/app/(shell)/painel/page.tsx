@@ -5,14 +5,28 @@ import {
   canAccessUnionDashboard,
   fetchUnionDashboard,
 } from "@/features/dashboard/data";
-import { buildHeroMetrics } from "@/features/dashboard/compose";
+import { buildLovableHeroBlock } from "@/features/dashboard/compose";
 import {
   firstNameFromFullName,
   formatHeroClock,
   greetingForNow,
 } from "@/features/dashboard/greeting";
+import {
+  aggregateOpenCharges,
+  sortAttentionCharges,
+} from "@/features/dashboard/charge-intel";
 import { fetchChargesPage } from "@/features/charges/data";
+import { DEMO_OPERACAO_AGORA, DEMO_STATUS } from "@/features/dashboard/demo-painel";
 import { DashboardCommandHero } from "@/features/dashboard/components/dashboard-command-hero";
+import { DashboardArrecadacaoChart } from "@/features/dashboard/components/dashboard-arrecadacao-chart";
+import { DashboardOperationNow } from "@/features/dashboard/components/dashboard-operation-now";
+import { DashboardIntelligence } from "@/features/dashboard/components/dashboard-intelligence";
+import { DashboardMovimentoBase } from "@/features/dashboard/components/dashboard-movimento-base";
+import { DashboardAlertas } from "@/features/dashboard/components/dashboard-alertas";
+import {
+  DashboardPriorityCompanies,
+  priorityFromAttention,
+} from "@/features/dashboard/components/dashboard-priority-companies";
 import {
   DashboardAttentionCharges,
   type AttentionChargeRow,
@@ -44,7 +58,7 @@ function mapChargeRow(
 }
 
 /**
- * Command Center — polimento Fase 2.3.
+ * Command Center Modo A — composição Lovable (seed real + DEMO UI rotulado).
  */
 export default async function PainelPage() {
   const session = await getSession();
@@ -100,13 +114,16 @@ export default async function PainelPage() {
   const tenantLabel = (tenant?.slug ?? "SYNTEX").toUpperCase();
   const contextLine = `${tenantLabel} · Operação consolidada · ${branchLabel}`;
 
-  const heroMetrics = buildHeroMetrics(metrics);
-
   const mappedCharges = canFinance ? chargesPage.map(mapChargeRow) : [];
-  const openRows = mappedCharges
-    .filter((row) => row.status === "pendente" || row.status === "vencido")
-    .slice(0, 8);
+  const openMapped = mappedCharges.filter(
+    (row) => row.status === "pendente" || row.status === "vencido",
+  );
+  const financeIntel = canFinance ? aggregateOpenCharges(openMapped, now) : null;
+  const openRows = sortAttentionCharges(openMapped, now).slice(0, 8);
   const recentRows = mappedCharges.slice(0, 8);
+  const priorityRows = priorityFromAttention(openMapped);
+
+  const heroBlock = buildLovableHeroBlock(metrics, financeIntel);
 
   const actions: QuickAction[] = [];
   if (canCreateCompany) {
@@ -158,21 +175,47 @@ export default async function PainelPage() {
         clockLabel={formatHeroClock(now)}
         greetingLine={greetingLine}
         contextLine={contextLine}
-        metrics={heroMetrics}
+        block={heroBlock}
+        alertCount={DEMO_STATUS.alertsCount}
       />
 
-      <div className="grid grid-cols-12 gap-3 px-6 py-4 xl:px-8">
-        <div className="col-span-12 xl:col-span-9">
-          {canFinance ? (
-            <DashboardAttentionCharges openRows={openRows} recentRows={recentRows} />
-          ) : (
-            <DashboardOperationalAccess links={operationalLinks} />
-          )}
+      <div className="space-y-6 px-6 py-6 xl:px-8">
+        <div className="grid gap-5 xl:grid-cols-3 xl:gap-6">
+          <div className="xl:col-span-2">
+            <DashboardArrecadacaoChart />
+          </div>
+          <DashboardOperationNow items={DEMO_OPERACAO_AGORA} />
         </div>
 
-        <aside className="col-span-12 xl:col-span-3">
-          <DashboardSideRail actions={actions} />
-        </aside>
+        <DashboardIntelligence />
+
+        <div className="grid gap-5 xl:grid-cols-3 xl:gap-6">
+          <DashboardMovimentoBase />
+          <div className="xl:col-span-2">
+            <DashboardAlertas />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-12 gap-5 xl:gap-6">
+          <div className="col-span-12 xl:col-span-8 2xl:col-span-9">
+            {canFinance ? (
+              <DashboardAttentionCharges
+                openRows={openRows}
+                recentRows={recentRows}
+                intel={financeIntel}
+              />
+            ) : (
+              <DashboardOperationalAccess links={operationalLinks} />
+            )}
+          </div>
+          <aside className="col-span-12 xl:col-span-4 2xl:col-span-3">
+            <DashboardSideRail actions={actions} financeIntel={financeIntel} />
+          </aside>
+        </div>
+
+        {canFinance && priorityRows.length > 0 ? (
+          <DashboardPriorityCompanies rows={priorityRows} />
+        ) : null}
       </div>
     </div>
   );

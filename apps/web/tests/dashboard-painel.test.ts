@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildHeroMetrics, buildOperationPulse } from "@/features/dashboard/compose";
+import { buildHeroMetrics, buildOperationPulse, attachHeroProgress, buildLovableHeroBlock } from "@/features/dashboard/compose";
 import {
   canAccessUnionDashboard,
   DASHBOARD_METRIC_PERMISSIONS,
@@ -133,6 +133,45 @@ describe("dashboard compose", () => {
     expect(hero.find((h) => h.key === "charges")?.size).toBe("primary");
     expect(hero.find((h) => h.key === "companies")?.size).toBe("secondary");
     expect(hero.find((h) => h.key === "workers")?.size).toBe("secondary");
+  });
+
+  it("attachHeroProgress só com denominador real", () => {
+    const hero = attachHeroProgress(buildHeroMetrics(base), {
+      membershipsActive: 100,
+      workersActive: 200,
+      overdueCount: 2,
+      openCount: 5,
+    });
+    expect(hero.find((h) => h.key === "memberships")?.progress?.value).toBe(50);
+    expect(hero.find((h) => h.key === "charges")?.progress?.value).toBe(40);
+    expect(hero.find((h) => h.key === "companies")?.progress).toBeUndefined();
+
+    const withoutDenom = attachHeroProgress(buildHeroMetrics(base), {
+      membershipsActive: 100,
+      workersActive: 0,
+      overdueCount: null,
+      openCount: null,
+    });
+    expect(withoutDenom.find((h) => h.key === "memberships")?.progress).toBeUndefined();
+    expect(withoutDenom.find((h) => h.key === "charges")?.progress).toBeUndefined();
+  });
+
+  it("buildLovableHeroBlock mistura seed real + arrecadação DEMO", () => {
+    const block = buildLovableHeroBlock(base, {
+      openCount: 10,
+      openAmount: 1000,
+      overdueCount: 2,
+      overdueAmount: 200,
+      dueIn30Count: 5,
+      dueIn30Amount: 500,
+      maxAmount: 100,
+      buckets: [],
+    });
+    expect(block.associados?.value).toBe("100");
+    expect(block.empresas?.value).toBe("10");
+    expect(block.inadimplencia.source).toBe("real");
+    expect(block.inadimplencia.value).toBe("20%");
+    expect(block.arrecadacao.valueDisplay).toContain("R$");
   });
 });
 

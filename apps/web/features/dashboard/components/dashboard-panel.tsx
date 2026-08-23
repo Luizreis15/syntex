@@ -1,5 +1,13 @@
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import {
+  SyntexPanel,
+  SyntexPanelBody,
+  SyntexPanelDescription,
+  SyntexPanelHeader,
+  SyntexPanelTitle,
+  type SyntexPanelVariant,
+} from "@/components/ui/syntex-panel";
+import type { SyntexAccentTone } from "@/components/ui/syntex-accent-rail";
 
 export interface DashboardPanelProps {
   title: string;
@@ -8,9 +16,11 @@ export interface DashboardPanelProps {
   children: ReactNode;
   className?: string;
   density?: "default" | "compact";
+  variant?: SyntexPanelVariant;
+  rail?: SyntexAccentTone;
 }
 
-/** Painel claro — superfície branca, borda/sombra mínimas (Fase 2.4). */
+/** Painel do Command Center — delega ao SyntexPanel v2.1. */
 export function DashboardPanel({
   title,
   subtitle,
@@ -18,38 +28,21 @@ export function DashboardPanel({
   children,
   className,
   density = "default",
+  variant = "raised",
+  rail,
 }: DashboardPanelProps) {
-  const compact = density === "compact";
-
   return (
-    <section
-      className={cn(
-        "rounded-md border border-border/40 bg-surface shadow-sm",
-        className,
-      )}
-    >
-      <header
-        className={cn(
-          "flex flex-wrap items-center justify-between gap-2",
-          compact ? "px-3 py-2" : "border-b border-border/40 px-5 py-2.5",
-        )}
-      >
+    <SyntexPanel variant={variant} rail={rail} className={className}>
+      <SyntexPanelHeader density={density}>
         <div>
-          <h2
-            className={cn(
-              "tracking-tight text-ink",
-              compact ? "text-dense font-semibold" : "text-component font-bold",
-            )}
-          >
+          <SyntexPanelTitle className={density === "compact" ? "text-dense" : undefined}>
             {title}
-          </h2>
-          {subtitle ? (
-            <p className="mt-0.5 text-label font-normal text-ink-3/75">{subtitle}</p>
-          ) : null}
+          </SyntexPanelTitle>
+          {subtitle ? <SyntexPanelDescription>{subtitle}</SyntexPanelDescription> : null}
         </div>
         {action}
-      </header>
-      {children}
-    </section>
+      </SyntexPanelHeader>
+      <SyntexPanelBody>{children}</SyntexPanelBody>
+    </SyntexPanel>
   );
 }

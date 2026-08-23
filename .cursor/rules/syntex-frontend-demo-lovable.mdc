@@ -1,0 +1,43 @@
+---
+description: Modo A — front Lovable-like com mocks DEMO autorizados
+alwaysApply: true
+---
+
+# Syntex — Modo visual DEMO (decisão A)
+
+A fundação de domínio foi arquivada em `_arquivo_fundacao/`.
+A lei visual rígida / freeze de shell+dashboard foi arquivada em `_arquivo_design/`.
+
+## Objetivo agora
+
+Entregar front **funcional e premium**, visualmente igual ou muito próximo das
+referências Lovable do projeto (`_ref_syntex-vital-core` e screenshots anexados).
+
+Prioridade: **impacto visual e densidade de Command Center / 360**.
+
+## Autorizado nesta fase
+
+- Redesign de `/painel`, Empresa 360, Trabalhador 360 e listagens
+- Alterar shell (sidebar/topbar) se a referência Lovable exigir
+- Usar **mocks / dados sintéticos de UI** para completar a composição visual
+  (gráficos, alertas, operação agora, intelligence, tendências)
+- Cards, tints, rails, charts (CSS/SVG; lib de chart só se necessário e pedida)
+- Gradientes e superfícies dark/light como na referência
+
+## Ainda proibido
+
+- `if (tenant === 'secabc')`
+- Quebrar isolamento de tenant / RLS / usar `service_role` no client
+- Commitar secrets
+- Apagar `_arquivo_fundacao` ou histórico git sem pedido explícito
+
+## Contrato dos mocks
+
+- Mock de UI deve viver em `features/*/demo-*.ts` ou equivalente claro
+- Comentário no topo: `DEMO UI — substituir por dados reais depois`
+- Preferir misturar seed DEV real + mock só onde faltar dado para o layout
+
+## Quando a fase DEMO acabar
+
+Reativar regras em `_arquivo_design/` e substituir mocks por queries reais,
+módulo a módulo.

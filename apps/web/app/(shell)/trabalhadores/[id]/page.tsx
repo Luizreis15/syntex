@@ -3,24 +3,39 @@ import Link from "next/link";
 import { hasAnyGrant } from "@syntex/permissions";
 import { recordAudit } from "@syntex/database";
 import { getSession } from "@/lib/auth/session";
-import { SyntexPageHeader } from "@/components/ui/syntex-page-header";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
 import { fetchWorkerDetail } from "@/features/workers/data";
 import { ChangeMembershipForm } from "@/features/workers/change-membership-form";
 import { IssueAssociateAccessButton } from "@/features/workers/issue-associate-access-button";
 import { formatCpf } from "@/lib/formatters/cpf";
+import { formatData } from "@/lib/formatters/data";
+import {
+  buildTrabalhadorSummary,
+  initialsFromName,
+} from "@/features/workers/trabalhador-360-compose";
+import { Trabalhador360Header } from "@/features/workers/components/trabalhador-360-header";
+import { Trabalhador360Tabs } from "@/features/workers/components/trabalhador-360-tabs";
+import { Trabalhador360Timeline } from "@/features/workers/components/trabalhador-360-timeline";
+import { Trabalhador360Intelligence } from "@/features/workers/components/trabalhador-360-intelligence";
+import { Trabalhador360Vinculos } from "@/features/workers/components/trabalhador-360-vinculos";
+import { Trabalhador360Financeiro } from "@/features/workers/components/trabalhador-360-financeiro";
+import { Trabalhador360AssociacaoCard } from "@/features/workers/components/trabalhador-360-associacao";
+import { Trabalhador360Beneficios } from "@/features/workers/components/trabalhador-360-beneficios";
+import { Trabalhador360Agenda } from "@/features/workers/components/trabalhador-360-agenda";
+import { DashboardPanel } from "@/features/dashboard/components/dashboard-panel";
+import { firstNameFromFullName } from "@/features/dashboard/greeting";
 
+/**
+ * Trabalhador 360 — Modo A (Lovable-like): seed real + DEMO UI rotulado.
+ */
 export default async function TrabalhadorDetailPage({ params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   if (!hasAnyGrant(session.grants, "worker.read")) {
     return (
-      <div>
-        <SyntexPageHeader breadcrumbs={[{ label: "Relações" }, { label: "Trabalhadores" }]} title="Trabalhador" />
-        <div className="p-6">
-          <SyntexEmptyState title="Sem permissão" description="worker.read é necessária." />
-        </div>
+      <div className="px-6 py-12">
+        <SyntexEmptyState title="Sem permissão" description="worker.read é necessária." />
       </div>
     );
   }
@@ -55,136 +70,204 @@ export default async function TrabalhadorDetailPage({ params }: { params: { id: 
     });
   }
 
-  const currentMembership = memberships.find((m) => m.valid_until == null) ?? memberships[0] ?? null;
+  const currentMembership =
+    memberships.find((m) => m.valid_until == null && m.status === "ativo") ??
+    memberships.find((m) => m.valid_until == null) ??
+    null;
+  const displayName = person.social_name ?? person.full_name;
+  const activeEmployment =
+    employments.find((e) => e.status === "ativo" && !e.valid_until) ?? employments[0] ?? null;
+
+  let branchLabel: string | null = null;
+  if (worker.branch_id) {
+    const { data: branch } = await session.supabase
+      .from("branch")
+      .select("name")
+      .eq("id", worker.branch_id)
+      .maybeSingle();
+    branchLabel = branch?.name ? `Unidade ${branch.name}` : null;
+  }
+
+  const summary = buildTrabalhadorSummary({
+    membershipStatus: canReadMembership ? (currentMembership?.status ?? null) : null,
+    membershipSince: canReadMembership ? (currentMembership?.valid_from ?? null) : null,
+    hasActiveEmployment: Boolean(activeEmployment),
+  });
+
+  const associadoAtivo = canReadMembership && currentMembership?.status === "ativo";
 
   return (
-    <div>
-      <SyntexPageHeader
-        breadcrumbs={[
-          { label: "Relações" },
-          { label: "Trabalhadores", href: "/trabalhadores" },
-          { label: person.social_name ?? person.full_name },
-        ]}
-        title={person.social_name ?? person.full_name}
-        metadata={
-          <span className="font-mono text-body text-ink-2">
-            {formatCpf(person.cpf)}
-            {currentMembership ? ` · filiação ${currentMembership.status}` : ""}
-          </span>
+    <div className="min-h-full bg-paper">
+      <Trabalhador360Header
+        name={displayName}
+        cpf={person.cpf}
+        registrationNumber={worker.registration_number}
+        jobTitle={activeEmployment?.job_title ?? null}
+        companyName={
+          activeEmployment?.company
+            ? (activeEmployment.company.trade_name ?? activeEmployment.company.legal_name)
+            : null
         }
+        companyId={activeEmployment?.company?.id ?? null}
+        branchLabel={branchLabel}
+        associadoAtivo={associadoAtivo}
+        initials={initialsFromName(displayName)}
+        summary={summary}
       />
 
-      <div className="space-y-6 p-6">
-        <section className="space-y-2 border-b border-border pb-4">
-          <h2 className="text-component font-semibold text-ink">Dados pessoais</h2>
-          <dl className="grid gap-2 text-body sm:grid-cols-2">
-            <div>
-              <dt className="text-label text-ink-3">Nome</dt>
-              <dd>{person.full_name}</dd>
+      <Trabalhador360Tabs
+        visaoGeral={
+          <div className="grid gap-5 xl:grid-cols-3">
+            <div className="space-y-5 xl:col-span-2">
+              <Trabalhador360Timeline />
+              <Trabalhador360Intelligence firstName={firstNameFromFullName(displayName)} />
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Trabalhador360Vinculos employments={employments} />
+                <Trabalhador360Financeiro />
+              </div>
             </div>
-            <div>
-              <dt className="text-label text-ink-3">CPF</dt>
-              <dd className="font-mono">{formatCpf(person.cpf)}</dd>
+            <div className="space-y-5">
+              <Trabalhador360AssociacaoCard
+                status={canReadMembership ? (currentMembership?.status ?? null) : null}
+                since={canReadMembership ? (currentMembership?.valid_from ?? null) : null}
+                branchLabel={branchLabel}
+              />
+              <Trabalhador360Beneficios />
+              <Trabalhador360Agenda />
             </div>
-            <div>
-              <dt className="text-label text-ink-3">E-mail</dt>
-              <dd>{person.email ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-label text-ink-3">Telefone</dt>
-              <dd>{person.phone ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-label text-ink-3">Matrícula</dt>
-              <dd className="font-mono">{worker.registration_number ?? "—"}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className="space-y-3 border-b border-border pb-4">
-          <h2 className="text-component font-semibold text-ink">Portal do associado</h2>
-          {canIssueAccess ? (
-            <IssueAssociateAccessButton
-              personId={person.id}
-              hasAccess={Boolean(person.app_user_id)}
-              hasEmail={Boolean(person.email)}
+          </div>
+        }
+        associacao={
+          <div className="mx-auto max-w-3xl space-y-5">
+            <Trabalhador360AssociacaoCard
+              status={canReadMembership ? (currentMembership?.status ?? null) : null}
+              since={canReadMembership ? (currentMembership?.valid_from ?? null) : null}
+              branchLabel={branchLabel}
             />
-          ) : (
-            <p className="text-body text-ink-2">
-              {person.app_user_id ? "Acesso já vinculado." : "Sem permissão para emitir acesso."}
-            </p>
-          )}
-        </section>
 
-        <section className="space-y-3 border-b border-border pb-4">
-          <h2 className="text-component font-semibold text-ink">Vínculos empregatícios</h2>
-          {employments.length === 0 ? (
-            <p className="text-body text-ink-2">Nenhum vínculo cadastrado.</p>
-          ) : (
-            <table className="w-full border-collapse text-left text-body" aria-label="Vínculos">
-              <thead>
-                <tr className="border-b border-border text-label uppercase text-ink-3">
-                  <th className="py-2 pr-3 font-medium">Empresa</th>
-                  <th className="py-2 pr-3 font-medium">Cargo</th>
-                  <th className="py-2 pr-3 font-medium">Status</th>
-                  <th className="py-2 font-medium">Vigência</th>
-                </tr>
-              </thead>
-              <tbody>
-                {employments.map((e) => (
-                  <tr key={e.id} className="border-b border-border">
-                    <td className="py-2.5 pr-3">
-                      {e.company ? (
-                        <Link href={`/empresas/${e.company.id}`} className="text-petrol-700 hover:underline">
-                          {e.company.trade_name ?? e.company.legal_name}
-                        </Link>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="py-2.5 pr-3 text-ink-2">{e.job_title ?? "—"}</td>
-                    <td className="py-2.5 pr-3 font-medium">{e.status}</td>
-                    <td className="py-2.5 font-mono text-ink-2">
-                      {e.valid_from} → {e.valid_until ?? "atual"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
+            <DashboardPanel title="Dados pessoais" subtitle="Cadastro na base">
+              <dl className="grid gap-3 px-5 py-4 text-body sm:grid-cols-2">
+                <div>
+                  <dt className="text-label text-ink-3">Nome</dt>
+                  <dd className="font-semibold text-ink">{person.full_name}</dd>
+                </div>
+                <div>
+                  <dt className="text-label text-ink-3">CPF</dt>
+                  <dd className="font-mono text-ink">{formatCpf(person.cpf)}</dd>
+                </div>
+                <div>
+                  <dt className="text-label text-ink-3">E-mail</dt>
+                  <dd>{person.email ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-label text-ink-3">Telefone</dt>
+                  <dd>{person.phone ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-label text-ink-3">Matrícula</dt>
+                  <dd className="font-mono">{worker.registration_number ?? "—"}</dd>
+                </div>
+              </dl>
+            </DashboardPanel>
 
-        <section className="space-y-3">
-          <h2 className="text-component font-semibold text-ink">Filiação sindical</h2>
-          {!canReadMembership ? (
-            <p className="text-body text-ink-2">Sem permissão membership.read para ver filiação.</p>
-          ) : memberships.length === 0 ? (
-            <p className="text-body text-ink-2">Sem histórico de filiação.</p>
-          ) : (
-            <table className="w-full border-collapse text-left text-body" aria-label="Filiação">
-              <thead>
-                <tr className="border-b border-border text-label uppercase text-ink-3">
-                  <th className="py-2 pr-3 font-medium">Status</th>
-                  <th className="py-2 pr-3 font-medium">Categoria</th>
-                  <th className="py-2 font-medium">Vigência</th>
-                </tr>
-              </thead>
-              <tbody>
-                {memberships.map((m) => (
-                  <tr key={m.id} className="border-b border-border">
-                    <td className="py-2.5 pr-3 font-medium">{m.status}</td>
-                    <td className="py-2.5 pr-3 text-ink-2">{m.category ?? "—"}</td>
-                    <td className="py-2.5 font-mono text-ink-2">
-                      {m.valid_from} → {m.valid_until ?? "atual"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {canWriteMembership && <ChangeMembershipForm personId={person.id} />}
-        </section>
-      </div>
+            <DashboardPanel title="Portal do associado" subtitle="Acesso digital">
+              <div className="px-5 py-4">
+                {canIssueAccess ? (
+                  <IssueAssociateAccessButton
+                    personId={person.id}
+                    hasAccess={Boolean(person.app_user_id)}
+                    hasEmail={Boolean(person.email)}
+                  />
+                ) : (
+                  <p className="text-body text-ink-2">
+                    {person.app_user_id ? "Acesso já vinculado." : "Sem permissão para emitir acesso."}
+                  </p>
+                )}
+              </div>
+            </DashboardPanel>
+
+            <DashboardPanel title="Filiação sindical" subtitle="Histórico e alteração">
+              <div className="space-y-4 px-5 py-4">
+                {!canReadMembership ? (
+                  <p className="text-body text-ink-2">
+                    Sem permissão membership.read para ver filiação.
+                  </p>
+                ) : memberships.length === 0 ? (
+                  <p className="text-body text-ink-2">Sem histórico de filiação.</p>
+                ) : (
+                  <table className="w-full border-collapse text-left text-body" aria-label="Filiação">
+                    <thead>
+                      <tr className="border-b border-border text-label uppercase text-ink-3">
+                        <th className="py-2 pr-3 font-medium">Status</th>
+                        <th className="py-2 pr-3 font-medium">Categoria</th>
+                        <th className="py-2 font-medium">Vigência</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {memberships.map((m) => (
+                        <tr key={m.id} className="border-b border-border/50">
+                          <td className="py-2.5 pr-3 font-medium capitalize">{m.status}</td>
+                          <td className="py-2.5 pr-3 text-ink-2">{m.category ?? "—"}</td>
+                          <td className="py-2.5 font-mono text-ink-2">
+                            {formatData(m.valid_from)} →{" "}
+                            {m.valid_until ? formatData(m.valid_until) : "atual"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {canWriteMembership ? <ChangeMembershipForm personId={person.id} /> : null}
+              </div>
+            </DashboardPanel>
+          </div>
+        }
+        vinculos={
+          <div className="mx-auto max-w-3xl space-y-5">
+            <Trabalhador360Vinculos employments={employments} />
+            <DashboardPanel title="Detalhe dos vínculos" subtitle="Fonte real">
+              {employments.length === 0 ? (
+                <p className="px-5 py-8 text-body text-ink-2">Nenhum vínculo cadastrado.</p>
+              ) : (
+                <table className="w-full border-collapse text-left text-body" aria-label="Vínculos">
+                  <thead>
+                    <tr className="border-b border-border text-label uppercase text-ink-3">
+                      <th className="px-5 py-2 font-medium">Empresa</th>
+                      <th className="py-2 pr-3 font-medium">Cargo</th>
+                      <th className="py-2 pr-3 font-medium">Status</th>
+                      <th className="py-2 pr-5 font-medium">Vigência</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {employments.map((e) => (
+                      <tr key={e.id} className="border-b border-border/50">
+                        <td className="px-5 py-2.5">
+                          {e.company ? (
+                            <Link
+                              href={`/empresas/${e.company.id}`}
+                              className="text-petrol-700 hover:underline"
+                            >
+                              {e.company.trade_name ?? e.company.legal_name}
+                            </Link>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="py-2.5 pr-3 text-ink-2">{e.job_title ?? "—"}</td>
+                        <td className="py-2.5 pr-3 font-medium capitalize">{e.status}</td>
+                        <td className="py-2.5 pr-5 font-mono text-ink-2">
+                          {formatData(e.valid_from)} →{" "}
+                          {e.valid_until ? formatData(e.valid_until) : "atual"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </DashboardPanel>
+          </div>
+        }
+      />
     </div>
   );
 }

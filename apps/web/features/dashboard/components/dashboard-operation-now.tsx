@@ -10,11 +10,18 @@ const TONE_BAR: Record<OperationPulseItem["tone"], string> = {
   danger: "bg-danger",
 };
 
+/**
+ * Operação agora — unidades operacionais (não tabela).
+ * Itens: DEV-only (`demo-painel.ts`).
+ */
 export function DashboardOperationNow({ items }: { items: OperationPulseItem[] }) {
   return (
     <DashboardPanel
-      title="Pulso da operação"
-      subtitle="Indicadores com fonte real no Syntex"
+      title="Operação agora"
+      subtitle="Syntex Pulse · atualizado continuamente"
+      variant="raised"
+      rail="teal"
+      className="rounded-feature"
       action={<span className="live-dot mt-1.5 size-2 rounded-full bg-teal" aria-hidden />}
     >
       {items.length === 0 ? (
@@ -22,30 +29,35 @@ export function DashboardOperationNow({ items }: { items: OperationPulseItem[] }
           Ainda não há indicadores operacionais disponíveis para o seu perfil.
         </p>
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="px-2 py-1.5">
           {items.map((item) => {
             const row = (
               <>
-                <span className={cn("h-8 w-[3px] shrink-0 rounded-full", TONE_BAR[item.tone])} />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-dense font-bold text-ink">{item.label}</span>
+                <span
+                  className={cn("mt-0.5 h-9 w-[3px] shrink-0 rounded-full", TONE_BAR[item.tone])}
+                  aria-hidden
+                />
+                <span className="min-w-0 flex-1 py-0.5">
+                  <span className="block text-dense font-semibold text-ink">{item.label}</span>
                   <span className="font-mono text-label text-ink-3">{item.hint}</span>
                 </span>
-                <span className="font-mono text-page-title font-black text-ink">{item.value}</span>
+                <span className="text-[1.65rem] leading-none font-semibold tracking-[-0.03em] tabular-nums text-ink">
+                  {item.value}
+                </span>
               </>
             );
+
+            const className =
+              "flex items-center gap-3.5 rounded-control px-3 py-2.5 transition-colors";
 
             return (
               <li key={item.key}>
                 {item.href ? (
-                  <Link
-                    href={item.href}
-                    className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-surface-2"
-                  >
+                  <Link href={item.href} className={cn(className, "hover:bg-surface-2/80")}>
                     {row}
                   </Link>
                 ) : (
-                  <div className="flex items-center gap-4 px-5 py-3">{row}</div>
+                  <div className={cn(className, "hover:bg-surface-2/50")}>{row}</div>
                 )}
               </li>
             );

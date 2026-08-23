@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Filter, Search } from "lucide-react";
 import { SyntexDataTable } from "@/components/ui/syntex-data-table";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
 import { SyntexSelect } from "@/components/ui/syntex-select";
@@ -25,9 +26,8 @@ export interface CompaniesTableProps {
 }
 
 /**
- * Filtro refletido na URL (design/SYNTEX-UI.md §14: "URL é estado") — busca,
- * município e status viram searchParams, então a lista sobrevive a recarregar
- * a página e a compartilhar o link.
+ * Listagem Empresas — Modo A: painel raised + toolbar densificado.
+ * Filtro continua na URL.
  */
 export function CompaniesTable({ page, pageIndex, q }: CompaniesTableProps) {
   const router = useRouter();
@@ -49,49 +49,37 @@ export function CompaniesTable({ page, pageIndex, q }: CompaniesTableProps) {
   );
 
   return (
-    <SyntexDataTable
-      aria-label="Empresas"
-      columns={companyColumns}
-      data={page.rows}
-      getRowId={(row) => row.id}
-      isLoading={isPending}
-      enableRowSelection
-      pagination={{
-        pageIndex,
-        pageSize: PAGE_SIZE,
-        rowCount: page.rowCount,
-        onPageChange: (nextIndex) => updateParams({ page: String(nextIndex + 1) }),
-      }}
-      emptyState={
-        <SyntexEmptyState
-          title="Nenhuma empresa encontrada"
-          description="Ajuste a busca ou os filtros — ou cadastre a primeira empresa desta unidade."
-        />
-      }
-      toolbar={
-        <div className="flex flex-wrap items-center gap-2">
-          <form
-            className="flex-1"
-            onSubmit={(e) => {
-              e.preventDefault();
-              updateParams({ q: search || null });
-            }}
-          >
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por CNPJ ou razão social"
-              className="h-input w-full max-w-xs rounded-sm border border-border bg-surface px-3 text-body text-ink outline-none focus-visible:border-petrol-600"
-            />
-          </form>
+    <div className="surface-raised overflow-hidden">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border/50 px-4 py-3">
+        <form
+          className="flex min-w-56 flex-1 items-center gap-2 rounded-control border border-border bg-paper px-3 py-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            updateParams({ q: search || null });
+          }}
+        >
+          <Search className="size-3.5 shrink-0 text-ink-3" aria-hidden />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filtrar empresas, CNPJ, município…"
+            className="w-full bg-transparent text-dense font-medium text-ink outline-none placeholder:text-ink-3"
+          />
+        </form>
 
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-label font-bold text-ink-3">
+            <Filter className="size-3.5" aria-hidden /> Filtros
+          </span>
           <SyntexSelect
             aria-label="Filtrar por município"
             value={searchParams.get("municipio") ?? ""}
             onValueChange={(value) => updateParams({ municipio: value || null })}
-            options={[{ value: "", label: "Todos os municípios" }, ...page.municipalityOptions.map((m) => ({ value: m.slug, label: m.name }))]}
+            options={[
+              { value: "", label: "Todos os municípios" },
+              ...page.municipalityOptions.map((m) => ({ value: m.slug, label: m.name })),
+            ]}
           />
-
           <SyntexSelect
             aria-label="Filtrar por status de representação"
             value={searchParams.get("status") ?? ""}
@@ -99,7 +87,32 @@ export function CompaniesTable({ page, pageIndex, q }: CompaniesTableProps) {
             options={STATUS_OPTIONS}
           />
         </div>
-      }
-    />
+      </div>
+
+      <div className="px-4 py-3">
+        <SyntexDataTable
+          aria-label="Empresas"
+          columns={companyColumns}
+          data={page.rows}
+          getRowId={(row) => row.id}
+          isLoading={isPending}
+          enableRowSelection
+          density="compact"
+          bare
+          pagination={{
+            pageIndex,
+            pageSize: PAGE_SIZE,
+            rowCount: page.rowCount,
+            onPageChange: (nextIndex) => updateParams({ page: String(nextIndex + 1) }),
+          }}
+          emptyState={
+            <SyntexEmptyState
+              title="Nenhuma empresa encontrada"
+              description="Ajuste a busca ou os filtros — ou cadastre a primeira empresa desta unidade."
+            />
+          }
+        />
+      </div>
+    </div>
   );
 }
