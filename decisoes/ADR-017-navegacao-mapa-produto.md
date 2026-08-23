@@ -33,7 +33,10 @@ Isto **emenda** a consequência de ADR-013 sobre “sem menu-fantasma”: fantas
 
 1. **Itens `built: false` em produção** — hoje permanecem visíveis (inertes) para comunicar o mapa do produto. Podem ficar visíveis **apenas em desenvolvimento**; em produção devem ser ocultados ou condicionados explicitamente a feature/module availability. Sem isso, a chrome de produção promete módulos que não existem.
 2. **Temporalidade após remoção do `SyntexAsOfBar`** — a remoção da barra full-width não elimina o conceito de domínio “vigente em”. **Competência** (mês/ano, pill na topbar, `?competencia=`) e **data de vigência** (as-of de entidades temporais) são conceitos distintos. O padrão de composição será redefinido nas telas temporais (Fases seguintes), não no shell.
-3. **P0 segurança (fora da migração visual)** — falha pré-existente: tabela `platform_notification` sem RLS (teste `structural.test.ts`). Tratar como pendência de segurança separada; não misturar com o trabalho de Visual System v2.
+3. **P0 estrutural (fora da migração visual) — resolvido em ADR-019 / migrations `0026`+`0027`.**  
+   Diagnóstico antigo incorreto: “`platform_notification` sem RLS”. A tabela **já tinha RLS** desde `0023` (sem policy `authenticated`; acesso via `service_role` / platform session).  
+   A falha real do `structural.test.ts` era: helper tratava qualquer coluna `tenant_id` como tabela de tenant e exigia `UNIQUE (id, tenant_id)`, mas `platform_notification` é **control-plane-scoped** (`tenant_id` nullable = contexto opcional / global).  
+   Correção: exceção **nominal** na allowlist `control_plane_nullable_tenant_allowlist()` (só `platform_notification`); tabelas com `tenant_id NOT NULL` seguem exigindo UNIQUE; qualquer outro `tenant_id` nullable fora da allowlist falha o structural.
 
 ## Congelamento do Shell (aprovado)
 

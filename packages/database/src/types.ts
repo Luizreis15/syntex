@@ -2103,6 +2103,20 @@ export type Database = {
           table_name: string
         }[]
       }
+      test_platform_notification_is_control_plane_scoped: {
+        Args: never
+        Returns: boolean
+      }
+      test_nullable_tenant_id_outside_allowlist: {
+        Args: never
+        Returns: {
+          table_name: string
+        }[]
+      }
+      control_plane_nullable_tenant_allowlist: {
+        Args: never
+        Returns: string[]
+      }
     }
     Enums: {
       [_ in never]: never
