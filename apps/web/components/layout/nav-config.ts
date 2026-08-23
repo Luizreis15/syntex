@@ -85,7 +85,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Operação",
     items: [
-      { label: "Atendimento", built: true, href: "/filiacao", permission: "membership.read", icon: "life-buoy" },
+      { label: "Atendimento", built: false, icon: "life-buoy" },
       { label: "Agenda", built: false, icon: "calendar-days" },
       { label: "Homologações", built: false, icon: "shield-check" },
       { label: "Fiscalização", built: false, icon: "gauge" },

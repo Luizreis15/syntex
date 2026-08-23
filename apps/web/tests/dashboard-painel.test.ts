@@ -96,6 +96,27 @@ describe("Painel nav — alinhado ao gate da página", () => {
     canSpy.mockRestore();
     hasSpy.mockRestore();
   });
+
+  it("Atendimento é PLANNED (built:false) — sem href operacional", () => {
+    const grants: UserGrant[] = [
+      { role: "atendimento", scope: "tenant" },
+      { role: "admin", scope: "tenant" },
+    ];
+    const sections = filterNavSections(grants, "tenant-1");
+    const atendimento = sections.flatMap((s) => s.items).find((i) => i.label === "Atendimento");
+    expect(atendimento).toBeDefined();
+    expect(atendimento?.built).toBe(false);
+    expect(atendimento && "href" in atendimento).toBe(false);
+
+    const builtWithHref = sections
+      .flatMap((s) => s.items)
+      .filter((i) => i.built)
+      .map((i) => i.label);
+    expect(builtWithHref).not.toContain("Atendimento");
+    expect(builtWithHref).toEqual(
+      expect.arrayContaining(["Painel", "Trabalhadores", "Empresas", "Convenções", "Cobranças"]),
+    );
+  });
 });
 
 describe("dashboard compose", () => {

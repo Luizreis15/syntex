@@ -113,13 +113,13 @@ Pagamento / conciliação / baixa
 
 | Capability | Estado | Notas |
 |------------|--------|-------|
-| **Atendimento** | **NOT_IMPLEMENTED** | Nav `built:true` → `/filiacao` = **placeholder** protegido por `membership.read`. Membership real vive em Trabalhadores — **não** equivale a Atendimento. |
+| **Atendimento** | **PLANNED** | Nav `built:false` (Slice 0.3). Sem href. Membership real continua em Trabalhadores / 360 — **não** equivale a Atendimento. Rota `/filiacao` permanece como placeholder/deep-link histórico. |
 | Agenda | PLANNED | `built:false` |
 | Homologações | PLANNED | `built:false` |
 | Fiscalização | PLANNED | `built:false` |
 | Jurídico | PLANNED | `built:false` |
 
-**/filiacao:** `NOT_IMPLEMENTED` / placeholder. Corrigir nav/semântica no **Slice 0.3** (não neste slice).
+**/filiacao:** placeholder intacto (não deletado). Não é superfície de nav operacional.
 
 ### BLOCK 5 — Engagement & Benefits
 
@@ -207,7 +207,7 @@ Já arquitetura oficial — expandir só com slice.
 
 | Item | built | href | Realidade |
 |------|-------|------|-----------|
-| Atendimento | true | `/filiacao` | Placeholder NOT_IMPLEMENTED |
+| Atendimento | false | — | PLANNED (Slice 0.3); `/filiacao` placeholder histórico |
 | Representação | false | — | Domain REAL / UI parcial |
 | Agenda…Jurídico | false | — | PLANNED |
 | Arrecadação / Financeiro | false | — | PLANNED (cobranças cobrem fatia) |
