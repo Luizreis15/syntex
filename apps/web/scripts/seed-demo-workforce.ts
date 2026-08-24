@@ -221,7 +221,12 @@ export async function seedDemoFinance(input: {
   referenceDate: string;
 }): Promise<{ obligations: number; charges: number }> {
   const { admin, tenantId, companies, rule, agreement, referenceDate } = input;
-  const plans = buildOpenChargePlan({ companyCount: companies.length, referenceDate });
+  const plans = buildOpenChargePlan({
+    companyCount: companies.length,
+    referenceDate,
+    agreementValidFrom: agreement.valid_from,
+    agreementValidUntil: agreement.valid_until,
+  });
 
   const obligationRows = plans.map((p) => {
     const company = companies[p.companyIndex]!;

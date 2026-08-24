@@ -21,6 +21,7 @@ import {
   seedDemoWorkforce,
   type SeededCompanyRef,
 } from "./seed-demo-workforce";
+import { pickAgreementCoveringDate } from "./data/demo-finance";
 
 const ADMIN_EMAIL = "admin@secabc.exemplo.org.br";
 const ADMIN_PASSWORD = "syntex-dev-2026!";
@@ -28,6 +29,9 @@ const ATENDIMENTO_MAUA_EMAIL = "atendimento.maua@secabc.exemplo.org.br";
 const ATENDIMENTO_MAUA_PASSWORD = "syntex-dev-2026!";
 const DIRETORIA_EMAIL = "diretoria@secabc.exemplo.org.br";
 const DIRETORIA_PASSWORD = "syntex-dev-2026!";
+/** C3 — role só financeiro (sem representation.*) para negativos do runbook. */
+const FINANCEIRO_EMAIL = "financeiro@secabc.exemplo.org.br";
+const FINANCEIRO_PASSWORD = "syntex-dev-2026!";
 const PLATFORM_EMAIL = "platform@syntex.exemplo.org.br";
 const PLATFORM_PASSWORD = "syntex-dev-2026!";
 
@@ -84,6 +88,15 @@ async function main() {
   await grantRole(tenant.id, diretoriaUser.appUserId, roles.diretoria, "tenant");
   await grantRole(tenant.id, diretoriaUser.appUserId, roles.financeiro, "tenant");
 
+  // C3 — financeiro puro (sem representation.read/write/decide) para N7 do runbook.
+  const financeiroUser = await seedUser(
+    tenant.id,
+    FINANCEIRO_EMAIL,
+    FINANCEIRO_PASSWORD,
+    "Financeiro SECABC",
+  );
+  await grantRole(tenant.id, financeiroUser.appUserId, roles.financeiro, "tenant");
+
   console.log("Seed: categorias, registro sindical e CCT");
   const categories = await seedCategories(tenant.id);
   const registration = await seedRegistration(tenant.id, categories, municipalities, branches);
@@ -105,19 +118,26 @@ async function main() {
     referenceDate,
   });
 
-  const agreement2025 = agreements.find((a) => a.valid_from === "2025-05-01");
-  const rule2025 = rules.find((r) => r.collective_agreement_id === agreement2025?.id);
-  if (!agreement2025 || !rule2025) {
-    throw new Error("Seed DEMO: CCT/regra 2025 não encontrada para obrigações.");
+  const agreementForFinance = pickAgreementCoveringDate(agreements, referenceDate);
+  const ruleForFinance = agreementForFinance
+    ? rules.find((r) => r.collective_agreement_id === agreementForFinance.id)
+    : undefined;
+  if (!agreementForFinance || !ruleForFinance) {
+    throw new Error(
+      `Seed DEMO: nenhuma CCT/regra cobrindo a referência ${referenceDate} (C3 — estender seedAgreements).`,
+    );
   }
 
   console.log("Seed: obrigações e cobranças em aberto (sem conciliação falsa)");
+  console.log(
+    `  CCT financeira: ${agreementForFinance.mediador_number} (${agreementForFinance.valid_from} → ${agreementForFinance.valid_until})`,
+  );
   const finance = await seedDemoFinance({
     admin: supabase,
     tenantId: tenant.id,
     companies,
-    rule: rule2025,
-    agreement: agreement2025,
+    rule: ruleForFinance,
+    agreement: agreementForFinance,
     referenceDate,
   });
 
@@ -130,6 +150,7 @@ async function main() {
   console.log(`Login admin:        ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
   console.log(`Login atendimento:  ${ATENDIMENTO_MAUA_EMAIL} / ${ATENDIMENTO_MAUA_PASSWORD} (escopo: Mauá)`);
   console.log(`Login diretoria:    ${DIRETORIA_EMAIL} / ${DIRETORIA_PASSWORD} (demonstração, permissão ampla)`);
+  console.log(`Login financeiro:   ${FINANCEIRO_EMAIL} / ${FINANCEIRO_PASSWORD} (só finance.*; sem representation)`);
   console.log(`Login platform:     ${PLATFORM_EMAIL} / ${PLATFORM_PASSWORD} → /platform`);
 }
 
@@ -463,6 +484,17 @@ async function seedAgreements(
       valid_from: "2025-05-01",
       valid_until: "2026-04-30",
       base_date: "2025-05-01",
+      economic_category_id: categories.economic.id,
+      professional_category_id: categories.professional.id,
+    },
+    // C3 — cobre SYNTEX_SEED_REFERENCE_DATE (~2026-08) para dues/aplicabilidade “atuais”.
+    {
+      tenant_id: tenantId,
+      kind: "cct" as const,
+      mediador_number: "MR024310/2026",
+      valid_from: "2026-05-01",
+      valid_until: "2027-04-30",
+      base_date: "2026-05-01",
       economic_category_id: categories.economic.id,
       professional_category_id: categories.professional.id,
     },

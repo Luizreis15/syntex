@@ -18,6 +18,8 @@ import {
   DEMO_OPEN_CHARGES,
   DEMO_OVERDUE_CHARGES,
   DEMO_PENDING_CHARGES,
+  listCompetenceMonthsInclusive,
+  pickAgreementCoveringDate,
 } from "../scripts/data/demo-finance";
 import { DEMO_COMPANIES } from "../scripts/data/demo-companies";
 import { assertSeedEnvironmentAllowed, resolveSeedReferenceDate } from "../scripts/lib/seed-safety";
@@ -87,6 +89,34 @@ describe("demo-people / demo-finance plans", () => {
       }
     }
 
+    const keys = new Set(charges.map((c) => `${c.companyIndex}:${c.competenceYm}`));
+    expect(keys.size).toBe(charges.length);
+  });
+
+  it("C3: competências sob CCT 2026 cobrem a referência do seed", () => {
+    const months = listCompetenceMonthsInclusive("2026-05-01", "2027-04-30", referenceDate);
+    expect(months[0]).toBe("2026-05");
+    expect(months.at(-1)).toBe("2026-08");
+    expect(months).toContain("2026-08");
+
+    const picked = pickAgreementCoveringDate(
+      [
+        { valid_from: "2025-05-01", valid_until: "2026-04-30", mediador: "2025" },
+        { valid_from: "2026-05-01", valid_until: "2027-04-30", mediador: "2026" },
+      ],
+      referenceDate,
+    );
+    expect(picked?.mediador).toBe("2026");
+
+    const charges = buildOpenChargePlan({
+      companyCount: DEMO_COMPANIES.length,
+      referenceDate,
+      agreementValidFrom: "2026-05-01",
+      agreementValidUntil: "2027-04-30",
+    });
+    expect(charges.every((c) => c.competenceYm >= "2026-05" && c.competenceYm <= "2026-08")).toBe(
+      true,
+    );
     const keys = new Set(charges.map((c) => `${c.companyIndex}:${c.competenceYm}`));
     expect(keys.size).toBe(charges.length);
   });

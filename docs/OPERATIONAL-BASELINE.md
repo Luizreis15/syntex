@@ -9,7 +9,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-24 (B2 — aplicabilidade CCT por estabelecimento+data)
+**Atualizado:** 2026-08-24 (C3 — seed CCT 2026 + financeiro puro)
 
 ---
 
@@ -206,6 +206,9 @@ Já arquitetura oficial — expandir só com slice.
 - **A2:** ponte financeira mínima — claim→reconhecer→`resolveCompanyDues`→`generateObligationWithCharge`; snapshot `origin` (establishment/representation, sem evidence); UI “Por que esta cobrança existe” em `/cobrancas/[id]`; geração continua manual via `/cobrancas/resolver` (não auto pós-recognize);
 - **B2:** painel “Resolver aplicabilidade” em `/convencoes` (estab+data → status + CCT se reconhecida); links cruzados 360/workspace ↔ convenção com `?date=`;
 - **B1:** create de estabelecimento na aba Representação da Empresa 360 (`establishment.write`); município/CNAE no form; município da matriz em `/empresas/nova`; link para `/representacao/[id]`;
+- **C1:** `docs/CORE-V1-ACCEPTANCE-RUNBOOK.md` — roteiro DoD §2.3;
+- **C2:** smoke Vitest `tests/core-v1-smoke.test.ts` (`npm run test:core-v1`) — cadastro→claim→recognize→CCT→dues→charge+origem + grants;
+- **C3:** seed — CCT `MR024310/2026` (cobre referência ~ago/2026); login `financeiro@secabc.exemplo.org.br` (só finance); obrigações DEMO sob CCT vigente na referência;
 - **Demo path SECABC/DEV:** Representação → Reconhecer → Cobranças → Resolver débitos (competência dentro da vigência da CCT) → abrir cobrança e ver origem;
 - conecta Empresa → CCT → Arrecadação.
 
@@ -230,6 +233,8 @@ Já arquitetura oficial — expandir só com slice.
 | `CLAUDE.md` | Lei operacional para agentes |
 | `docs/OPERATIONAL-BASELINE.md` | **Este** — mapa canônico de implementation |
 | `docs/SYNTEX-VERSIONS.md` | Core V1 / V1.x / V2+ — o que se vende e se entrega por versão |
+| `docs/CORE-V1-BUILD-FLOW.md` | Ordem das fatias até aceite do Core V1 |
+| `docs/CORE-V1-ACCEPTANCE-RUNBOOK.md` | Roteiro clicável DoD V1 (C1) + bloqueios → C3 |
 | `docs/FRONTEND-APPROVED-BASELINE.md` | Freeze visual PO |
 | `decisoes/ADR-020-…` | Precedência fase + frontend |
 | `decisoes/ADR-019-…` | platform_notification |

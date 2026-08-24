@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:core-v1": "vitest run tests/core-v1-smoke.test.ts",
     "test:e2e": "playwright test",
     "db:seed": "tsx --env-file=.env.local scripts/seed.ts"
   },
