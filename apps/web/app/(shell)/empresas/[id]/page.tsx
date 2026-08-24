@@ -86,6 +86,25 @@ export default async function CompanyDetailPage({
     (establishments ?? []).find((e) => e.kind === "matriz") ?? establishments?.[0] ?? null;
 
   const canReadRepresentation = hasAnyGrant(session.grants, "representation.read");
+  const canWriteEstablishment = hasAnyGrant(session.grants, "establishment.write");
+
+  const [{ data: municipalities }, { data: cnaes }] = await Promise.all([
+    session.supabase
+      .from("municipality")
+      .select("id, name, state_code")
+      .order("name")
+      .limit(600),
+    session.supabase.from("cnae").select("id, code, description").order("code").limit(400),
+  ]);
+
+  const municipalityOptions = (municipalities ?? []).map((m) => ({
+    id: m.id,
+    label: `${m.name}/${m.state_code}`,
+  }));
+  const cnaeOptions = (cnaes ?? []).map((c) => ({
+    id: c.id,
+    label: `${c.code} — ${c.description}`,
+  }));
 
   const [representationBlock, stats] = await Promise.all([
     fetchEmpresa360RepresentationBlock(
@@ -161,6 +180,7 @@ export default async function CompanyDetailPage({
 
                 <Empresa360Representacao
                   date={date}
+                  companyId={company.id}
                   establishments={(establishments ?? []).map((e) => {
                     const m = (e as unknown as { municipality: { name: string } | null }).municipality;
                     return {
@@ -206,6 +226,7 @@ export default async function CompanyDetailPage({
           canReadRepresentation ? (
             <Empresa360Representacao
               date={date}
+              companyId={company.id}
               establishments={(establishments ?? []).map((e) => {
                 const m = (e as unknown as { municipality: { name: string } | null }).municipality;
                 return {
@@ -225,6 +246,9 @@ export default async function CompanyDetailPage({
                 evidence: r.evidence,
               }))}
               mode="tab"
+              canWriteEstablishment={canWriteEstablishment}
+              municipalities={municipalityOptions}
+              cnaes={cnaeOptions}
             />
           ) : (
             <SyntexEmptyState

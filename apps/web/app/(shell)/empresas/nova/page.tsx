@@ -46,6 +46,12 @@ export default async function NovaEmpresaPage() {
     .order("code")
     .limit(400);
 
+  const { data: municipalities } = await session.supabase
+    .from("municipality")
+    .select("id, name, state_code")
+    .order("name")
+    .limit(600);
+
   return (
     <div>
       <SyntexPageHeader
@@ -57,7 +63,7 @@ export default async function NovaEmpresaPage() {
         title="Nova empresa"
         metadata={
           <span className="text-body text-ink-2">
-            Identificação · endereço · responsável pela conta · matriz
+            Identificação · município · endereço · responsável pela conta · matriz
           </span>
         }
       />
@@ -67,6 +73,10 @@ export default async function NovaEmpresaPage() {
           cnaes={(cnaes ?? []).map((c) => ({
             id: c.id,
             label: `${c.code} — ${c.description}`,
+          }))}
+          municipalities={(municipalities ?? []).map((m) => ({
+            id: m.id,
+            label: `${m.name}/${m.state_code}`,
           }))}
         />
       </div>

@@ -9,7 +9,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-24 (A2 — ponte recognize → dues → charge)
+**Atualizado:** 2026-08-24 (B1 — establishments create + município na matriz)
 
 ---
 
@@ -79,8 +79,8 @@ Pagamento / conciliação / baixa
 
 | Capability | Create | Read | Update | Detail | History | Estado |
 |------------|--------|------|--------|--------|---------|--------|
-| Companies | ✅ | ✅ | — UI | ⚠ 360+DEMO | DEMO | REAL (CRUD incompleto) |
-| Establishments | ✅ API | ⚠ | — | ⚠ | — | REAL parcial |
+| Companies | ✅ (+município matriz) | ✅ | — UI | ⚠ 360+DEMO | DEMO | REAL (CRUD incompleto; B1 município no create) |
+| Establishments | ✅ API+UI Empresa 360 | ✅ lista 360 | — | ⚠ | — | REAL parcial (create+list; sem PATCH) |
 | Workers | ✅ | ✅ | — UI | ⚠ 360+DEMO | DEMO | REAL (CRUD incompleto) |
 | Persons | ✅ via worker | ✅ | — | via worker | — | REAL |
 | Memberships | ✅ | ✅ | ⚠ status | via worker/portal | ⚠ | REAL |
@@ -204,6 +204,7 @@ Já arquitetura oficial — expandir só com slice.
 - **Slice 1.3B / A0:** command REIVINDICAR — status sempre `reivindicada`; audit create sem evidence; outbox insert `0028`;
 - **A1:** command RECONHECER (`POST /api/representations/[id]/recognize`) — `representation.decide`; encerra concorrentes sobrepostos como `perdida`; outbox status `0029`;
 - **A2:** ponte financeira mínima — claim→reconhecer→`resolveCompanyDues`→`generateObligationWithCharge`; snapshot `origin` (establishment/representation, sem evidence); UI “Por que esta cobrança existe” em `/cobrancas/[id]`; geração continua manual via `/cobrancas/resolver` (não auto pós-recognize);
+- **B1:** create de estabelecimento na aba Representação da Empresa 360 (`establishment.write`); município/CNAE no form; município da matriz em `/empresas/nova`; link para `/representacao/[id]`;
 - **Demo path SECABC/DEV:** Representação → Reconhecer → Cobranças → Resolver débitos (competência dentro da vigência da CCT) → abrir cobrança e ver origem;
 - conecta Empresa → CCT → Arrecadação.
 

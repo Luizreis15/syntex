@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordAudit } from "@syntex/database";
 import { establishmentCreateSchema } from "@syntex/validation";
 import { checkPermission, requireSession } from "@/lib/auth/require-permission";
 
@@ -19,7 +20,9 @@ export async function POST(request: NextRequest) {
     .eq("tenant_id", session.tenantId)
     .eq("id", parsed.data.companyId)
     .single();
-  if (companyError || !company) return NextResponse.json({ error: "empresa não encontrada" }, { status: 404 });
+  if (companyError || !company) {
+    return NextResponse.json({ error: "empresa não encontrada" }, { status: 404 });
+  }
 
   const denied = checkPermission(session, "establishment.write", {
     tenantId: session.tenantId,
@@ -41,5 +44,20 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  await recordAudit(session.supabase, {
+    tenantId: session.tenantId,
+    actorId: session.appUserId,
+    action: "create",
+    table: "establishment",
+    resourceId: data.id,
+    metadata: {
+      surface: "empresa.establishment",
+      companyId: parsed.data.companyId,
+      kind: parsed.data.kind,
+      municipalityId: parsed.data.municipalityId ?? null,
+    },
+  });
+
   return NextResponse.json({ data }, { status: 201 });
 }

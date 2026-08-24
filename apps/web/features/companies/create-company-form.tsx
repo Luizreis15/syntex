@@ -17,9 +17,11 @@ interface Option {
 export function CreateCompanyForm({
   branches,
   cnaes,
+  municipalities = [],
 }: {
   branches: Option[];
   cnaes: Option[];
+  municipalities?: Option[];
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +29,7 @@ export function CreateCompanyForm({
   const [pending, setPending] = useState(false);
   const [primaryCnaeId, setPrimaryCnaeId] = useState("");
   const [branchId, setBranchId] = useState("");
+  const [municipalityId, setMunicipalityId] = useState("");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -40,6 +43,7 @@ export function CreateCompanyForm({
       tradeName: String(fd.get("tradeName") || "") || undefined,
       cnpj: String(fd.get("cnpj") || ""),
       primaryCnaeId: String(fd.get("primaryCnaeId") || "") || undefined,
+      municipalityId: municipalityId || undefined,
       branchId: String(fd.get("branchId") || "") || undefined,
       phone: String(fd.get("phone") || "") || undefined,
       addressZip: String(fd.get("addressZip") || "") || undefined,
@@ -78,6 +82,10 @@ export function CreateCompanyForm({
 
   const cnaeOptions = [{ value: "", label: "—" }, ...cnaes.map((c) => ({ value: c.id, label: c.label }))];
   const branchOptions = [{ value: "", label: "—" }, ...branches.map((b) => ({ value: b.id, label: b.label }))];
+  const municipalityOptions = [
+    { value: "", label: "—" },
+    ...municipalities.map((m) => ({ value: m.id, label: m.label })),
+  ];
 
   return (
     <form onSubmit={onSubmit} className="max-w-3xl space-y-10">
@@ -103,6 +111,15 @@ export function CreateCompanyForm({
           />
           <SyntexField
             variant="select"
+            label="Município da matriz"
+            name="municipalityId"
+            value={municipalityId}
+            onValueChange={setMunicipalityId}
+            options={municipalityOptions}
+            width="lg"
+          />
+          <SyntexField
+            variant="select"
             label="Unidade sindical responsável"
             name="branchId"
             value={branchId}
@@ -111,6 +128,9 @@ export function CreateCompanyForm({
             width="md"
           />
         </div>
+        <p className="text-label text-ink-3">
+          O município da matriz é usado na resolução de representação e CCT. Recomendado.
+        </p>
       </section>
 
       <section className="space-y-4">

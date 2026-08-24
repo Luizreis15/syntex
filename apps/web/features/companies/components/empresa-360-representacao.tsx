@@ -1,21 +1,30 @@
+import Link from "next/link";
 import { formatData } from "@/lib/formatters/data";
 import { DashboardPanel } from "@/features/dashboard/components/dashboard-panel";
+import { CreateEstablishmentForm } from "@/features/companies/create-establishment-form";
 
 type Resolution = Awaited<
   ReturnType<typeof import("@/lib/domain/resolve-representation").resolveRepresentation>
 >;
+
+type EstabOption = { id: string; label: string };
 
 /**
  * Representação — resolução temporal real (visão geral) ou aba completa.
  */
 export function Empresa360Representacao({
   date,
+  companyId,
   establishments,
   resolution,
   timeline,
   mode = "tab",
+  canWriteEstablishment = false,
+  municipalities = [],
+  cnaes = [],
 }: {
   date: string;
+  companyId: string;
   establishments: {
     id: string;
     kind: string;
@@ -33,7 +42,11 @@ export function Empresa360Representacao({
   }[];
   /** compact = só resolução (visão geral / e2e); tab = estabelecimentos + timeline */
   mode?: "compact" | "tab";
+  canWriteEstablishment?: boolean;
+  municipalities?: EstabOption[];
+  cnaes?: EstabOption[];
 }) {
+  const hasMatriz = establishments.some((e) => e.kind === "matriz");
   const resolutionPanel = (
     <DashboardPanel
       title="Representação na data"
@@ -150,18 +163,39 @@ export function Empresa360Representacao({
       <DashboardPanel title="Estabelecimentos" subtitle="Matriz e filiais na base">
         <ul className="divide-y divide-border/40">
           {establishments.map((e) => (
-            <li key={e.id} className="flex items-center justify-between gap-3 px-5 py-3 text-body">
+            <li
+              key={e.id}
+              className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-body"
+            >
               <span className="font-semibold text-ink">
                 {e.kind === "matriz" ? "Matriz" : "Filial"}
                 <span className="ml-2 font-mono text-label font-normal text-ink-3">{e.cnpj}</span>
               </span>
-              <span className="text-ink-2">{e.municipalityName ?? "—"}</span>
+              <span className="flex flex-wrap items-center gap-3 text-ink-2">
+                <span>{e.municipalityName ?? "—"}</span>
+                <Link
+                  href={`/representacao/${e.id}`}
+                  className="text-label font-semibold text-petrol-700 hover:underline"
+                >
+                  Representação
+                </Link>
+              </span>
             </li>
           ))}
           {establishments.length === 0 ? (
             <li className="px-5 py-8 text-ink-2">Nenhum estabelecimento cadastrado.</li>
           ) : null}
         </ul>
+        {canWriteEstablishment ? (
+          <div className="border-t border-border/40 px-5 py-4">
+            <CreateEstablishmentForm
+              companyId={companyId}
+              municipalities={municipalities}
+              cnaes={cnaes}
+              defaultKind={hasMatriz ? "filial" : "matriz"}
+            />
+          </div>
+        ) : null}
       </DashboardPanel>
 
       <DashboardPanel title="Linha do tempo da representação" subtitle="Histórico cadastrado">
