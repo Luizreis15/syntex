@@ -52,7 +52,10 @@ export async function resolveCompanyDues(
       est.id,
       competenceDate,
     );
-    if (resolution.status === "sem_representacao" || resolution.status === "disputada") {
+    // Obrigação automática só a partir de representação consolidada.
+    // resolveRepresentation já bloqueia agreement/rules fora de `reconhecida`;
+    // este guard evita gerar dues se o contrato do resolver mudar.
+    if (resolution.status !== "reconhecida") {
       continue;
     }
     if (!resolution.agreement || resolution.contributionRules.length === 0) continue;

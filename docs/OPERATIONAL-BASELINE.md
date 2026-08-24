@@ -91,7 +91,7 @@ Pagamento / conciliação / baixa
 
 | Capability | Estado | Notas |
 |------------|--------|-------|
-| Representation | **DOMAIN REAL / UI PARCIAL** | Schema, resolve, API `/api/nxt*`, Empresa 360; nav `built:false`; sem módulo UI próprio |
+| Representation | **READ LIST + WORKSPACE REAL / WRITE PARCIAL** | Lista + workspace; CCT/dues só via `reconhecida` (1.3A); Empresa 360 exige `representation.read` no bloco jurídico |
 | Territory / Registration | REAL (seed/joins) | Sem CRUD UI |
 | Categories (econ/prof) | REAL (seed) | Sem CRUD UI |
 | Collective Agreements | REAL read + parcial write | Lista/detalhe; create UI fraca |
@@ -196,19 +196,21 @@ Já arquitetura oficial — expandir só com slice.
 
 - schema + EXCLUDE + seed existem;
 - permissions `representation.*` existem;
-- `resolveRepresentation` + API `/api/nxt` / `resolve` existem;
+- `resolveRepresentation` + API `/api/representations` / `resolve` existem;
 - Empresa 360 já consome representação;
-- falta superfície operacional própria (`built:false` hoje);
+- superfície READ-ONLY: lista `/representacao` + workspace `/representacao/[establishmentId]` (Slices 1.1B–1.2); write/decide ainda parciais;
+- **Slice 1.3A:** CCT/`contributionRules`/`resolveDues` só a partir de status `reconhecida` (estado consolidado — ADR-003); reivindicada/perdida/disputa/sem_rep não elegem acordo automático;
+- **Slice 1.3A:** Empresa 360 só carrega bloco jurídico de representação com `representation.read` (não basta `company.read`);
 - conecta Empresa → CCT → Arrecadação.
 
 ---
 
-## 12. Nav notes (sem alteração neste slice)
+## 12. Nav notes
 
 | Item | built | href | Realidade |
 |------|-------|------|-----------|
 | Atendimento | false | — | PLANNED (Slice 0.3); `/filiacao` placeholder histórico |
-| Representação | false | — | Domain REAL / UI parcial |
+| Representação | true | `/representacao` | READ LIST + WORKSPACE REAL / WRITE PARCIAL / DECISION NOT IMPLEMENTED |
 | Agenda…Jurídico | false | — | PLANNED |
 | Arrecadação / Financeiro | false | — | PLANNED (cobranças cobrem fatia) |
 | Engajamento / Inteligência / Config | false | — | PLANNED |

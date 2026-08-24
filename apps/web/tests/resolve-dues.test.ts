@@ -187,3 +187,148 @@ describe("resolveCompanyDues — o que a empresa deve na competência", () => {
     expect(dues).toEqual([]);
   });
 });
+
+describe("resolveCompanyDues — status não consolidado não gera obrigação (1.3A)", () => {
+  let tenant: { id: string };
+  let companyId: string;
+  let establishmentId: string;
+
+  beforeAll(async () => {
+    tenant = await createTestTenant("dues-status");
+
+    const { data: company, error: companyError } = await admin
+      .from("company")
+      .insert({ tenant_id: tenant.id, cnpj: unique("00"), legal_name: "Empresa Status Dues" })
+      .select()
+      .single();
+    if (companyError) throw companyError;
+    companyId = company.id;
+
+    const { data: establishment, error: estError } = await admin
+      .from("establishment")
+      .insert({
+        tenant_id: tenant.id,
+        company_id: companyId,
+        cnpj: unique("00"),
+        kind: "matriz",
+      })
+      .select()
+      .single();
+    if (estError) throw estError;
+    establishmentId = establishment.id;
+
+    const { data: economic, error: ecoError } = await admin
+      .from("economic_category")
+      .insert({ tenant_id: tenant.id, name: unique("Eco") })
+      .select()
+      .single();
+    if (ecoError) throw ecoError;
+
+    const { data: professional, error: proError } = await admin
+      .from("professional_category")
+      .insert({ tenant_id: tenant.id, name: unique("Pro") })
+      .select()
+      .single();
+    if (proError) throw proError;
+
+    const { data: registration, error: regError } = await admin
+      .from("union_registration")
+      .insert({
+        tenant_id: tenant.id,
+        registry_number: unique("REG"),
+        registered_at: "2020-01-01",
+        economic_category_id: economic.id,
+        professional_category_id: professional.id,
+      })
+      .select()
+      .single();
+    if (regError) throw regError;
+
+    const { data: agreement, error: agreementError } = await admin
+      .from("collective_agreement")
+      .insert({
+        tenant_id: tenant.id,
+        kind: "cct",
+        mediador_number: "MR-ST",
+        valid_from: "2026-01-01",
+        valid_until: "2026-12-31",
+        base_date: "2026-01-01",
+        economic_category_id: economic.id,
+        professional_category_id: professional.id,
+      })
+      .select()
+      .single();
+    if (agreementError) throw agreementError;
+
+    const { error: ruleError } = await admin.from("contribution_rule").insert({
+      tenant_id: tenant.id,
+      collective_agreement_id: agreement.id,
+      type: "mensalidade",
+      valid_from: "2026-01-01",
+      calculation_base: "empresa",
+      value_type: "valor_fixo",
+      value: 99,
+    });
+    if (ruleError) throw ruleError;
+
+    const { error: repError } = await admin.from("union_representation").insert({
+      tenant_id: tenant.id,
+      establishment_id: establishmentId,
+      union_registration_id: registration.id,
+      status: "reivindicada",
+      valid_from: "2020-01-01",
+      valid_until: null,
+      basis: "manual",
+      evidence: "ainda não consolidada",
+    });
+    if (repError) throw repError;
+  });
+
+  afterAll(async () => {
+    await deleteTestTenant(tenant.id);
+  });
+
+  it("reivindicada não gera dues mesmo com CCT/regra existentes", async () => {
+    const dues = await resolveCompanyDues(admin, {
+      tenantId: tenant.id,
+      companyId,
+      competence: "2026-08",
+      calculationBaseAmount: 1_000,
+    });
+    expect(dues).toEqual([]);
+  });
+
+  it("após promover a reconhecida, dues voltam a resolver", async () => {
+    const { error } = await admin
+      .from("union_representation")
+      .update({ status: "reconhecida" })
+      .eq("establishment_id", establishmentId)
+      .eq("tenant_id", tenant.id);
+    if (error) throw error;
+
+    const dues = await resolveCompanyDues(admin, {
+      tenantId: tenant.id,
+      companyId,
+      competence: "2026-08",
+      calculationBaseAmount: 1_000,
+    });
+    expect(dues.length).toBeGreaterThan(0);
+    expect(dues.every((d) => d.representationStatus === "reconhecida")).toBe(true);
+  });
+
+  it("perdida não gera dues", async () => {
+    const { error } = await admin
+      .from("union_representation")
+      .update({ status: "perdida" })
+      .eq("establishment_id", establishmentId)
+      .eq("tenant_id", tenant.id);
+    if (error) throw error;
+
+    const dues = await resolveCompanyDues(admin, {
+      tenantId: tenant.id,
+      companyId,
+      competence: "2026-08",
+    });
+    expect(dues).toEqual([]);
+  });
+});

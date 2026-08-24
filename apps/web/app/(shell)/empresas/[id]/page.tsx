@@ -1,13 +1,13 @@
 import { notFound, redirect } from "next/navigation";
 import { hasAnyGrant } from "@syntex/permissions";
 import { getSession } from "@/lib/auth/session";
-import { resolveRepresentation } from "@/lib/domain/resolve-representation";
 import type { DomainState } from "@/components/ui/syntex-status";
 import {
   buildEmpresaSummary,
   buildWorkerMix,
   fetchEmpresa360Stats,
 } from "@/features/companies/empresa-360-data";
+import { fetchEmpresa360RepresentationBlock } from "@/features/companies/empresa-360-representation";
 import { Empresa360Header } from "@/features/companies/components/empresa-360-header";
 import { Empresa360Tabs } from "@/features/companies/components/empresa-360-tabs";
 import {
@@ -20,6 +20,7 @@ import { Empresa360Pendencias } from "@/features/companies/components/empresa-36
 import { Empresa360Intelligence } from "@/features/companies/components/empresa-360-intelligence";
 import { Empresa360Timeline } from "@/features/companies/components/empresa-360-timeline";
 import { Empresa360Representacao } from "@/features/companies/components/empresa-360-representacao";
+import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -84,32 +85,24 @@ export default async function CompanyDetailPage({
   const matriz =
     (establishments ?? []).find((e) => e.kind === "matriz") ?? establishments?.[0] ?? null;
 
-  const [resolution, stats, timelineRes] = await Promise.all([
-    matriz
-      ? resolveRepresentation(session.supabase, session.tenantId, matriz.id, date)
-      : Promise.resolve(null),
+  const canReadRepresentation = hasAnyGrant(session.grants, "representation.read");
+
+  const [representationBlock, stats] = await Promise.all([
+    fetchEmpresa360RepresentationBlock(
+      session.supabase,
+      session.tenantId,
+      session.grants,
+      matriz?.id ?? null,
+      date,
+    ),
     fetchEmpresa360Stats(session.supabase, session.tenantId, company.id),
-    matriz
-      ? session.supabase
-          .from("union_representation")
-          .select("id, status, basis, valid_from, valid_until, evidence")
-          .eq("tenant_id", session.tenantId)
-          .eq("establishment_id", matriz.id)
-          .order("valid_from", { ascending: true })
-      : Promise.resolve({
-          data: [] as {
-            id: string;
-            status: string;
-            basis: string | null;
-            valid_from: string;
-            valid_until: string | null;
-            evidence: string | null;
-          }[],
-        }),
   ]);
 
-  const timeline = timelineRes.data ?? [];
-  const domainStatus = asDomainState(resolution?.status ?? null);
+  const resolution = representationBlock?.resolution ?? null;
+  const timeline = representationBlock?.timeline ?? [];
+  const domainStatus = canReadRepresentation
+    ? asDomainState(resolution?.status ?? null)
+    : null;
   const displayName = company.trade_name ?? company.legal_name;
   const municipality = company.municipality as unknown as {
     name: string;
@@ -157,35 +150,39 @@ export default async function CompanyDetailPage({
       <Empresa360Tabs
         visaoGeral={
           <>
-            <Empresa360StatusRail
-              stops={railStops}
-              domainStatus={domainStatus}
-              sinceLabel={sinceFmt}
-              showClaimSplit={domainStatus === "disputada" || domainStatus === "reivindicada"}
-            />
+            {canReadRepresentation ? (
+              <>
+                <Empresa360StatusRail
+                  stops={railStops}
+                  domainStatus={domainStatus}
+                  sinceLabel={sinceFmt}
+                  showClaimSplit={domainStatus === "disputada" || domainStatus === "reivindicada"}
+                />
 
-            <Empresa360Representacao
-              date={date}
-              establishments={(establishments ?? []).map((e) => {
-                const m = (e as unknown as { municipality: { name: string } | null }).municipality;
-                return {
-                  id: e.id,
-                  kind: e.kind,
-                  cnpj: e.cnpj,
-                  municipalityName: m?.name ?? null,
-                };
-              })}
-              resolution={resolution}
-              timeline={timeline.map((r) => ({
-                id: r.id,
-                status: r.status,
-                basis: r.basis,
-                valid_from: r.valid_from,
-                valid_until: r.valid_until,
-                evidence: r.evidence,
-              }))}
-              mode="compact"
-            />
+                <Empresa360Representacao
+                  date={date}
+                  establishments={(establishments ?? []).map((e) => {
+                    const m = (e as unknown as { municipality: { name: string } | null }).municipality;
+                    return {
+                      id: e.id,
+                      kind: e.kind,
+                      cnpj: e.cnpj,
+                      municipalityName: m?.name ?? null,
+                    };
+                  })}
+                  resolution={resolution}
+                  timeline={timeline.map((r) => ({
+                    id: r.id,
+                    status: r.status,
+                    basis: r.basis,
+                    valid_from: r.valid_from,
+                    valid_until: r.valid_until,
+                    evidence: r.evidence,
+                  }))}
+                  mode="compact"
+                />
+              </>
+            ) : null}
 
             <div className="grid gap-5 xl:grid-cols-3">
               <div className="xl:col-span-2">
@@ -206,28 +203,35 @@ export default async function CompanyDetailPage({
           </>
         }
         representacao={
-          <Empresa360Representacao
-            date={date}
-            establishments={(establishments ?? []).map((e) => {
-              const m = (e as unknown as { municipality: { name: string } | null }).municipality;
-              return {
-                id: e.id,
-                kind: e.kind,
-                cnpj: e.cnpj,
-                municipalityName: m?.name ?? null,
-              };
-            })}
-            resolution={resolution}
-            timeline={timeline.map((r) => ({
-              id: r.id,
-              status: r.status,
-              basis: r.basis,
-              valid_from: r.valid_from,
-              valid_until: r.valid_until,
-              evidence: r.evidence,
-            }))}
-            mode="tab"
-          />
+          canReadRepresentation ? (
+            <Empresa360Representacao
+              date={date}
+              establishments={(establishments ?? []).map((e) => {
+                const m = (e as unknown as { municipality: { name: string } | null }).municipality;
+                return {
+                  id: e.id,
+                  kind: e.kind,
+                  cnpj: e.cnpj,
+                  municipalityName: m?.name ?? null,
+                };
+              })}
+              resolution={resolution}
+              timeline={timeline.map((r) => ({
+                id: r.id,
+                status: r.status,
+                basis: r.basis,
+                valid_from: r.valid_from,
+                valid_until: r.valid_until,
+                evidence: r.evidence,
+              }))}
+              mode="tab"
+            />
+          ) : (
+            <SyntexEmptyState
+              title="Sem acesso a Representação"
+              description="Sua conta não tem representation.read. Os dados jurídicos de enquadramento não são carregados nesta ficha."
+            />
+          )
         }
       />
     </div>
