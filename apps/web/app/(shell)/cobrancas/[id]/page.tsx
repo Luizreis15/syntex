@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth/session";
 import { SyntexPageHeader } from "@/components/ui/syntex-page-header";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
 import { fetchChargeDetail } from "@/features/charges/data";
+import { ChargeObligationOrigin } from "@/features/charges/charge-obligation-origin";
 import { SettleChargeButton } from "@/features/charges/settle-charge-button";
 import { GatewayChargeActions } from "@/features/charges/gateway-charge-actions";
 import { formatMoeda } from "@/lib/formatters/moeda";
@@ -144,26 +145,11 @@ export default async function CobrancaDetailPage({ params }: { params: { id: str
           </section>
         )}
 
-        <section className="space-y-2 border-b border-border pb-4">
-          <h2 className="text-component font-semibold text-ink">Obrigação e snapshot da regra</h2>
-          <p className="text-body text-ink-2">
-            Status da obrigação: <span className="font-medium text-ink">{obligation.status}</span>
-            {obligation.contribution_rule && (
-              <>
-                {" · "}
-                {obligation.contribution_rule.type} · {obligation.contribution_rule.calculation_base} ·{" "}
-                <span className="font-mono">
-                  {obligation.contribution_rule.value_type === "percentual"
-                    ? `${obligation.contribution_rule.value}%`
-                    : obligation.contribution_rule.value}
-                </span>
-              </>
-            )}
-          </p>
-          <pre className="overflow-x-auto rounded-sm border border-border bg-surface-2 p-3 font-mono text-label text-ink-2">
-            {JSON.stringify(obligation.rule_snapshot, null, 2)}
-          </pre>
-        </section>
+        <ChargeObligationOrigin
+          snapshot={obligation.rule_snapshot}
+          ruleLive={obligation.contribution_rule}
+          obligationStatus={obligation.status}
+        />
 
         <section className="space-y-2">
           <h2 className="text-component font-semibold text-ink">Lançamento contábil</h2>

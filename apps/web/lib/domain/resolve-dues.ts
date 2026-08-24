@@ -18,6 +18,7 @@ export interface DueItem {
   existingObligationId: string | null;
   existingChargeId: string | null;
   representationStatus: string;
+  representationId: string | null;
 }
 
 /**
@@ -82,6 +83,7 @@ export async function resolveCompanyDues(
         existingObligationId: null,
         existingChargeId: null,
         representationStatus: resolution.status,
+        representationId: resolution.representation?.id ?? null,
       });
     }
   }

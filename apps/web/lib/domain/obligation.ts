@@ -19,6 +19,12 @@ export interface RuleSnapshot {
     valid_until: string;
     base_date: string;
   } | null;
+  /** Origem sindical no momento da geração (A2) — sem evidence. */
+  origin?: {
+    establishment_id: string;
+    representation_id: string | null;
+    representation_status: string;
+  } | null;
   competence: string;
   calculation_base_amount: number | null;
   computed_at: string;
@@ -53,6 +59,7 @@ export function buildRuleSnapshot(input: {
   agreement: RuleSnapshot["agreement"];
   competence: string;
   calculationBaseAmount: number | null;
+  origin?: RuleSnapshot["origin"];
 }): RuleSnapshot {
   return {
     rule: {
@@ -66,6 +73,7 @@ export function buildRuleSnapshot(input: {
       collective_agreement_id: input.rule.collective_agreement_id,
     },
     agreement: input.agreement,
+    origin: input.origin ?? null,
     competence: input.competence,
     calculation_base_amount: input.calculationBaseAmount,
     computed_at: new Date().toISOString(),

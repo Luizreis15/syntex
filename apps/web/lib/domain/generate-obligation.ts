@@ -5,7 +5,9 @@ import {
   buildRuleSnapshot,
   competenceToDate,
   computeObligationAmount,
+  type RuleSnapshot,
 } from "@/lib/domain/obligation";
+import { resolveCompanyDues } from "@/lib/domain/resolve-dues";
 
 type Client = SupabaseClient<Database>;
 
@@ -80,6 +82,7 @@ export async function generateObligationWithCharge(
     .maybeSingle();
 
   const amount = computeObligationAmount(ruleTyped, input.calculationBaseAmount);
+  const origin = await resolveSnapshotOrigin(supabase, input);
   const snapshot = buildRuleSnapshot({
     rule: ruleTyped,
     agreement: agreement
@@ -94,6 +97,7 @@ export async function generateObligationWithCharge(
       : null,
     competence: input.competence,
     calculationBaseAmount: input.calculationBaseAmount ?? null,
+    origin,
   });
 
   const { data: obligation, error: obligationError } = await supabase
@@ -131,6 +135,36 @@ export async function generateObligationWithCharge(
     charge,
     created: true,
   };
+}
+
+/** Melhor esforço: amarra a regra à representação reconhecida que a originou. */
+async function resolveSnapshotOrigin(
+  supabase: Client,
+  input: {
+    tenantId: string;
+    companyId: string;
+    contributionRuleId: string;
+    competence: string;
+    calculationBaseAmount?: number;
+  },
+): Promise<RuleSnapshot["origin"]> {
+  try {
+    const dues = await resolveCompanyDues(supabase, {
+      tenantId: input.tenantId,
+      companyId: input.companyId,
+      competence: input.competence,
+      calculationBaseAmount: input.calculationBaseAmount,
+    });
+    const match = dues.find((d) => d.contributionRuleId === input.contributionRuleId);
+    if (!match) return null;
+    return {
+      establishment_id: match.establishmentId,
+      representation_id: match.representationId,
+      representation_status: match.representationStatus,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function defaultDueDate(competenceDate: string): string {

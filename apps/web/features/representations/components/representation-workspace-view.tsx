@@ -105,6 +105,14 @@ export function RepresentationWorkspaceView({
                   registrations={registrations}
                 />
               ) : null}
+              {workspace.currentStatus === "reconhecida" ? (
+                <p className="text-dense text-ink-2">
+                  Representação consolidada.{" "}
+                  <Link href="/cobrancas/resolver" className="font-semibold text-petrol-700 hover:underline">
+                    Resolver débitos e gerar cobrança
+                  </Link>
+                </p>
+              ) : null}
             </div>
           </div>
         </div>

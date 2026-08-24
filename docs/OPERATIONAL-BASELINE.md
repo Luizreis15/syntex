@@ -9,7 +9,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-24 (A1 — RECONHECER / decide + migration 0029)
+**Atualizado:** 2026-08-24 (A2 — ponte recognize → dues → charge)
 
 ---
 
@@ -102,7 +102,7 @@ Pagamento / conciliação / baixa
 | Capability | Estado | Notas |
 |------------|--------|-------|
 | Obligation | REAL | Via generate; sem listagem própria |
-| Charge | REAL | Jornada mais madura (lista/nova/detail/settle/intent) |
+| Charge | REAL | Lista/nova/detail/settle/intent; detalhe com origem sindical no snapshot (A2) |
 | Payment / gateway | REAL (DEV) | Stub/Asaas/Itaú; prod keys à parte |
 | Settlement | REAL | Manual + webhook |
 | Journal | REAL parcial | Visível no detalhe da charge |
@@ -203,6 +203,8 @@ Já arquitetura oficial — expandir só com slice.
 - **Slice 1.3A:** Empresa 360 só carrega bloco jurídico de representação com `representation.read` (não basta `company.read`);
 - **Slice 1.3B / A0:** command REIVINDICAR — status sempre `reivindicada`; audit create sem evidence; outbox insert `0028`;
 - **A1:** command RECONHECER (`POST /api/representations/[id]/recognize`) — `representation.decide`; encerra concorrentes sobrepostos como `perdida`; outbox status `0029`;
+- **A2:** ponte financeira mínima — claim→reconhecer→`resolveCompanyDues`→`generateObligationWithCharge`; snapshot `origin` (establishment/representation, sem evidence); UI “Por que esta cobrança existe” em `/cobrancas/[id]`; geração continua manual via `/cobrancas/resolver` (não auto pós-recognize);
+- **Demo path SECABC/DEV:** Representação → Reconhecer → Cobranças → Resolver débitos (competência dentro da vigência da CCT) → abrir cobrança e ver origem;
 - conecta Empresa → CCT → Arrecadação.
 
 ---
