@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth/session";
 import { SyntexPageHeader } from "@/components/ui/syntex-page-header";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
 import { fetchAgreementsPage } from "@/features/agreements/data";
+import { ResolveAgreementApplicabilityForm } from "@/features/agreements/resolve-agreement-applicability-form";
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -34,6 +35,26 @@ export default async function ConvencoesPage({
 
   const date = searchParams.date;
   const rows = await fetchAgreementsPage(session.supabase, session.tenantId, { date });
+  const canResolveApplicability = hasAnyGrant(session.grants, "representation.read");
+
+  let establishmentOptions: { id: string; label: string }[] = [];
+  if (canResolveApplicability) {
+    const { data: establishments } = await session.supabase
+      .from("establishment")
+      .select("id, cnpj, kind, company:establishment_company_id_tenant_id_fkey(legal_name, trade_name)")
+      .eq("tenant_id", session.tenantId)
+      .order("cnpj")
+      .limit(400);
+    establishmentOptions = (establishments ?? []).map((e) => {
+      const company = e.company as unknown as { legal_name: string; trade_name: string | null } | null;
+      const name = company?.trade_name ?? company?.legal_name ?? "Empresa";
+      const kind = e.kind === "matriz" ? "Matriz" : "Filial";
+      return {
+        id: e.id,
+        label: `${name} · ${kind} · ${e.cnpj}`,
+      };
+    });
+  }
 
   return (
     <div>
@@ -47,7 +68,18 @@ export default async function ConvencoesPage({
           </span>
         }
       />
-      <div className="space-y-4 p-6">
+      <div className="space-y-6 p-6">
+        {canResolveApplicability ? (
+          <ResolveAgreementApplicabilityForm
+            establishments={establishmentOptions}
+            defaultDate={date ?? todayIso()}
+          />
+        ) : (
+          <p className="text-dense text-ink-3">
+            Para resolver qual acordo vale para um estabelecimento, é necessário representation.read.
+          </p>
+        )}
+
         <form className="flex items-end gap-2">
           <div className="space-y-1">
             <label htmlFor="date" className="text-label text-ink-3">

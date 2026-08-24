@@ -78,9 +78,24 @@ export function RepresentationWorkspaceView({
                       state={workspace.currentStatus as DomainState}
                     />
                   )}
-                  <span className="font-mono text-label text-ink-3">
-                    referência {formatData(referenceDate)}
-                  </span>
+                                    <form className="flex flex-wrap items-center gap-2">
+                    <label htmlFor="workspace-date" className="font-mono text-label text-ink-3">
+                      referência
+                    </label>
+                    <input
+                      id="workspace-date"
+                      name="date"
+                      type="date"
+                      defaultValue={referenceDate}
+                      className="h-8 rounded-control border border-border bg-surface px-2 font-mono text-label text-ink"
+                    />
+                    <button
+                      type="submit"
+                      className="h-8 rounded-control border border-border-strong px-2 text-label font-semibold text-ink hover:bg-surface-2"
+                    >
+                      Atualizar
+                    </button>
+                  </form>
                   {workspace.hasConflict ? (
                     <span className="text-label font-semibold text-status-disputada">
                       {workspace.activeClaimsCount} reivindicações vigentes
@@ -209,7 +224,7 @@ export function RepresentationWorkspaceView({
                     </p>
                   )}
                   <Link
-                    href={`/convencoes/${workspace.resolvedAgreement.id}`}
+                    href={`/convencoes/${workspace.resolvedAgreement.id}?date=${workspace.referenceDate}`}
                     className="inline-flex text-label font-bold text-petrol-600 hover:underline"
                   >
                     Ver convenção

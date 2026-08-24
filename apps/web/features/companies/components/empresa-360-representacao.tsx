@@ -121,6 +121,14 @@ export function Empresa360Representacao({
                   {formatData(resolution.agreement.valid_until)} · data-base{" "}
                   {formatData(resolution.agreement.base_date)}
                 </p>
+                <p>
+                  <Link
+                    href={`/convencoes/${resolution.agreement.id}?date=${date}`}
+                    className="text-label font-semibold text-petrol-700 hover:underline"
+                  >
+                    Abrir convenção
+                  </Link>
+                </p>
                 {resolution.contributionRules.length > 0 ? (
                   <ul className="space-y-1 text-ink-2" data-testid="contribution-rules">
                     {resolution.contributionRules.map((rule) => (

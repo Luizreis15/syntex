@@ -9,7 +9,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-24 (B1 — establishments create + município na matriz)
+**Atualizado:** 2026-08-24 (B2 — aplicabilidade CCT por estabelecimento+data)
 
 ---
 
@@ -94,7 +94,7 @@ Pagamento / conciliação / baixa
 | Representation | **READ LIST + WORKSPACE + CLAIM WRITE + DECIDE/RECONHECER REAL** | Claim=`reivindicada`; decide promove `reconhecida` e encerra concorrentes; CCT/dues só `reconhecida` |
 | Territory / Registration | REAL (seed/joins) | Sem CRUD UI |
 | Categories (econ/prof) | REAL (seed) | Sem CRUD UI |
-| Collective Agreements | REAL read + parcial write | Lista/detalhe; create UI fraca |
+| Collective Agreements | REAL read + parcial write | Lista/detalhe; resolve aplicabilidade estab+data (B2); create UI fraca |
 | Contribution Rules | REAL | Form no detalhe CCT |
 
 ### BLOCK 3 — Revenue & Finance
@@ -204,6 +204,7 @@ Já arquitetura oficial — expandir só com slice.
 - **Slice 1.3B / A0:** command REIVINDICAR — status sempre `reivindicada`; audit create sem evidence; outbox insert `0028`;
 - **A1:** command RECONHECER (`POST /api/representations/[id]/recognize`) — `representation.decide`; encerra concorrentes sobrepostos como `perdida`; outbox status `0029`;
 - **A2:** ponte financeira mínima — claim→reconhecer→`resolveCompanyDues`→`generateObligationWithCharge`; snapshot `origin` (establishment/representation, sem evidence); UI “Por que esta cobrança existe” em `/cobrancas/[id]`; geração continua manual via `/cobrancas/resolver` (não auto pós-recognize);
+- **B2:** painel “Resolver aplicabilidade” em `/convencoes` (estab+data → status + CCT se reconhecida); links cruzados 360/workspace ↔ convenção com `?date=`;
 - **B1:** create de estabelecimento na aba Representação da Empresa 360 (`establishment.write`); município/CNAE no form; município da matriz em `/empresas/nova`; link para `/representacao/[id]`;
 - **Demo path SECABC/DEV:** Representação → Reconhecer → Cobranças → Resolver débitos (competência dentro da vigência da CCT) → abrir cobrança e ver origem;
 - conecta Empresa → CCT → Arrecadação.

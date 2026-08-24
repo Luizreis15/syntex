@@ -11,8 +11,10 @@ import { operationalReferenceDate } from "@/features/representations/data";
 
 export default async function RepresentacaoWorkspacePage({
   params,
+  searchParams,
 }: {
   params: { establishmentId: string };
+  searchParams: { date?: string };
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -28,7 +30,7 @@ export default async function RepresentacaoWorkspacePage({
     );
   }
 
-  const referenceDate = operationalReferenceDate();
+  const referenceDate = searchParams.date ?? operationalReferenceDate();
   const canWrite = hasAnyGrant(session.grants, "representation.write");
   const canDecide = hasAnyGrant(session.grants, "representation.decide");
 
