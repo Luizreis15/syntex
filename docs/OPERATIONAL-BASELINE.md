@@ -9,7 +9,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-24 (A0 — land Representação 1.1B–1.3B + migration 0028)
+**Atualizado:** 2026-08-24 (A1 — RECONHECER / decide + migration 0029)
 
 ---
 
@@ -91,7 +91,7 @@ Pagamento / conciliação / baixa
 
 | Capability | Estado | Notas |
 |------------|--------|-------|
-| Representation | **READ LIST + WORKSPACE + CLAIM WRITE REAL / DECISION NOT IMPLEMENTED** | Claim = sempre `reivindicada`; CCT/dues só `reconhecida`; decide ainda não |
+| Representation | **READ LIST + WORKSPACE + CLAIM WRITE + DECIDE/RECONHECER REAL** | Claim=`reivindicada`; decide promove `reconhecida` e encerra concorrentes; CCT/dues só `reconhecida` |
 | Territory / Registration | REAL (seed/joins) | Sem CRUD UI |
 | Categories (econ/prof) | REAL (seed) | Sem CRUD UI |
 | Collective Agreements | REAL read + parcial write | Lista/detalhe; create UI fraca |
@@ -198,10 +198,11 @@ Já arquitetura oficial — expandir só com slice.
 - permissions `representation.*` existem;
 - `resolveRepresentation` + API `/api/representations` / `resolve` existem;
 - Empresa 360 já consome representação;
-- superfície: lista `/representacao` + workspace `/representacao/[establishmentId]` (Slices 1.1B–1.2); **CLAIM WRITE REAL** (1.3B); **DECISION NOT IMPLEMENTED**;
+- superfície: lista + workspace + **CLAIM WRITE** + **DECIDE/RECONHECER REAL** (A1); perder genérico ainda só via encerramento de concorrentes no recognize;
 - **Slice 1.3A:** CCT/`contributionRules`/`resolveDues` só a partir de status `reconhecida` (estado consolidado — ADR-003); reivindicada/perdida/disputa/sem_rep não elegem acordo automático;
 - **Slice 1.3A:** Empresa 360 só carrega bloco jurídico de representação com `representation.read` (não basta `company.read`);
-- **Slice 1.3B:** command REIVINDICAR (`POST /api/representations`) — status sempre `reivindicada`; audit create sem evidence; outbox via migration `0028`;
+- **Slice 1.3B / A0:** command REIVINDICAR — status sempre `reivindicada`; audit create sem evidence; outbox insert `0028`;
+- **A1:** command RECONHECER (`POST /api/representations/[id]/recognize`) — `representation.decide`; encerra concorrentes sobrepostos como `perdida`; outbox status `0029`;
 - conecta Empresa → CCT → Arrecadação.
 
 ---
@@ -211,7 +212,7 @@ Já arquitetura oficial — expandir só com slice.
 | Item | built | href | Realidade |
 |------|-------|------|-----------|
 | Atendimento | false | — | PLANNED (Slice 0.3); `/filiacao` placeholder histórico |
-| Representação | true | `/representacao` | READ LIST + WORKSPACE + CLAIM WRITE REAL / DECISION NOT IMPLEMENTED |
+| Representação | true | `/representacao` | READ LIST + WORKSPACE + CLAIM WRITE + DECIDE/RECONHECER REAL |
 | Agenda…Jurídico | false | — | PLANNED |
 | Arrecadação / Financeiro | false | — | PLANNED (cobranças cobrem fatia) |
 | Engajamento / Inteligência / Config | false | — | PLANNED |

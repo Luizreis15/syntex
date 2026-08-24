@@ -25,10 +25,12 @@ function statusLabel(status: RepresentationWorkspace["currentStatus"]): string {
 export function RepresentationWorkspaceView({
   workspace,
   canWrite = false,
+  canDecide = false,
   registrations = [],
 }: {
   workspace: RepresentationWorkspace;
   canWrite?: boolean;
+  canDecide?: boolean;
   registrations?: ClaimRegistrationOption[];
 }) {
   const { establishment, company, referenceDate } = workspace;
@@ -130,7 +132,12 @@ export function RepresentationWorkspaceView({
                 </p>
               ) : (
                 workspace.activeClaims.map((claim) => (
-                  <RepresentationClaimCard key={claim.id} claim={claim} />
+                  <RepresentationClaimCard
+                    key={claim.id}
+                    claim={claim}
+                    canDecide={canDecide}
+                    hasCompetitors={workspace.activeClaimsCount > 1}
+                  />
                 ))
               )}
             </SyntexPanelBody>

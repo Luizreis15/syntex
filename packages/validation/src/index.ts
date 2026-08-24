@@ -93,6 +93,13 @@ export type RepresentationClaimInput = z.infer<typeof representationClaimSchema>
 export const representationCreateSchema = representationClaimSchema;
 export type RepresentationCreateInput = RepresentationClaimInput;
 
+/**
+ * Body do command RECONHECER — id vai na URL.
+ * Client não envia status/decided*; servidor promove para reconhecida.
+ */
+export const representationRecognizeSchema = z.object({}).strict();
+export type RepresentationRecognizeInput = z.infer<typeof representationRecognizeSchema>;
+
 export const resolveRepresentationQuerySchema = z.object({
   establishmentId: z.string().uuid(),
   date: isoDate,

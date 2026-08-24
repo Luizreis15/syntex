@@ -30,6 +30,7 @@ export default async function RepresentacaoWorkspacePage({
 
   const referenceDate = operationalReferenceDate();
   const canWrite = hasAnyGrant(session.grants, "representation.write");
+  const canDecide = hasAnyGrant(session.grants, "representation.decide");
 
   const result = await fetchRepresentationWorkspace(
     session.supabase,
@@ -89,6 +90,7 @@ export default async function RepresentacaoWorkspacePage({
     <RepresentationWorkspaceView
       workspace={workspace}
       canWrite={canWrite}
+      canDecide={canDecide}
       registrations={registrations}
     />
   );

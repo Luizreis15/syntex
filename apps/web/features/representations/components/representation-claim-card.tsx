@@ -2,8 +2,19 @@ import { SyntexStatus, type DomainState } from "@/components/ui/syntex-status";
 import { formatData, formatDataHora } from "@/lib/formatters/data";
 import { representationBasisLabel } from "@/features/representations/basis-label";
 import type { WorkspaceClaim } from "@/features/representations/workspace-data";
+import { RecognizeRepresentationButton } from "@/features/representations/components/recognize-representation-button";
 
-export function RepresentationClaimCard({ claim }: { claim: WorkspaceClaim }) {
+export function RepresentationClaimCard({
+  claim,
+  canDecide = false,
+  hasCompetitors = false,
+}: {
+  claim: WorkspaceClaim;
+  canDecide?: boolean;
+  hasCompetitors?: boolean;
+}) {
+  const showRecognize = canDecide && claim.status === "reivindicada";
+
   return (
     <article className="rounded-control border border-border/50 bg-paper px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -77,6 +88,15 @@ export function RepresentationClaimCard({ claim }: { claim: WorkspaceClaim }) {
         </summary>
         <p className="mt-2 whitespace-pre-wrap text-dense leading-relaxed text-ink-2">{claim.evidence}</p>
       </details>
+
+      {showRecognize ? (
+        <div className="mt-3 border-t border-border/40 pt-3">
+          <RecognizeRepresentationButton
+            representationId={claim.id}
+            hasCompetitors={hasCompetitors}
+          />
+        </div>
+      ) : null}
     </article>
   );
 }
