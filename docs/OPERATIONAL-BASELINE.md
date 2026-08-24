@@ -228,7 +228,8 @@ Já arquitetura oficial — expandir só com slice.
 | Doc | Papel |
 |-----|-------|
 | `CLAUDE.md` | Lei operacional para agentes |
-| `docs/OPERATIONAL-BASELINE.md` | **Este** — mapa canônico |
+| `docs/OPERATIONAL-BASELINE.md` | **Este** — mapa canônico de implementation |
+| `docs/SYNTEX-VERSIONS.md` | Core V1 / V1.x / V2+ — o que se vende e se entrega por versão |
 | `docs/FRONTEND-APPROVED-BASELINE.md` | Freeze visual PO |
 | `decisoes/ADR-020-…` | Precedência fase + frontend |
 | `decisoes/ADR-019-…` | platform_notification |
