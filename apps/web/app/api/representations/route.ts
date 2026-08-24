@@ -1,52 +1,86 @@
 import { NextRequest, NextResponse } from "next/server";
-import { representationCreateSchema } from "@syntex/validation";
+import { recordAudit } from "@syntex/database";
+import { representationClaimSchema } from "@syntex/validation";
 import { checkPermission, requireSession } from "@/lib/auth/require-permission";
+import { claimRepresentation } from "@/lib/domain/claim-representation";
 
+/**
+ * POST /api/representations — command REIVINDICAR.
+ * Status é sempre `reivindicada` (servidor). Client não escolhe status.
+ */
 export async function POST(request: NextRequest) {
   const auth = await requireSession();
   if ("response" in auth) return auth.response;
   const { session } = auth;
 
-  const body = await request.json();
-  const parsed = representationCreateSchema.safeParse(body);
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "JSON inválido" }, { status: 422 });
+  }
+
+  // Rejeita status/validUntil/decided* se enviados (schema .strict()).
+  const parsed = representationClaimSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 });
   }
 
+  // Escopo: precisa do branch do establishment antes do write.
   const { data: establishment, error: establishmentError } = await session.supabase
     .from("establishment")
     .select("id, company:establishment_company_id_tenant_id_fkey(branch_id)")
     .eq("tenant_id", session.tenantId)
     .eq("id", parsed.data.establishmentId)
-    .single();
+    .maybeSingle();
   if (establishmentError || !establishment) {
     return NextResponse.json({ error: "estabelecimento não encontrado" }, { status: 404 });
   }
 
-  const branchId = (establishment.company as unknown as { branch_id: string | null } | null)?.branch_id ?? null;
-  const denied = checkPermission(session, "representation.write", { tenantId: session.tenantId, branchId });
+  const branchId =
+    (establishment.company as unknown as { branch_id: string | null } | null)?.branch_id ?? null;
+  const denied = checkPermission(session, "representation.write", {
+    tenantId: session.tenantId,
+    branchId,
+  });
   if (denied) return denied;
 
-  const { data, error } = await session.supabase
-    .from("union_representation")
-    .insert({
-      tenant_id: session.tenantId,
-      establishment_id: parsed.data.establishmentId,
-      union_registration_id: parsed.data.unionRegistrationId ?? null,
-      status: parsed.data.status,
-      valid_from: parsed.data.validFrom,
-      valid_until: parsed.data.validUntil ?? null,
+  const result = await claimRepresentation(
+    session.supabase,
+    { tenantId: session.tenantId, appUserId: session.appUserId },
+    {
+      establishmentId: parsed.data.establishmentId,
+      unionRegistrationId: parsed.data.unionRegistrationId,
+      validFrom: parsed.data.validFrom,
       basis: parsed.data.basis,
       evidence: parsed.data.evidence,
-      decided_by: session.appUserId,
-      decided_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
+    },
+  );
 
-  if (error) {
-    const status = error.message.includes("exclude") || error.code === "23P01" ? 409 : 400;
-    return NextResponse.json({ error: error.message }, { status });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
-  return NextResponse.json({ data }, { status: 201 });
+
+  if (!result.duplicate) {
+    await recordAudit(session.supabase, {
+      tenantId: session.tenantId,
+      actorId: session.appUserId,
+      action: "create",
+      table: "union_representation",
+      resourceId: result.representation.id,
+      metadata: {
+        surface: "representacao.claim",
+        establishmentId: parsed.data.establishmentId,
+        companyId: result.companyId,
+        status: "reivindicada",
+        basis: parsed.data.basis,
+        classification: "juridico",
+      },
+    });
+  }
+
+  return NextResponse.json(
+    { data: result.representation, duplicate: result.duplicate },
+    { status: result.duplicate ? 200 : 201 },
+  );
 }

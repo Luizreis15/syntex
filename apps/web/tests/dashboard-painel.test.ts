@@ -114,7 +114,7 @@ describe("Painel nav — alinhado ao gate da página", () => {
       .map((i) => i.label);
     expect(builtWithHref).not.toContain("Atendimento");
     expect(builtWithHref).toEqual(
-      expect.arrayContaining(["Painel", "Trabalhadores", "Empresas", "Convenções", "Cobranças"]),
+      expect.arrayContaining(["Painel", "Trabalhadores", "Empresas", "Representação", "Convenções", "Cobranças"]),
     );
   });
 });

@@ -9,7 +9,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-23 (Slice 0.2)
+**Atualizado:** 2026-08-24 (A0 — land Representação 1.1B–1.3B + migration 0028)
 
 ---
 
@@ -91,7 +91,7 @@ Pagamento / conciliação / baixa
 
 | Capability | Estado | Notas |
 |------------|--------|-------|
-| Representation | **READ LIST + WORKSPACE REAL / WRITE PARCIAL** | Lista + workspace; CCT/dues só via `reconhecida` (1.3A); Empresa 360 exige `representation.read` no bloco jurídico |
+| Representation | **READ LIST + WORKSPACE + CLAIM WRITE REAL / DECISION NOT IMPLEMENTED** | Claim = sempre `reivindicada`; CCT/dues só `reconhecida`; decide ainda não |
 | Territory / Registration | REAL (seed/joins) | Sem CRUD UI |
 | Categories (econ/prof) | REAL (seed) | Sem CRUD UI |
 | Collective Agreements | REAL read + parcial write | Lista/detalhe; create UI fraca |
@@ -198,9 +198,10 @@ Já arquitetura oficial — expandir só com slice.
 - permissions `representation.*` existem;
 - `resolveRepresentation` + API `/api/representations` / `resolve` existem;
 - Empresa 360 já consome representação;
-- superfície READ-ONLY: lista `/representacao` + workspace `/representacao/[establishmentId]` (Slices 1.1B–1.2); write/decide ainda parciais;
+- superfície: lista `/representacao` + workspace `/representacao/[establishmentId]` (Slices 1.1B–1.2); **CLAIM WRITE REAL** (1.3B); **DECISION NOT IMPLEMENTED**;
 - **Slice 1.3A:** CCT/`contributionRules`/`resolveDues` só a partir de status `reconhecida` (estado consolidado — ADR-003); reivindicada/perdida/disputa/sem_rep não elegem acordo automático;
 - **Slice 1.3A:** Empresa 360 só carrega bloco jurídico de representação com `representation.read` (não basta `company.read`);
+- **Slice 1.3B:** command REIVINDICAR (`POST /api/representations`) — status sempre `reivindicada`; audit create sem evidence; outbox via migration `0028`;
 - conecta Empresa → CCT → Arrecadação.
 
 ---
@@ -210,7 +211,7 @@ Já arquitetura oficial — expandir só com slice.
 | Item | built | href | Realidade |
 |------|-------|------|-----------|
 | Atendimento | false | — | PLANNED (Slice 0.3); `/filiacao` placeholder histórico |
-| Representação | true | `/representacao` | READ LIST + WORKSPACE REAL / WRITE PARCIAL / DECISION NOT IMPLEMENTED |
+| Representação | true | `/representacao` | READ LIST + WORKSPACE + CLAIM WRITE REAL / DECISION NOT IMPLEMENTED |
 | Agenda…Jurídico | false | — | PLANNED |
 | Arrecadação / Financeiro | false | — | PLANNED (cobranças cobrem fatia) |
 | Engajamento / Inteligência / Config | false | — | PLANNED |

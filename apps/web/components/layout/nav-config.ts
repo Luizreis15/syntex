@@ -78,7 +78,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Trabalhadores", built: true, href: "/trabalhadores", permission: "worker.read", icon: "users" },
       { label: "Empresas", built: true, href: "/empresas", permission: "company.read", icon: "building-2" },
-      { label: "Representação", built: false, icon: "scale" },
+      { label: "Representação", built: true, href: "/representacao", permission: "representation.read", icon: "scale" },
       { label: "Convenções", built: true, href: "/convencoes", permission: "agreement.read", icon: "file-check-2" },
     ],
   },

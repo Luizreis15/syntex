@@ -77,16 +77,21 @@ export const establishmentCreateSchema = z.object({
 });
 export type EstablishmentCreateInput = z.infer<typeof establishmentCreateSchema>;
 
-export const representationCreateSchema = z.object({
-  establishmentId: z.string().uuid(),
-  unionRegistrationId: z.string().uuid().optional(),
-  status: z.enum(["reivindicada", "reconhecida", "disputada", "perdida"]),
-  validFrom: isoDate,
-  validUntil: isoDate.optional(),
-  basis: z.enum(["cnae", "cct_registrada", "decisao_judicial", "carta_sindical", "manual"]),
-  evidence: z.string().min(1),
-});
-export type RepresentationCreateInput = z.infer<typeof representationCreateSchema>;
+/** Claim write — status/validUntil/decided* NÃO vêm do client (servidor fixa reivindicada). */
+export const representationClaimSchema = z
+  .object({
+    establishmentId: z.string().uuid(),
+    unionRegistrationId: z.string().uuid().optional().nullable(),
+    validFrom: isoDate,
+    basis: z.enum(["cnae", "cct_registrada", "decisao_judicial", "carta_sindical", "manual"]),
+    evidence: z.string().min(1),
+  })
+  .strict();
+export type RepresentationClaimInput = z.infer<typeof representationClaimSchema>;
+
+/** @deprecated Use representationClaimSchema — create genérico por status foi retirado (Slice 1.3B). */
+export const representationCreateSchema = representationClaimSchema;
+export type RepresentationCreateInput = RepresentationClaimInput;
 
 export const resolveRepresentationQuerySchema = z.object({
   establishmentId: z.string().uuid(),
