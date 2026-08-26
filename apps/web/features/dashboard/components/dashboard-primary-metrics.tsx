@@ -2,11 +2,12 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { SyntexProgress } from "@/components/ui/syntex-progress";
 import { SyntexAccentFrame } from "@/components/ui/syntex-accent-rail";
+import { DevDemoBadge } from "@/components/ui/dev-demo-mark";
 import type { LovableHeroBlock } from "@/features/dashboard/compose";
 
 /**
  * KPIs do Command Hero — surfaces integradas (sem “card com contorno”).
- * Arrecadação / deltas DEMO: ver `demo-painel.ts` (DEV-only).
+ * Arrecadação / deltas DEMO: ver `demo-painel.ts` (C4: rótulo visível).
  */
 export function DashboardPrimaryMetrics({ block }: { block: LovableHeroBlock }) {
   const { associados, arrecadacao, inadimplencia, empresas } = block;
@@ -52,11 +53,17 @@ export function DashboardPrimaryMetrics({ block }: { block: LovableHeroBlock }) 
         </Link>
       ) : null}
 
-      <div className="relative overflow-hidden rounded-feature bg-[color-mix(in_oklab,var(--success)_12%,transparent)] p-5 ring-1 ring-inset ring-shell-ink/[0.06] lg:col-span-4">
+      <div
+        className="relative overflow-hidden rounded-feature bg-[color-mix(in_oklab,var(--success)_12%,transparent)] p-5 ring-1 ring-inset ring-shell-ink/[0.06] lg:col-span-4"
+        data-demo="true"
+      >
         <SyntexAccentFrame tone="green" className="pl-2.5">
-          <span className="text-label font-semibold uppercase tracking-[0.1em] text-shell-ink-2/90">
-            {arrecadacao.label}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-label font-semibold uppercase tracking-[0.1em] text-shell-ink-2/90">
+              {arrecadacao.label}
+            </span>
+            <DevDemoBadge tone="onDark" />
+          </div>
           <p className="mt-2.5 text-[2.35rem] leading-none font-semibold tracking-[-0.04em] text-shell-ink tabular-nums">
             {arrecadacao.valueDisplay}{" "}
             <span className="text-xl font-semibold tracking-[-0.02em] text-shell-ink-2">
@@ -81,15 +88,19 @@ export function DashboardPrimaryMetrics({ block }: { block: LovableHeroBlock }) 
               ? "bg-[color-mix(in_oklab,var(--warning)_10%,transparent)]"
               : "bg-[color-mix(in_oklab,var(--danger)_10%,transparent)]",
           )}
+          data-demo={inadimplencia.source === "demo" ? "true" : undefined}
         >
           <SyntexAccentFrame
             tone={inadimplencia.source === "real" ? "amber" : "red"}
             className="pl-2.5"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-label font-semibold uppercase tracking-[0.1em] text-shell-ink-2/90">
-                Inadimplência
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-label font-semibold uppercase tracking-[0.1em] text-shell-ink-2/90">
+                  Inadimplência
+                </span>
+                {inadimplencia.source === "demo" ? <DevDemoBadge tone="onDark" /> : null}
+              </div>
               <span
                 className={cn(
                   "font-mono text-label font-semibold",

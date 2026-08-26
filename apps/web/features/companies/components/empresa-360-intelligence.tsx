@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { DEMO_EMPRESA_INTELLIGENCE } from "@/features/companies/demo-empresa-360";
+import { DevDemoBadge } from "@/components/ui/dev-demo-mark";
 
 /**
- * DEMO UI — Syntex Intelligence inline (Empresa 360).
+ * DEMO UI — Syntex Intelligence inline (Empresa 360). C4: badge canônico.
  */
 export function Empresa360Intelligence({ workersHint }: { workersHint?: number }) {
   const intel = DEMO_EMPRESA_INTELLIGENCE;
@@ -12,7 +13,10 @@ export function Empresa360Intelligence({ workersHint }: { workersHint?: number }
       : intel.insight;
 
   return (
-    <section className="relative overflow-hidden rounded-panel border border-border/50 bg-tint-blue">
+    <section
+      className="relative overflow-hidden rounded-panel border border-border/50 bg-tint-blue"
+      data-demo="true"
+    >
       <span
         className="absolute inset-y-0 left-0 w-[3px] rounded-r bg-gradient-to-b from-teal to-petrol-600"
         aria-hidden
@@ -26,9 +30,7 @@ export function Empresa360Intelligence({ workersHint }: { workersHint?: number }
             <span className="text-dense font-extrabold tracking-tight text-ink">
               Syntex Intelligence
             </span>
-            <span className="rounded-control bg-surface/80 px-1.5 py-0.5 text-label font-medium text-ink-3">
-              demo
-            </span>
+            <DevDemoBadge />
           </div>
           <span className="font-mono text-label text-ink-3">{intel.tag}</span>
         </div>

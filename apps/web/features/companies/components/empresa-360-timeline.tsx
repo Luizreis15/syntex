@@ -17,7 +17,8 @@ export function Empresa360Timeline() {
   return (
     <DashboardPanel
       title="Atividade recente"
-      subtitle="Syntex Timeline · todas as áreas · demo"
+      subtitle="Syntex Timeline · ilustrativo"
+      demo
       action={
         <button
           type="button"

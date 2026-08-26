@@ -18,7 +18,8 @@ export function DashboardOperationNow({ items }: { items: OperationPulseItem[] }
   return (
     <DashboardPanel
       title="Operação agora"
-      subtitle="Syntex Pulse · atualizado continuamente"
+      subtitle="Syntex Pulse · ilustrativo (não é fila real)"
+      demo
       variant="raised"
       rail="teal"
       className="rounded-feature"

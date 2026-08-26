@@ -1,15 +1,19 @@
 import Link from "next/link";
 import { DEMO_INTELLIGENCE } from "@/features/dashboard/demo-painel";
+import { DevDemoBadge } from "@/components/ui/dev-demo-mark";
 
 /**
  * Syntex Intelligence — painel dark protagonista.
- * Conteúdo: DEV-only (`demo-painel.ts`). Não exibir rótulo “demo” na UI.
+ * Conteúdo: DEV_DEMO (`demo-painel.ts`). C4: rótulo DEMO obrigatório.
  */
 export function DashboardIntelligence() {
   const intel = DEMO_INTELLIGENCE;
 
   return (
-    <section className="surface-command relative overflow-hidden rounded-feature ring-1 ring-inset ring-shell-ink/[0.08]">
+    <section
+      className="surface-command relative overflow-hidden rounded-feature ring-1 ring-inset ring-shell-ink/[0.08]"
+      data-demo="true"
+    >
       <svg
         aria-hidden
         className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.07]"
@@ -39,6 +43,7 @@ export function DashboardIntelligence() {
             <span className="text-dense font-semibold tracking-tight text-shell-ink">
               Syntex Intelligence
             </span>
+            <DevDemoBadge tone="onDark" />
           </div>
           <span className="font-mono text-label text-shell-ink-2/80">{intel.tag}</span>
         </div>

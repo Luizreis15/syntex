@@ -9,7 +9,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-24 (C3 — seed CCT 2026 + financeiro puro)
+**Atualizado:** 2026-08-24 (C4 — honesty DEMO Painel / Empresa 360)
 
 ---
 
@@ -209,6 +209,7 @@ Já arquitetura oficial — expandir só com slice.
 - **C1:** `docs/CORE-V1-ACCEPTANCE-RUNBOOK.md` — roteiro DoD §2.3;
 - **C2:** smoke Vitest `tests/core-v1-smoke.test.ts` (`npm run test:core-v1`) — cadastro→claim→recognize→CCT→dues→charge+origem + grants;
 - **C3:** seed — CCT `MR024310/2026` (cobre referência ~ago/2026); login `financeiro@secabc.exemplo.org.br` (só finance); obrigações DEMO sob CCT vigente na referência;
+- **C4:** honesty — `DevDemoBadge`/`DevDemoNotice` no Painel e Empresa 360; painéis ilustrativos com `demo`; Intelligence sem esconder rótulo;
 - **Demo path SECABC/DEV:** Representação → Reconhecer → Cobranças → Resolver débitos (competência dentro da vigência da CCT) → abrir cobrança e ver origem;
 - conecta Empresa → CCT → Arrecadação.
 

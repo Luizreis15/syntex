@@ -35,10 +35,8 @@ import {
   DashboardOperationalAccess,
   type OperationalLink,
 } from "@/features/dashboard/components/dashboard-operational-access";
-import {
-  DashboardSideRail,
-  type QuickAction,
-} from "@/features/dashboard/components/dashboard-side-rail";
+import { DashboardSideRail, type QuickAction } from "@/features/dashboard/components/dashboard-side-rail";
+import { DevDemoNotice } from "@/components/ui/dev-demo-mark";
 
 function mapChargeRow(
   row: Awaited<ReturnType<typeof fetchChargesPage>>[number],
@@ -180,6 +178,8 @@ export default async function PainelPage() {
       />
 
       <div className="space-y-6 px-6 py-6 xl:px-8">
+        <DevDemoNotice />
+
         <div className="grid gap-5 xl:grid-cols-3 xl:gap-6">
           <div className="xl:col-span-2">
             <DashboardArrecadacaoChart />

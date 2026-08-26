@@ -12,7 +12,8 @@ export function DashboardAlertas() {
   return (
     <DashboardPanel
       title="Atenção necessária"
-      subtitle="4 frentes exigem decisão hoje"
+      subtitle="Frentes ilustrativas — não use como fila operacional"
+      demo
       variant="attention"
       rail="amber"
       className="rounded-feature"

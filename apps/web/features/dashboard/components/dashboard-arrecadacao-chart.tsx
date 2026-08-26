@@ -43,7 +43,8 @@ export function DashboardArrecadacaoChart() {
   return (
     <DashboardPanel
       title="Arrecadação"
-      subtitle="Últimos 12 meses · previsto vs. realizado"
+      subtitle="Últimos 12 meses · previsto vs. realizado · ilustrativo"
+      demo
       className="rounded-feature"
       action={
         <div className="flex items-center gap-3.5">

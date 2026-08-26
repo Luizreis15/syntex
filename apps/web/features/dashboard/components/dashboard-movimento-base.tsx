@@ -25,7 +25,7 @@ const TONE_TEXT: Record<DemoTone, string> = {
  */
 export function DashboardMovimentoBase() {
   return (
-    <DashboardPanel title="Movimento da base" subtitle="Competência 08/2026">
+    <DashboardPanel title="Movimento da base" subtitle="Competência ilustrativa" demo>
       <ul className="px-5 py-3.5">
         {DEMO_MOVIMENTO_BASE.map((m) => (
           <li key={m.label} className="py-2.5">

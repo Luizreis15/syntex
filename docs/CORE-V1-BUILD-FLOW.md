@@ -93,17 +93,18 @@ Ordenado por impacto na aceitação §2.3:
 |-------|--------|
 | **C1** | **Entregue** — `docs/CORE-V1-ACCEPTANCE-RUNBOOK.md` |
 | **C2** | **Entregue** — `apps/web/tests/core-v1-smoke.test.ts` + `npm run test:core-v1` |
-| **C3** | **Entregue** — CCT `MR024310/2026` + user `financeiro@…` + pick CCT na referência (2026-08-24). **Requer re-seed DEV** |
-| **C4** | Próxima — honesty Painel/360 |
-| **C5–C6** | Pendente |
+| **C3** | **Entregue** — CCT `MR024310/2026` + user `financeiro@…` + pick CCT na referência. **Requer re-seed DEV** |
+| **C4** | **Entregue** — rótulos DEMO no Painel / Empresa 360 (`DevDemoBadge` / `DevDemoNotice`, 2026-08-24) |
+| **C5** | Próxima — baseline + nav honestos |
+| **C6** | Pendente |
 
 ---
 
 ## 6.1 Próxima ação
 
-1. Re-seed DEV (`npm run db:seed` em `apps/web` com flags de segurança) para materializar C3.  
-2. PO: execução humana do runbook (agora com competência atual + N7 financeiro).  
-3. Agente: **C4** — honesty Painel/360 (DEMO rotulado).
+1. Re-seed DEV se ainda não rodou C3.  
+2. **Testes humanos** pelo runbook (P0–P4) — Painel agora avisa o que é DEMO.  
+3. Agente: **C5** (baseline/nav) ou buffer C6 conforme review.
 
 ---
 
@@ -129,8 +130,9 @@ Estamos prontos para construir quando:
 - [x] Fatia **C1** entregue (runbook)  
 - [x] Fatia **C2** entregue (smoke Vitest)  
 - [x] Fatia **C3** entregue (seed CCT 2026 + financeiro puro)  
-- [ ] Re-seed DEV + primeira execução humana do runbook  
-- [ ] Fatia **C4** (honesty Painel/360)  
+- [x] Fatia **C4** entregue (honesty DEMO Painel/Empresa 360)  
+- [ ] Re-seed DEV + testes humanos do runbook  
+- [ ] Fatia **C5** (baseline + nav)  
 
 ---
 

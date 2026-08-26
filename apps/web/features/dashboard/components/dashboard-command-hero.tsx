@@ -84,6 +84,9 @@ export function DashboardCommandHero({
             <span className="inline-flex items-center gap-1.5 font-mono text-label text-shell-ink-2/80">
               <RefreshCw className="size-3 opacity-80" aria-hidden /> {DEMO_STATUS.refreshedLabel}
             </span>
+            <span className="font-mono text-label uppercase tracking-[0.08em] text-shell-ink-2/70">
+              status DEMO
+            </span>
           </div>
         </div>
 

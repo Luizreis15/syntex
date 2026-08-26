@@ -21,6 +21,7 @@ import { Empresa360Intelligence } from "@/features/companies/components/empresa-
 import { Empresa360Timeline } from "@/features/companies/components/empresa-360-timeline";
 import { Empresa360Representacao } from "@/features/companies/components/empresa-360-representacao";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
+import { DevDemoNotice } from "@/components/ui/dev-demo-mark";
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -203,6 +204,11 @@ export default async function CompanyDetailPage({
                 />
               </>
             ) : null}
+
+            <DevDemoNotice className="mb-1">
+              Abaixo: arrecadação, timeline e intelligence são ilustrativos (DEMO). Representação e
+              cobranças abertas usam dado da base quando disponíveis.
+            </DevDemoNotice>
 
             <div className="grid gap-5 xl:grid-cols-3">
               <div className="xl:col-span-2">

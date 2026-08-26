@@ -29,7 +29,8 @@ export function Empresa360Arrecadacao({ companyId }: { companyId: string }) {
   return (
     <DashboardPanel
       title="Arrecadação da empresa"
-      subtitle="Contribuições e mensalidades · 12 meses · demo"
+      subtitle="Contribuições e mensalidades · 12 meses · ilustrativo"
+      demo
       action={
         <Link
           href={`/cobrancas?company=${companyId}`}
