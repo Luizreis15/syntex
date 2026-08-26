@@ -34,6 +34,11 @@ export type NavIconKey =
  * aprovada `syntex-vital-core`). Estrutura de sete grupos é a aprovada pelo
  * negócio; a maioria dos itens ainda não tem módulo por trás.
  *
+ * Contrato Core V1 (C5): `built:true` só o que entra no DoD de
+ * `docs/SYNTEX-VERSIONS.md` e está REAL no `docs/OPERATIONAL-BASELINE.md`.
+ * Fora do Core (Atendimento, Arrecadação BI, Inteligência, etc.) permanece
+ * `built:false` — mapa do produto, sem href operacional.
+ *
  * `built: true` — módulo existe. Some da navegação se o usuário não tiver
  * a permissão (regra de sempre; RLS + app-layer continuam sendo a
  * autorização real, isto é só UI).

@@ -9,17 +9,17 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-24 (C4 — honesty DEMO Painel / Empresa 360)
+**Atualizado:** 2026-08-26 (C5 — baseline + nav honesty Core V1)
 
 ---
 
 ## 1. Current Phase
 
-**Operational Core v1.**
+**Operational Core v1** — espinha DoD em `docs/SYNTEX-VERSIONS.md` §2; fatias C1–C5 no fluxo.
 
 - Frontend premium **aprovado e congelado** (ADR-020).
 - Slice 0.1: `platform_notification` control-plane-scoped (ADR-019).
-- Prioridade: vertical slices de domínio real.
+- Prioridade: **aceitação humana + C6** (não abrir V2 / Atendimento incidentalmente).
 - Redesign global / Modo A: **encerrado**.
 
 ### Taxonomia de capability
@@ -27,9 +27,22 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 | Estado | Significado |
 |--------|-------------|
 | **REAL** | Fonte domínio/Supabase. Seed DEV = dado sintético **persistido** no modelo real (**seed ≠ mock**). |
-| **DEV_DEMO** | Hardcoded/showcase para composição visual. Nunca tratar como operacional. |
+| **DEV_DEMO** | Hardcoded/showcase para composição visual. Nunca tratar como operacional. Rotulado (C4). |
 | **NOT_IMPLEMENTED** | Prometida/desenhada sem fluxo funcional real (pode ter rota/auth). |
 | **PLANNED** | No mapa do produto (`built:false` ou futuro), ainda sem módulo. |
+
+### Core V1 — leitura rápida (C5)
+
+| Área DoD | Estado no baseline |
+|----------|-------------------|
+| Fundação / tenant / IAM | REAL |
+| Empresas + estabelecimentos (município) | REAL parcial (sem PATCH rico) |
+| Representação claim + recognize | REAL |
+| Convenções + aplicabilidade | REAL (create CCT UI fraca) |
+| Dues → cobrança + origem | REAL |
+| Portais / CP | REAL no estado atual — não expandir |
+| Painel / 360 | REAL + DEV_DEMO **rotulado** (C4) |
+| Atendimento / Arrecadação BI / IA | PLANNED (`built:false`) — **fora V1** |
 
 ---
 
@@ -176,54 +189,55 @@ Já arquitetura oficial — expandir só com slice.
 
 ## 10. Current Build Order
 
-| Wave | Foco |
-|------|------|
-| **0** | Foundation / governance (docs, estrutural, honesty nav) |
-| **1** | People + Union Relations (CRUD mínimo + **Representação**) |
-| **2** | Revenue / Finance (obligation list, arrecadação real, hardening pay) |
-| **3** | Union Operations (atendimento real, depois agenda/homologação…) |
-| **4** | Engagement |
-| **5** | Data / Intelligence (só com processos reais) |
-| **6** | Production hardening contínuo |
+| Wave | Foco | Relação com Core V1 |
+|------|------|---------------------|
+| **0** | Foundation / governance | Feito |
+| **1** | People + Union Relations | Feito (Representação A0–A2, B1–B2) |
+| **2** | Revenue fino (lista obrigação, arrecadação BI) | **V1.x** — Cobranças já cobrem V1 |
+| **3** | Union Operations (atendimento…) | **V2+** |
+| **4–5** | Engagement / Intelligence | **V4–V5** |
+| **6** | Production hardening | Ops paralelo / C6 buffer |
+
+Fatias de fechamento Core: **C1–C5** feitas; **C6** = bug bash + aceite formal.
 
 ---
 
-## 11. NEXT PRODUCT DOMAIN
+## 11. NEXT (após Core V1)
 
-### REPRESENTAÇÃO SINDICAL
+1. **C6 / aceite humano** — runbook + re-seed C3 se ainda não.  
+2. **V1.x** conforme gap (PATCH cadastro, lista obrigação, arrecadação BI REAL).  
+3. **Não** promover Atendimento / Intelligence / redesign sem DoD de versão.
 
-**Por quê agora:**
+### Evidência Representação (histórico A0–C4)
 
-- schema + EXCLUDE + seed existem;
-- permissions `representation.*` existem;
-- `resolveRepresentation` + API `/api/representations` / `resolve` existem;
-- Empresa 360 já consome representação;
-- superfície: lista + workspace + **CLAIM WRITE** + **DECIDE/RECONHECER REAL** (A1); perder genérico ainda só via encerramento de concorrentes no recognize;
-- **Slice 1.3A:** CCT/`contributionRules`/`resolveDues` só a partir de status `reconhecida` (estado consolidado — ADR-003); reivindicada/perdida/disputa/sem_rep não elegem acordo automático;
-- **Slice 1.3A:** Empresa 360 só carrega bloco jurídico de representação com `representation.read` (não basta `company.read`);
-- **Slice 1.3B / A0:** command REIVINDICAR — status sempre `reivindicada`; audit create sem evidence; outbox insert `0028`;
-- **A1:** command RECONHECER (`POST /api/representations/[id]/recognize`) — `representation.decide`; encerra concorrentes sobrepostos como `perdida`; outbox status `0029`;
-- **A2:** ponte financeira mínima — claim→reconhecer→`resolveCompanyDues`→`generateObligationWithCharge`; snapshot `origin` (establishment/representation, sem evidence); UI “Por que esta cobrança existe” em `/cobrancas/[id]`; geração continua manual via `/cobrancas/resolver` (não auto pós-recognize);
-- **B2:** painel “Resolver aplicabilidade” em `/convencoes` (estab+data → status + CCT se reconhecida); links cruzados 360/workspace ↔ convenção com `?date=`;
-- **B1:** create de estabelecimento na aba Representação da Empresa 360 (`establishment.write`); município/CNAE no form; município da matriz em `/empresas/nova`; link para `/representacao/[id]`;
-- **C1:** `docs/CORE-V1-ACCEPTANCE-RUNBOOK.md` — roteiro DoD §2.3;
-- **C2:** smoke Vitest `tests/core-v1-smoke.test.ts` (`npm run test:core-v1`) — cadastro→claim→recognize→CCT→dues→charge+origem + grants;
-- **C3:** seed — CCT `MR024310/2026` (cobre referência ~ago/2026); login `financeiro@secabc.exemplo.org.br` (só finance); obrigações DEMO sob CCT vigente na referência;
-- **C4:** honesty — `DevDemoBadge`/`DevDemoNotice` no Painel e Empresa 360; painéis ilustrativos com `demo`; Intelligence sem esconder rótulo;
-- **Demo path SECABC/DEV:** Representação → Reconhecer → Cobranças → Resolver débitos (competência dentro da vigência da CCT) → abrir cobrança e ver origem;
-- conecta Empresa → CCT → Arrecadação.
+- claim + recognize REAL; CCT/dues só `reconhecida`; origem na cobrança; resolve aplicabilidade; seed CCT 2026 + financeiro puro; DEMO rotulado no Painel/360.
+- Demo path: Representação → Reconhecer → Cobranças → Resolver débitos → origem.
 
 ---
 
-## 12. Nav notes
+## 12. Nav contract (Core V1 — C5)
 
-| Item | built | href | Realidade |
-|------|-------|------|-----------|
-| Atendimento | false | — | PLANNED (Slice 0.3); `/filiacao` placeholder histórico |
-| Representação | true | `/representacao` | READ LIST + WORKSPACE + CLAIM WRITE + DECIDE/RECONHECER REAL |
-| Agenda…Jurídico | false | — | PLANNED |
-| Arrecadação / Financeiro | false | — | PLANNED (cobranças cobrem fatia) |
-| Engajamento / Inteligência / Config | false | — | PLANNED |
+Espelho de `apps/web/components/layout/nav-config.ts`. Teste: `tests/core-v1-c5-nav-baseline.test.ts`.
+
+| Item | built | href | Versão / realidade |
+|------|-------|------|--------------------|
+| Painel | true | `/painel` | V1 — métricas REAL + blocos DEV_DEMO rotulados (C4) |
+| Trabalhadores | true | `/trabalhadores` | V1 |
+| Empresas | true | `/empresas` | V1 |
+| Representação | true | `/representacao` | V1 REAL (claim + recognize) |
+| Convenções | true | `/convencoes` | V1 (+ resolve aplicabilidade) |
+| Cobranças | true | `/cobrancas` | V1 (dues/resolver/origem) |
+| Equipe | true | `/equipe` | V1 / staff |
+| Escritórios | true | `/escritorios` | V1 estado atual (ADR-015) |
+| Atendimento | **false** | — | **V2** — PLANNED; `/filiacao` placeholder histórico |
+| Agenda…Jurídico | **false** | — | V2–V3 |
+| Arrecadação | **false** | — | **V1.x** BI — cobranças cobrem fatia V1 |
+| Financeiro | **false** | — | PLANNED / futuro |
+| Engajamento | **false** | — | V4 |
+| Analytics / Intelligence | **false** | — | V5 (+ cards DEMO no Painel) |
+| Configurações | **false** | — | PLANNED |
+
+**Regra C5:** não marcar `built:true` por “já existe rota fantasma”. Só capability REAL do contrato V1.
 
 ---
 
