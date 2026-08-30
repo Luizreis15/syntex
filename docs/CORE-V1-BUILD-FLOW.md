@@ -102,10 +102,9 @@ Ordenado por impacto na aceitação §2.3:
 
 ## 6.1 Próxima ação
 
-1. **Implementar ADR-021 na UI** (copy Pendente/Ativa/Inativa; caminho feliz sem “reivindicar/reconhecer”).  
-2. Atualizar runbook + smoke para a nova narrativa.  
-3. Testes humanos + **C6** buffer.  
-4. Não abrir disputa judicial / Atendimento no meio.
+1. **Testes humanos** com nomenclatura ADR-021 (pendente → ativar → cobrança).  
+2. **C6** buffer / o que o teste achar.  
+3. Opcional V1.x: migration renomeando enum no banco.
 
 ---
 

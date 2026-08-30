@@ -27,7 +27,9 @@ describe("B2 — aplicabilidade CCT na data", () => {
     expect(form).toContain("/resolve?");
     expect(form).toContain("/representacao/");
     expect(form).toContain("/convencoes/");
-    expect(form).toMatch(/reconhecida/);
+    expect(form).toMatch(/ativa/);
+    expect(form).toContain("ADR-021");
+    expect(form).toContain("representationStatusLabel");
 
     const page = readFileSync(
       join(process.cwd(), "app/(shell)/convencoes/page.tsx"),

@@ -36,8 +36,8 @@ const STATE_TEXT: Record<StatusRailStop["state"], string> = {
 const DOMAIN_LABEL: Record<DomainState, string> = {
   reconhecida: "SECABC reconhecido",
   reivindicada: "Representação reivindicada",
-  disputada: "Representação disputada",
-  perdida: "Representação perdida",
+  disputada: "Em disputa",
+  perdida: "Inativa",
   sensivel: "Situação sensível",
 };
 
@@ -127,7 +127,7 @@ export function Empresa360StatusRail({
             state={domainStatus}
             label={
               sinceLabel
-                ? `${DOMAIN_LABEL[domainStatus].replace("SECABC reconhecido", "Reconhecida").replace("Representação ", "")} desde ${sinceLabel}`
+                ? `${DOMAIN_LABEL[domainStatus]} desde ${sinceLabel}`
                 : undefined
             }
           />
@@ -199,7 +199,7 @@ export function Empresa360StatusRail({
       {showClaimSplit ? (
         <div className="border-t border-border/50 px-5 py-5">
           <span className="text-label font-bold uppercase tracking-[0.12em] text-ink-3">
-            Entidades reivindicando · demo
+            Entidades na base · demo
           </span>
           <div className="mt-3 flex h-2.5 overflow-hidden rounded-full">
             {DEMO_EMPRESA_CLAIM.map((e) => (

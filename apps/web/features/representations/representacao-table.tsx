@@ -12,10 +12,10 @@ import type { RepresentationListPage } from "@/features/representations/data";
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS = [
   { value: "", label: "Todos os status" },
-  { value: "reconhecida", label: "Reconhecida" },
-  { value: "reivindicada", label: "Reivindicada" },
-  { value: "disputada", label: "Disputada" },
-  { value: "perdida", label: "Perdida" },
+  { value: "reconhecida", label: "Ativa" },
+  { value: "reivindicada", label: "Pendente" },
+  { value: "disputada", label: "Em disputa" },
+  { value: "perdida", label: "Inativa" },
   { value: "sem_representacao", label: "Sem representação" },
 ];
 

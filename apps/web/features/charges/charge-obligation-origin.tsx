@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { representationStatusLabel } from "@/lib/domain/representation-status-label";
 import type { RuleSnapshot } from "@/lib/domain/obligation";
 
 const RULE_TYPE_LABEL: Record<string, string> = {
@@ -92,7 +93,7 @@ export function ChargeObligationOrigin({
           <dd className="text-ink">
             {origin?.representation_status ? (
               <>
-                Status <span className="font-medium">{origin.representation_status}</span>
+                Status <span className="font-medium">{representationStatusLabel(origin.representation_status)}</span>
                 {origin.establishment_id ? (
                   <span className="mt-1 block">
                     <Link

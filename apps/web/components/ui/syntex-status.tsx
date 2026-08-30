@@ -13,15 +13,15 @@ export type DomainState = "reconhecida" | "reivindicada" | "disputada" | "perdid
 export type SystemState = "success" | "warning" | "danger" | "info";
 
 const DOMAIN: Record<DomainState, { label: string; icon: typeof IconDot; fg: string; bg: string }> = {
-  reconhecida: { label: "Reconhecida", icon: IconDot, fg: "text-status-reconhecida", bg: "bg-status-reconhecida-bg" },
+  reconhecida: { label: "Ativa", icon: IconDot, fg: "text-status-reconhecida", bg: "bg-status-reconhecida-bg" },
   reivindicada: {
-    label: "Reivindicada",
+    label: "Pendente",
     icon: IconTriangleAlert,
     fg: "text-status-reivindicada",
     bg: "bg-status-reivindicada-bg",
   },
-  disputada: { label: "Disputada", icon: IconDispute, fg: "text-status-disputada", bg: "bg-status-disputada-bg" },
-  perdida: { label: "Perdida", icon: IconXCircle, fg: "text-status-perdida", bg: "bg-status-perdida-bg" },
+  disputada: { label: "Em disputa", icon: IconDispute, fg: "text-status-disputada", bg: "bg-status-disputada-bg" },
+  perdida: { label: "Inativa", icon: IconXCircle, fg: "text-status-perdida", bg: "bg-status-perdida-bg" },
   sensivel: { label: "Sensível", icon: IconLock, fg: "text-status-sensivel", bg: "bg-status-sensivel-bg" },
 };
 

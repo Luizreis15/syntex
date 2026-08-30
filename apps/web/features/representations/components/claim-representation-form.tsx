@@ -75,15 +75,15 @@ export function ClaimRepresentationForm({
       const msg =
         typeof json.error === "string"
           ? json.error
-          : "Não foi possível registrar a reivindicação.";
+          : "Não foi possível incluir na base.";
       setError(msg);
       return;
     }
 
     setOkMessage(
       json.duplicate
-        ? "Reivindicação equivalente já vigente — nenhuma linha nova criada."
-        : "Reivindicação registrada.",
+        ? "Inclusão equivalente já vigente — nenhuma linha nova criada."
+        : "Incluído na base como pendente.",
     );
     setOpen(false);
     setRegistrationId("");
@@ -94,8 +94,8 @@ export function ClaimRepresentationForm({
 
   const impact =
     hasActiveClaims || currentStatus !== "sem_representacao"
-      ? "Já existe representação vigente para este estabelecimento. A nova reivindicação poderá colocar o enquadramento em disputa."
-      : "Esta reivindicação passará a constar como representação reivindicada.";
+      ? "Já existe registro vigente para este estabelecimento. Nova inclusão fica pendente até ativação."
+      : "Este estabelecimento entrará na base como pendente — cobrança só após ativar.";
 
   return (
     <div className="space-y-3">
@@ -109,7 +109,7 @@ export function ClaimRepresentationForm({
           }}
           className="inline-flex h-10 items-center rounded-control bg-petrol-700 px-3.5 text-label font-bold text-shell-ink transition-colors hover:bg-petrol-600"
         >
-          Reivindicar representação
+          Incluir na base
         </button>
       ) : null}
 
@@ -119,7 +119,7 @@ export function ClaimRepresentationForm({
         <SyntexPanel variant="raised" rail="amber">
           <SyntexPanelHeader>
             <div>
-              <SyntexPanelTitle>Reivindicar representação</SyntexPanelTitle>
+              <SyntexPanelTitle>Incluir na base</SyntexPanelTitle>
               <SyntexPanelDescription>{impact}</SyntexPanelDescription>
             </div>
             <button
@@ -174,12 +174,12 @@ export function ClaimRepresentationForm({
                   required
                   rows={4}
                   className="w-full rounded-control border border-border bg-surface px-2.5 py-2 text-body text-ink outline-none placeholder:text-ink-3 focus-visible:border-petrol-600"
-                  placeholder="Descreva a base factual da reivindicação…"
+                  placeholder="Observação opcional sobre o enquadramento (CNAE, visita, etc.)…"
                 />
               </div>
 
               <p className="text-label text-ink-3">
-                Reivindicar não altera automaticamente a CCT aplicável nem gera cobrança.
+                Incluir como pendente não gera cobrança. Só status ativa habilita CCT e dues.
               </p>
 
               {error ? <p className="text-dense font-medium text-danger">{error}</p> : null}
@@ -189,7 +189,7 @@ export function ClaimRepresentationForm({
                 disabled={pending}
                 className="inline-flex h-10 items-center rounded-control bg-petrol-700 px-3.5 text-label font-bold text-shell-ink transition-colors hover:bg-petrol-600 disabled:opacity-60"
               >
-                {pending ? "Registrando…" : "Registrar reivindicação"}
+                {pending ? "Incluindo…" : "Incluir como pendente"}
               </button>
             </form>
           </SyntexPanelBody>

@@ -66,9 +66,9 @@ Após re-seed, obrigações DEMO abertas usam a CCT que cobre `SYNTEX_SEED_REFER
 
 | Cenário | Exemplo de razão social (seed) | Uso |
 |---------|--------------------------------|-----|
-| Já `reconhecida` | Mercado Bertoldi / Papelaria Central… | Pular claim/recognize; ir a CCT/dues |
-| Só `reivindicada` | Mercearia São Judas Tadeu / Casa do Parafuso… | Exercitar **Reconhecer** |
-| Disputa | Auto Peças Rodovale / Drogaria Alvorada… | Ver concorrentes; reconhecer uma → outras `perdida` |
+| Já **ativa** | Mercado Bertoldi / Papelaria Central… | Pular claim/recognize; ir a CCT/dues |
+| Só **pendente** | Mercearia São Judas Tadeu / Casa do Parafuso… | Exercitar **Ativar** |
+| Disputa | Auto Peças Rodovale / Drogaria Alvorada… | Ver concorrentes; ativar uma → outras **inativas** |
 
 ---
 
@@ -98,16 +98,16 @@ Login: **diretoria**. Sidebar deve mostrar Cadastro (Empresas, …), Representa�
 
 ---
 
-### Passo 2 — Reivindicar e reconhecer
+### Passo 2 — Incluir na base (pendente) e ativar
 
 | # | Ação | Onde | Esperado |
 |---|------|------|----------|
 | 2.1 | Abrir workspace | `/representacao/[establishmentId]` (ou via lista `/representacao`) | Timeline / cards de status na data de referência |
-| 2.2 | (Se ainda sem claim próprio) **Reivindicar representação** | Form no workspace | Nova linha `reivindicada`; **não** muda CCT nem gera cobrança sozinho |
-| 2.3 | **Reconhecer** | CTA no card elegível | Status → `reconhecida`; concorrentes sobrepostas → `perdida` |
-| 2.4 | Conferir lista | `/representacao` | Status composto coerente (ex. reconhecida; se ainda houver ≥2 ativas disputáveis, agregado pode refletir disputa) |
+| 2.2 | (Se ainda sem claim próprio) **Incluir na base** | Form no workspace | Nova linha **pendente**; **não** gera cobrança sozinho |
+| 2.3 | **Ativar** | CTA no card elegível | Status → **ativa**; concorrentes sobrepostas → **inativa** |
+| 2.4 | Conferir lista | `/representacao` | Status composto coerente (ex. ativa; se ≥2 registros vigentes, agregado pode mostrar em disputa) |
 
-**Critério DoD:** operador autorizado promoveu representação a `reconhecida`.
+**Critério DoD:** operador autorizado marcou representação como **ativa**.
 
 ---
 
@@ -116,12 +116,12 @@ Login: **diretoria**. Sidebar deve mostrar Cadastro (Empresas, …), Representa�
 | # | Ação | Onde | Esperado |
 |---|------|------|----------|
 | 3.1 | Resolver aplicabilidade | `/convencoes` → painel **Resolver aplicabilidade** | Escolher estab + data **dentro** da vigência (ex. `2026-08-15`) |
-| 3.2 | Submeter | Resolve | Status de representação + CCT (ex. `MR024310/2026`) **somente se** `reconhecida` |
+| 3.2 | Submeter | Resolve | Status de representação + CCT (ex. `MR024310/2026`) **somente se** **ativa** |
 | 3.3 | (Opcional) Detalhe | `/convencoes/[id]?date=…` | Regras de contribuição visíveis; link cruzado com 360/workspace |
 
-**Negativo rápido no mesmo estab:** data com status ≠ reconhecida → **sem** eleição automática de CCT.
+**Negativo rápido no mesmo estab:** data com status ≠ ativa → **sem** eleição automática de CCT.
 
-**Critério DoD:** vê instrumento coletivo aplicável quando reconhecida.
+**Critério DoD:** vê instrumento coletivo aplicável quando **ativa**.
 
 ---
 
@@ -129,7 +129,7 @@ Login: **diretoria**. Sidebar deve mostrar Cadastro (Empresas, …), Representa�
 
 | # | Ação | Onde | Esperado |
 |---|------|------|----------|
-| 4.1 | Abrir resolver | `/cobrancas/resolver` (também link no workspace se reconhecida) | Form empresa + competência |
+| 4.1 | Abrir resolver | `/cobrancas/resolver` (também link no workspace se ativa) | Form empresa + competência |
 | 4.2 | Resolver | Empresa do passo 1–2; competência ex. `2026-08` | Lista de débito(s) com regra/CCT; ou mensagem clara se nada devido / base necessária |
 | 4.3 | Gerar | CTA de geração (quando amount ok e sem charge existente) | Redirect para `/cobrancas/[id]` |
 
@@ -167,8 +167,8 @@ Login: `atendimento.maua@secabc.exemplo.org.br`
 |---|-----------|----------|
 | N1 | `/empresas/nova` | Sem permissão (`company.write` / provision) |
 | N2 | Create estabelecimento no 360 | Sem UI/API de write (`establishment.write`) |
-| N3 | Workspace: Reconhecer | CTA ausente ou API 403 (`representation.decide`) |
-| N4 | Claim (reivindicar) | Sem write (`representation.write` ausente no role) |
+| N3 | Workspace: Ativar | CTA ausente ou API 403 (`representation.decide`) |
+| N4 | Incluir na base | Sem write (`representation.write` ausente no role) |
 | N5 | `/cobrancas/resolver` gerar | Sem `finance.write` — não gera |
 | N6 | Escopo branch | Dados fora de Mauá não devem vazar além do que a sessão permite |
 
@@ -184,7 +184,7 @@ Login: `financeiro@secabc.exemplo.org.br`
 
 | # | Checagem | Esperado |
 |---|----------|----------|
-| N7 | Abrir workspace / Reconhecer | Sem nav Representação ou sem decide; API 403 se forçar |
+| N7 | Abrir workspace / Ativar | Sem nav Representação ou sem decide; API 403 se forçar |
 | N8 | Sidebar | Item Representação **ausente** (`representation.read` false) |
 | N7b | `/cobrancas/resolver` | Pode ler/gerar (tem `finance.*`) |
 
@@ -192,9 +192,9 @@ Login: `financeiro@secabc.exemplo.org.br`
 
 | # | Tentativa | Esperado |
 |---|-----------|----------|
-| N9 | Resolve aplicabilidade com estab só `reivindicada` | Sem CCT eleita |
+| N9 | Resolve aplicabilidade com estab só **pendente** | Sem CCT eleita |
 | N10 | Dues com competência fora da vigência CCT | Sem débito elegível / vazio coerente |
-| N11 | Reconhecer com usuário sem decide | 403 |
+| N11 | Ativar com usuário sem decide | 403 |
 
 ---
 

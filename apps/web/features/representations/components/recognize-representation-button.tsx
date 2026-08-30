@@ -30,7 +30,7 @@ export function RecognizeRepresentationButton({
       setError(
         typeof json.error === "string"
           ? json.error
-          : "Não foi possível reconhecer a reivindicação.",
+          : "Não foi possível ativar a representação.",
       );
       return;
     }
@@ -49,7 +49,7 @@ export function RecognizeRepresentationButton({
         }}
         className="inline-flex h-9 items-center rounded-control bg-petrol-700 px-3 text-label font-bold text-shell-ink transition-colors hover:bg-petrol-600"
       >
-        Reconhecer
+        Ativar
       </button>
     );
   }
@@ -58,8 +58,8 @@ export function RecognizeRepresentationButton({
     <div className="mt-3 space-y-2 rounded-control border border-amber-500/40 bg-amber-500/5 px-3 py-3">
       <p className="text-dense text-ink-2">
         {hasCompetitors
-          ? "Reconhecer esta reivindicação encerra as concorrentes sobrepostas como perdidas e habilita CCT/regras quando aplicável."
-          : "Ao reconhecer, esta representação passa a consolidar o enquadramento e pode habilitar CCT/regras/dues."}
+          ? "Ativar encerra registros concorrentes sobrepostos (inativos) e habilita CCT/regras/cobrança."
+          : "Ao ativar, este estabelecimento passa a gerar cobrança quando houver regra/CCT aplicável."}
       </p>
       {error ? <p className="text-dense font-medium text-danger">{error}</p> : null}
       <div className="flex flex-wrap gap-2">
@@ -69,7 +69,7 @@ export function RecognizeRepresentationButton({
           onClick={confirm}
           className="inline-flex h-9 items-center rounded-control bg-petrol-700 px-3 text-label font-bold text-shell-ink disabled:opacity-60"
         >
-          {pending ? "Reconhecendo…" : "Confirmar reconhecimento"}
+          {pending ? "Ativando…" : "Confirmar ativação"}
         </button>
         <button
           type="button"

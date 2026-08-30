@@ -37,7 +37,7 @@ test("login → busca por nome → ficha → representação vigente → muda a 
   const resolutionCard = page.getByTestId("representation-resolution");
 
   // Data de hoje cai no terceiro período — reconhecida por decisão judicial.
-  await expect(resolutionCard.getByText("reconhecida")).toBeVisible();
+  await expect(resolutionCard.getByText("Ativa")).toBeVisible();
   await expect(resolutionCard.getByText("base: decisao_judicial")).toBeVisible();
 
   // Muda a data de referência para dentro do segundo período (2018–2023-06).
@@ -96,13 +96,13 @@ test("filtros de município e status usam SyntexSelect, não <select> nativo", a
   expect(await page.locator("select").count()).toBe(0);
 
   await page.getByRole("combobox", { name: "Filtrar por status de representação" }).click();
-  await page.getByRole("option", { name: "Disputada" }).click();
+  await page.getByRole("option", { name: "Em disputa" }).click();
   await page.waitForURL(/status=disputada/);
 
   const rows = page.getByRole("table", { name: "Empresas" }).locator("tbody tr");
   await expect(rows.first()).toBeVisible();
   const count = await rows.count();
   for (let i = 0; i < count; i++) {
-    await expect(rows.nth(i)).toContainText("Disputada");
+    await expect(rows.nth(i)).toContainText("Em disputa");
   }
 });

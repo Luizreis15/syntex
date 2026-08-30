@@ -30,10 +30,10 @@ const STATE_COLOR: Record<DomainState, string> = {
 };
 
 const STATE_LABEL: Record<DomainState, string> = {
-  reconhecida: "Reconhecida",
-  reivindicada: "Reivindicada",
-  disputada: "Disputada",
-  perdida: "Perdida",
+  reconhecida: "Ativa",
+  reivindicada: "Pendente",
+  disputada: "Em disputa",
+  perdida: "Inativa",
   sensivel: "Sensível",
 };
 

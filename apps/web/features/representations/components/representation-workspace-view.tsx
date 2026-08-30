@@ -138,7 +138,7 @@ export function RepresentationWorkspaceView({
           <SyntexPanel variant="raised" rail={workspace.hasConflict ? "amber" : "teal"}>
             <SyntexPanelHeader>
               <div>
-                <SyntexPanelTitle>Reivindicações vigentes</SyntexPanelTitle>
+                <SyntexPanelTitle>Registros vigentes na base</SyntexPanelTitle>
                 <SyntexPanelDescription>
                   {workspace.activeClaimsCount === 0
                     ? "Nenhuma representação vigente para este estabelecimento."

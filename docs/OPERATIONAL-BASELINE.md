@@ -37,7 +37,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 |----------|-------------------|
 | Fundação / tenant / IAM | REAL |
 | Empresas + estabelecimentos (município) | REAL parcial (sem PATCH rico) |
-| Representação claim + recognize | REAL no código; **norma de produto ADR-021** = Pendente/Ativa/Inativa (copy/UX a alinhar) |
+| Representação claim + recognize | REAL; **UI ADR-021**: Pendente / Ativa / Inativa (persistência ainda reivindicada/reconhecida) |
 | Convenções + aplicabilidade | REAL (create CCT UI fraca) |
 | Dues → cobrança + origem | REAL |
 | Portais / CP | REAL no estado atual — não expandir |

@@ -1,3 +1,4 @@
+import { representationStatusLabel } from "@/lib/domain/representation-status-label";
 "use client";
 
 import Link from "next/link";
@@ -67,7 +68,7 @@ export function ResolveAgreementApplicabilityForm({
         <h2 className="text-component font-semibold text-ink">Resolver aplicabilidade</h2>
         <p className="mt-1 text-dense text-ink-2">
           Dado estabelecimento + data, responde o status da representação e a CCT/ACT só se estiver{" "}
-          <span className="font-medium text-ink">reconhecida</span>.
+          <span className="font-medium text-ink">ativa</span>.
         </p>
       </div>
 
@@ -107,12 +108,12 @@ export function ResolveAgreementApplicabilityForm({
         <div className="space-y-2 rounded-control border border-border bg-paper px-4 py-3 text-body">
           <p>
             Status da representação:{" "}
-            <span className="font-semibold capitalize text-ink">{result.status}</span>
+            <span className="font-semibold text-ink">{representationStatusLabel(result.status)}</span>
             {result.basis ? <span className="text-ink-2"> · base {result.basis}</span> : null}
           </p>
           {result.status !== "reconhecida" ? (
             <p className="text-dense text-ink-2">
-              CCT/ACT automática só é elegível com representação reconhecida (ADR-003 / Slice 1.3A).
+              CCT/ACT automática só é elegível com representação ativa (ADR-021).
             </p>
           ) : null}
           {result.agreement ? (
@@ -136,7 +137,7 @@ export function ResolveAgreementApplicabilityForm({
             </p>
           ) : result.status === "reconhecida" ? (
             <p className="text-dense text-ink-2">
-              Representação reconhecida, mas nenhuma CCT/ACT casa categorias/território nesta data.
+              Representação ativa, mas nenhuma CCT/ACT casa categorias/território nesta data.
             </p>
           ) : null}
           <div className="flex flex-wrap gap-3 pt-1">
