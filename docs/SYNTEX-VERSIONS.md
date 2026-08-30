@@ -48,7 +48,7 @@ O sindicato opera na mesma plataforma: **conhecer a base → quem representa o e
 | **Empresas** | Lista, create (com município da matriz), Empresa 360 (blocos REAL; DEMO rotulado se permanecer) |
 | **Estabelecimentos** | Lista no 360, create (CNPJ, tipo, município, CNAE), link para representação |
 | **Trabalhadores** | Lista, create, 360 com vínculo/filiação mínima (write de status de filiação se já existir) |
-| **Representação** | Lista por estabelecimento, workspace temporal, reivindicar, reconhecer (decide), histórico |
+| **Representação** | Inclusão na base por estabelecimento: **pendente → ativa → inativa** (ADR-021). Só **ativa** habilita CCT/cobrança. Sem teatro de disputa no caminho feliz. |
 | **Convenções** | Lista/detalhe CCT/ACT, regras de contribuição (create de regra se já existir), resolver aplicabilidade (estab + data) |
 | **Arrecadação operacional** | Resolver débitos (dues), gerar obrigação + cobrança, listar/detalhar cobranças, baixa manual, origem da cobrança legível |
 | **Portais** | Associado / Empresa / Escritório **no estado atual** — sem expansão de escopo |
@@ -59,11 +59,11 @@ O sindicato opera na mesma plataforma: **conhecer a base → quem representa o e
 Um operador autorizado consegue, em ambiente acordado (DEV/staging):
 
 1. Cadastrar ou abrir **empresa** e **estabelecimento** (com município).  
-2. **Reivindicar** e **reconhecer** representação.  
-3. Ver **CCT/regras** aplicáveis (quando reconhecida).  
+2. Incluir na base de representação como **pendente** e marcar **ativa** (ADR-021).  
+3. Ver **CCT/regras** aplicáveis (quando **ativa**).  
 4. **Resolver débitos** e **gerar cobrança** para uma competência.  
 5. Abrir a cobrança e entender **por que existe** (regra / CCT / origem sindical).  
-6. Perfis sem permissão **não** executam writes críticos nem veem dados jurídicos indevidos.
+6. Perfis sem permissão **não** executam writes críticos nem veem dados indevidos.
 
 ### 2.4 Explicitamente fora da V1
 
@@ -80,7 +80,7 @@ Não fazem parte do Core / não devem constar como entregáveis do contrato V1:
 | Redesign de shell, painel ou 360s | Não (freeze ADR-020) |
 | Tesouraria / financeiro administrativo completo / journal UI rica | V1.x ou módulo Financeiro futuro |
 | Arrecadação “BI” (previsto×realizado gerencial completo) | V1.x |
-| Create rico de CCT / editor genérico de status de representação | Fora ou V1.x pontual |
+| Create rico de CCT / editor genérico de status de representação | Fora ou V1.x pontual (status operacional = Ativa/Pendente/Inativa, ADR-021) |
 | Production hardening pleno (DLQ, MFA, E2E amplo, gateways prod) | Plano de ops separado |
 | Expandir portais além do que já existe | Só com add-on / versão |
 

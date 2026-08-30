@@ -9,7 +9,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-26 (C5 — baseline + nav honesty Core V1)
+**Atualizado:** 2026-08-30 (ADR-021 — representação Ativa/Pendente/Inativa)
 
 ---
 
@@ -37,7 +37,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 |----------|-------------------|
 | Fundação / tenant / IAM | REAL |
 | Empresas + estabelecimentos (município) | REAL parcial (sem PATCH rico) |
-| Representação claim + recognize | REAL |
+| Representação claim + recognize | REAL no código; **norma de produto ADR-021** = Pendente/Ativa/Inativa (copy/UX a alinhar) |
 | Convenções + aplicabilidade | REAL (create CCT UI fraca) |
 | Dues → cobrança + origem | REAL |
 | Portais / CP | REAL no estado atual — não expandir |
@@ -249,7 +249,8 @@ Espelho de `apps/web/components/layout/nav-config.ts`. Teste: `tests/core-v1-c5-
 | `docs/OPERATIONAL-BASELINE.md` | **Este** — mapa canônico de implementation |
 | `docs/SYNTEX-VERSIONS.md` | Core V1 / V1.x / V2+ — o que se vende e se entrega por versão |
 | `docs/CORE-V1-BUILD-FLOW.md` | Ordem das fatias até aceite do Core V1 |
-| `docs/CORE-V1-ACCEPTANCE-RUNBOOK.md` | Roteiro clicável DoD V1 (C1) + bloqueios → C3 |
+| `docs/CORE-V1-ACCEPTANCE-RUNBOOK.md` | Roteiro clicável DoD V1 (C1); alinhar copy à ADR-021 |
+| `decisoes/ADR-021-…` | Representação operacional: Ativa / Pendente / Inativa |
 | `docs/FRONTEND-APPROVED-BASELINE.md` | Freeze visual PO |
 | `decisoes/ADR-020-…` | Precedência fase + frontend |
 | `decisoes/ADR-019-…` | platform_notification |

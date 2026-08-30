@@ -102,9 +102,10 @@ Ordenado por impacto na aceitação §2.3:
 
 ## 6.1 Próxima ação
 
-1. **Testes humanos** (runbook / 5 cliques) + re-seed C3 se ainda não.  
-2. Agente: **C6** — buffer, regressão, ajustes do que o teste humano achar.  
-3. Não abrir V2 / Atendimento no meio.
+1. **Implementar ADR-021 na UI** (copy Pendente/Ativa/Inativa; caminho feliz sem “reivindicar/reconhecer”).  
+2. Atualizar runbook + smoke para a nova narrativa.  
+3. Testes humanos + **C6** buffer.  
+4. Não abrir disputa judicial / Atendimento no meio.
 
 ---
 
