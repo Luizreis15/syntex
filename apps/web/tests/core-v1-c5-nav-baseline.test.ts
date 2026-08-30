@@ -2,10 +2,9 @@ import { describe, expect, it } from "vitest";
 import { NAV_SECTIONS } from "@/components/layout/nav-config";
 
 /**
- * C5 — contrato de honestidade da nav vs Core V1 (SYNTEX-VERSIONS + baseline).
- * `built:true` só para capability REAL do Core; fora do Core permanece `built:false`.
+ * ADR-022 — sidebar só Core operacional (sem built:false / mapa fantasma).
  */
-const CORE_V1_BUILT_TRUE: Record<string, string> = {
+const CORE_NAV: Record<string, string> = {
   Painel: "/painel",
   Trabalhadores: "/trabalhadores",
   Empresas: "/empresas",
@@ -16,8 +15,7 @@ const CORE_V1_BUILT_TRUE: Record<string, string> = {
   Escritórios: "/escritorios",
 };
 
-/** Fora do DoD V1 / V1.x BI — não devem ganhar href operacional nesta fase. */
-const MUST_STAY_BUILT_FALSE = [
+const REMOVED_FROM_NAV = [
   "Atendimento",
   "Agenda",
   "Homologações",
@@ -37,41 +35,33 @@ function allItems() {
   return NAV_SECTIONS.flatMap((s) => s.items);
 }
 
-describe("C5 — nav honesty Core V1", () => {
-  it("itens Core V1 estão built:true com href esperado", () => {
-    for (const [label, href] of Object.entries(CORE_V1_BUILT_TRUE)) {
-      const item = allItems().find((i) => i.label === label);
+describe("ADR-022 — sidebar Core operacional", () => {
+  it("contém exatamente os 8 itens Core com href", () => {
+    const items = allItems();
+    expect(items).toHaveLength(Object.keys(CORE_NAV).length);
+    for (const [label, href] of Object.entries(CORE_NAV)) {
+      const item = items.find((i) => i.label === label);
       expect(item, label).toBeDefined();
-      expect(item!.built, label).toBe(true);
+      expect(item!.built).toBe(true);
       if (!item || !item.built) throw new Error(label);
       expect(item.href).toBe(href);
     }
   });
 
-  it("itens fora do Core V1 permanecem built:false sem href", () => {
-    for (const label of MUST_STAY_BUILT_FALSE) {
-      const item = allItems().find((i) => i.label === label);
-      expect(item, label).toBeDefined();
-      expect(item!.built, label).toBe(false);
-      if (item && item.built) {
-        throw new Error(`${label} não pode ser built:true no Core V1`);
-      }
+  it("não reintroduz mapa fantasma / Engajamento / Inteligência", () => {
+    const labels = allItems().map((i) => i.label);
+    for (const label of REMOVED_FROM_NAV) {
+      expect(labels, label).not.toContain(label);
     }
+    expect(NAV_SECTIONS.map((s) => s.label)).toEqual([
+      "Visão geral",
+      "Relações",
+      "Financeiro",
+      "Administração",
+    ]);
   });
 
-  it("nenhum built:true aponta para rota fora do contrato Core listado", () => {
-    const built = allItems().filter((i) => i.built);
-    for (const item of built) {
-      expect(CORE_V1_BUILT_TRUE[item.label], item.label).toBe(item.href);
-    }
-  });
-
-  it("Arrecadação e Atendimento não competem com Cobranças / Representação", () => {
-    const arrecadacao = allItems().find((i) => i.label === "Arrecadação");
-    const atendimento = allItems().find((i) => i.label === "Atendimento");
-    const cobrancas = allItems().find((i) => i.label === "Cobranças");
-    expect(arrecadacao?.built).toBe(false);
-    expect(atendimento?.built).toBe(false);
-    expect(cobrancas?.built).toBe(true);
+  it("todos os itens são built:true", () => {
+    expect(allItems().every((i) => i.built)).toBe(true);
   });
 });

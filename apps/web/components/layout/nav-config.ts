@@ -14,39 +14,19 @@ export type NavIconKey =
   | "building-2"
   | "scale"
   | "file-check-2"
-  | "life-buoy"
-  | "calendar-days"
-  | "shield-check"
-  | "gauge"
-  | "gavel"
-  | "wallet"
   | "receipt-text"
-  | "bar-chart-3"
-  | "megaphone"
-  | "sparkles"
-  | "heart-handshake"
   | "user-cog"
-  | "briefcase"
-  | "settings";
+  | "briefcase";
 
 /**
- * Navegação do painel do sindicato (Visual System v2 — ADR-017, referência
- * aprovada `syntex-vital-core`). Estrutura de sete grupos é a aprovada pelo
- * negócio; a maioria dos itens ainda não tem módulo por trás.
+ * Navegação do painel do sindicato — **Core operacional** (ADR-022).
+ * Emenda ADR-017: sem mapa fantasma (`built:false`) na chrome do Core.
  *
- * Contrato Core V1 (C5): `built:true` só o que entra no DoD de
- * `docs/SYNTEX-VERSIONS.md` e está REAL no `docs/OPERATIONAL-BASELINE.md`.
- * Fora do Core (Atendimento, Arrecadação BI, Inteligência, etc.) permanece
- * `built:false` — mapa do produto, sem href operacional.
+ * Só itens REAL do DoD V1 (`docs/SYNTEX-VERSIONS.md`). Novos módulos
+ * entram quando `built: true` + rota + permission.
  *
- * `built: true` — módulo existe. Some da navegação se o usuário não tiver
- * a permissão (regra de sempre; RLS + app-layer continuam sendo a
- * autorização real, isto é só UI).
- *
- * `built: false` — módulo aprovado no mapa do produto, sem rota ainda.
- * Aparece para todo mundo, sem link, visualmente inerte — nunca abre tela
- * vazia. Isto supera a consequência de ADR-013 ("sidebar só mostra o que
- * existe, sem menu-fantasma"); ver ADR-017 para o registro da decisão.
+ * `built: true` — some da UI se o usuário não tiver a permissão.
+ * Autorização real continua em app-layer + RLS.
  */
 export type NavItem =
   | { label: string; built: true; href: string; permission: PermissionKey; icon: NavIconKey }
@@ -57,8 +37,7 @@ export type NavItem =
       /** Qualquer uma basta (OR) — alinhado ao gate da página. */
       permissions: readonly PermissionKey[];
       icon: NavIconKey;
-    }
-  | { label: string; built: false; icon: NavIconKey };
+    };
 
 export interface NavSection {
   label: string;
@@ -88,47 +67,16 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: "Operação",
-    items: [
-      { label: "Atendimento", built: false, icon: "life-buoy" },
-      { label: "Agenda", built: false, icon: "calendar-days" },
-      { label: "Homologações", built: false, icon: "shield-check" },
-      { label: "Fiscalização", built: false, icon: "gauge" },
-      { label: "Jurídico", built: false, icon: "gavel" },
-    ],
-  },
-  {
     label: "Financeiro",
     items: [
-      { label: "Arrecadação", built: false, icon: "wallet" },
       { label: "Cobranças", built: true, href: "/cobrancas", permission: "finance.read", icon: "receipt-text" },
-      { label: "Financeiro", built: false, icon: "bar-chart-3" },
-    ],
-  },
-  {
-    label: "Engajamento",
-    items: [
-      { label: "Comunicação", built: false, icon: "megaphone" },
-      { label: "Campanhas", built: false, icon: "sparkles" },
-      { label: "Benefícios", built: false, icon: "heart-handshake" },
-    ],
-  },
-  {
-    label: "Inteligência",
-    items: [
-      { label: "Analytics", built: false, icon: "bar-chart-3" },
-      { label: "Syntex Intelligence", built: false, icon: "sparkles" },
     ],
   },
   {
     label: "Administração",
     items: [
       { label: "Equipe", built: true, href: "/equipe", permission: "staff.read", icon: "user-cog" },
-      // Escritórios não está na lista aprovada pela referência — é rota real
-      // que já existe (ADR-015, delegação de escritório de contabilidade);
-      // mantida aqui para não regredir funcionalidade.
       { label: "Escritórios", built: true, href: "/escritorios", permission: "office.provision", icon: "briefcase" },
-      { label: "Configurações", built: false, icon: "settings" },
     ],
   },
 ];
@@ -145,6 +93,6 @@ export function isBuiltNavItemVisible(
 export function filterNavSections(grants: UserGrant[], tenantId: string): NavSection[] {
   return NAV_SECTIONS.map((section) => ({
     ...section,
-    items: section.items.filter((item) => !item.built || isBuiltNavItemVisible(item, grants, tenantId)),
+    items: section.items.filter((item) => isBuiltNavItemVisible(item, grants, tenantId)),
   })).filter((section) => section.items.length > 0);
 }

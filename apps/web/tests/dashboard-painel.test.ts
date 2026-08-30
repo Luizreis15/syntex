@@ -97,24 +97,25 @@ describe("Painel nav — alinhado ao gate da página", () => {
     hasSpy.mockRestore();
   });
 
-  it("Atendimento é PLANNED (built:false) — sem href operacional", () => {
+  it("Atendimento não aparece na nav Core (ADR-022)", () => {
     const grants: UserGrant[] = [
       { role: "atendimento", scope: "tenant" },
       { role: "admin", scope: "tenant" },
     ];
     const sections = filterNavSections(grants, "tenant-1");
-    const atendimento = sections.flatMap((s) => s.items).find((i) => i.label === "Atendimento");
-    expect(atendimento).toBeDefined();
-    expect(atendimento?.built).toBe(false);
-    expect(atendimento && "href" in atendimento).toBe(false);
-
-    const builtWithHref = sections
-      .flatMap((s) => s.items)
-      .filter((i) => i.built)
-      .map((i) => i.label);
-    expect(builtWithHref).not.toContain("Atendimento");
-    expect(builtWithHref).toEqual(
-      expect.arrayContaining(["Painel", "Trabalhadores", "Empresas", "Representação", "Convenções", "Cobranças"]),
+    const labels = sections.flatMap((s) => s.items).map((i) => i.label);
+    expect(labels).not.toContain("Atendimento");
+    expect(labels).not.toContain("Comunicação");
+    expect(labels).not.toContain("Benefícios");
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        "Painel",
+        "Trabalhadores",
+        "Empresas",
+        "Representação",
+        "Convenções",
+        "Cobranças",
+      ]),
     );
   });
 });

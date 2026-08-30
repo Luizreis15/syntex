@@ -4,26 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
-  BarChart3,
   Briefcase,
   Building2,
-  CalendarDays,
   ChevronDown,
   FileCheck2,
-  Gauge,
-  Gavel,
-  HeartHandshake,
   LayoutGrid,
-  LifeBuoy,
-  Megaphone,
   ReceiptText,
   Scale,
-  Settings,
-  ShieldCheck,
-  Sparkles,
   UserCog,
   Users,
-  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavIconKey, NavSection } from "./nav-config";
@@ -34,20 +23,9 @@ const NAV_ICON: Record<NavIconKey, LucideIcon> = {
   "building-2": Building2,
   scale: Scale,
   "file-check-2": FileCheck2,
-  "life-buoy": LifeBuoy,
-  "calendar-days": CalendarDays,
-  "shield-check": ShieldCheck,
-  gauge: Gauge,
-  gavel: Gavel,
-  wallet: Wallet,
   "receipt-text": ReceiptText,
-  "bar-chart-3": BarChart3,
-  megaphone: Megaphone,
-  sparkles: Sparkles,
-  "heart-handshake": HeartHandshake,
   "user-cog": UserCog,
   briefcase: Briefcase,
-  settings: Settings,
 };
 
 export interface SidebarProps {
@@ -65,6 +43,8 @@ function initials(label: string): string {
  * Sidebar command dark (Visual System v2). Tenant/branch switcher continua
  * informativo: um auth user ↔ um tenant no schema atual; sem mecanismo de
  * troca de unidade — `<div>` com cara de controle da referência, não botão morto.
+ *
+ * Itens: só Core operacional (ADR-022) — sem mapa fantasma.
  */
 export function Sidebar({ sections, tenantName, tenantLegalName, branchLabel }: SidebarProps) {
   const pathname = usePathname();
@@ -110,41 +90,20 @@ export function Sidebar({ sections, tenantName, tenantLegalName, branchLabel }: 
             <ul className="flex flex-col gap-0.5">
               {section.items.map((item) => {
                 const Icon = NAV_ICON[item.icon];
-                if (!item.built) {
-                  return (
-                    <li key={item.label}>
-                      <span
-                        aria-disabled="true"
-                        className="flex w-full cursor-default items-center gap-2.5 rounded-sm px-2 py-1.5 text-dense font-semibold text-shell-ink-2/45"
-                      >
-                        <Icon size={15} className="shrink-0" aria-hidden />
-                        <span className="truncate">{item.label}</span>
-                      </span>
-                    </li>
-                  );
-                }
-
                 const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      aria-current={active ? "page" : undefined}
                       className={cn(
-                        "relative flex w-full items-center gap-2.5 rounded-sm px-2 py-1.5 text-dense font-semibold transition-colors",
+                        "flex w-full items-center gap-2.5 rounded-sm px-2 py-1.5 text-dense font-semibold transition-colors",
                         active
-                          ? "bg-shell-active text-shell-ink"
-                          : "text-shell-ink-2 hover:bg-shell-ink/[0.08] hover:text-shell-ink",
+                          ? "bg-shell-ink/[0.1] text-shell-ink"
+                          : "text-shell-ink-2 hover:bg-shell-ink/[0.06] hover:text-shell-ink",
                       )}
+                      aria-current={active ? "page" : undefined}
                     >
-                      {active ? (
-                        <span className="absolute inset-y-1.5 -left-3 w-[3px] rounded-r bg-teal" aria-hidden />
-                      ) : null}
-                      <Icon
-                        size={15}
-                        className={cn("shrink-0", active ? "text-teal" : "text-shell-ink-2")}
-                        aria-hidden
-                      />
+                      <Icon size={15} className="shrink-0" aria-hidden />
                       <span className="truncate">{item.label}</span>
                     </Link>
                   </li>

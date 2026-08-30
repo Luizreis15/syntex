@@ -30,7 +30,7 @@ V2 / V3 / V4 / V5    →  módulos novos (vendáveis como versão ou add-on)
 - **V1** = funcional básico bom.  
 - **Versões seguintes** = acréscimo de capacidade (e base para cobrar updates).  
 - Módulos futuros entram por **feature entitlement** por tenant — nunca `if (tenant === 'secabc')`.  
-- Item de nav só `built: true` quando a capability for **REAL**.
+- Item de nav só `built: true` quando a capability for **REAL** (ADR-022: sidebar Core sem mapa fantasma).
 
 ---
 
@@ -84,7 +84,7 @@ Não fazem parte do Core / não devem constar como entregáveis do contrato V1:
 | Production hardening pleno (DLQ, MFA, E2E amplo, gateways prod) | Plano de ops separado |
 | Expandir portais além do que já existe | Só com add-on / versão |
 
-Itens `built: false` na navegação permanecem **não entregues** na V1.
+Itens fora do Core **não** aparecem na sidebar (ADR-022). Voltam com DoD de versão.
 
 ### 2.5 Critérios de qualidade da V1
 

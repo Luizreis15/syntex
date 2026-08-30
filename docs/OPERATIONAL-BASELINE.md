@@ -9,7 +9,7 @@ divergência código↔ADR é GAP a resolver, não “código sempre vence”.
 **Auditoria histórica:** `docs/audits/OPERABILITY-MAP-CURSOR-2026-08-23.md`  
 **Frontend freeze:** `docs/FRONTEND-APPROVED-BASELINE.md` · commits `d31dcc1` / `3409cdc`  
 **Branch operacional:** `operational-core-v1`  
-**Atualizado:** 2026-08-30 (ADR-021 — representação Ativa/Pendente/Inativa)
+**Atualizado:** 2026-08-30 (ADR-022 — sidebar Core enxuta)
 
 ---
 
@@ -215,29 +215,20 @@ Fatias de fechamento Core: **C1–C5** feitas; **C6** = bug bash + aceite formal
 
 ---
 
-## 12. Nav contract (Core V1 — C5)
+## 12. Nav contract (Core — ADR-022)
 
-Espelho de `apps/web/components/layout/nav-config.ts`. Teste: `tests/core-v1-c5-nav-baseline.test.ts`.
+Sidebar **só** módulos REAL do Core (sem `built:false` / mapa fantasma).  
+Teste: `tests/core-v1-c5-nav-baseline.test.ts`.
 
-| Item | built | href | Versão / realidade |
-|------|-------|------|--------------------|
-| Painel | true | `/painel` | V1 — métricas REAL + blocos DEV_DEMO rotulados (C4) |
-| Trabalhadores | true | `/trabalhadores` | V1 |
-| Empresas | true | `/empresas` | V1 |
-| Representação | true | `/representacao` | V1 REAL (claim + recognize) |
-| Convenções | true | `/convencoes` | V1 (+ resolve aplicabilidade) |
-| Cobranças | true | `/cobrancas` | V1 (dues/resolver/origem) |
-| Equipe | true | `/equipe` | V1 / staff |
-| Escritórios | true | `/escritorios` | V1 estado atual (ADR-015) |
-| Atendimento | **false** | — | **V2** — PLANNED; `/filiacao` placeholder histórico |
-| Agenda…Jurídico | **false** | — | V2–V3 |
-| Arrecadação | **false** | — | **V1.x** BI — cobranças cobrem fatia V1 |
-| Financeiro | **false** | — | PLANNED / futuro |
-| Engajamento | **false** | — | V4 |
-| Analytics / Intelligence | **false** | — | V5 (+ cards DEMO no Painel) |
-| Configurações | **false** | — | PLANNED |
+| Grupo | Itens |
+|-------|--------|
+| Visão geral | Painel |
+| Relações | Trabalhadores, Empresas, Representação, Convenções |
+| Financeiro | Cobranças |
+| Administração | Equipe, Escritórios |
 
-**Regra C5:** não marcar `built:true` por “já existe rota fantasma”. Só capability REAL do contrato V1.
+**Removidos da chrome (PO 2026-08-30):** Atendimento, Agenda, Homologações (Veramo), Fiscalização, Jurídico, Arrecadação/Financeiro BI, Engajamento (Comunicação/Campanhas/Benefícios), Inteligência, Configurações.  
+Voltam só com DoD de versão + `built:true`.
 
 ---
 
