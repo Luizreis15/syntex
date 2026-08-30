@@ -36,6 +36,12 @@ Três estados operacionais:
 | **Ativa** | Liberada na base do sindicato | **Sim** |
 | **Inativa** | Encerrada / fora da base | **Não** |
 
+**Em disputa** (agregado / status explícito): opção de produto **mantida** para
+esclarecer quando o estabelecimento está **em juízo** ou contestação externa
+aberta — não é o caminho feliz do cadastro diário, mas permanece visível para
+operadores/diretoria acompanharem o caso. Cobrança/CCT operacional no Core
+continuam exigindo **ativa** (não sobem só porque há disputa).
+
 Regra de ouro: **só `ativa` sobe cobrança** (e só `ativa` elege CCT/regras
 no caminho operacional).
 
