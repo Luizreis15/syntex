@@ -72,9 +72,10 @@ Enquanto o enum/coluna no banco ainda usar os valores históricos:
 
 - Unicidade / `EXCLUDE` “só consolidada” continua valendo sobre o valor que
   mapeia **ativa** (`reconhecida` hoje).
-- Status agregado `disputada` e fluxos de rival **não** fazem parte do
-  caminho feliz do Core V1; podem permanecer no modelo para histórico /
-  segundo sindicato, sem UI obrigatória.
+- Status agregado `disputada` (**Em disputa** na UI) permanece para sinalizar
+  estabelecimento **em juízo / contestação externa**; não é workflow jurídico
+  completo nem caminho feliz do Core V1, mas a opção fica disponível para
+  esclarecimento operacional.
 
 ### 5. Trabalho seguinte (implementação — fatia própria)
 
