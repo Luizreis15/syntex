@@ -12,14 +12,14 @@ import { formatCnpj } from "@/lib/formatters/cnpj";
 import { formatData } from "@/lib/formatters/data";
 import { RepresentationClaimCard } from "@/features/representations/components/representation-claim-card";
 import type { RepresentationWorkspace } from "@/features/representations/workspace-data";
+import { representationStatusLabel } from "@/lib/domain/representation-status-label";
 import {
   ClaimRepresentationForm,
   type ClaimRegistrationOption,
 } from "@/features/representations/components/claim-representation-form";
 
 function statusLabel(status: RepresentationWorkspace["currentStatus"]): string {
-  if (status === "sem_representacao") return "Sem representação";
-  return status;
+  return representationStatusLabel(status);
 }
 
 export function RepresentationWorkspaceView({
@@ -98,7 +98,7 @@ export function RepresentationWorkspaceView({
                   </form>
                   {workspace.hasConflict ? (
                     <span className="text-label font-semibold text-status-disputada">
-                      {workspace.activeClaimsCount} reivindicações vigentes
+                      {workspace.activeClaimsCount} registros vigentes na base
                     </span>
                   ) : null}
                 </div>
@@ -122,8 +122,8 @@ export function RepresentationWorkspaceView({
               ) : null}
               {workspace.currentStatus === "reconhecida" ? (
                 <p className="text-dense text-ink-2">
-                  Representação consolidada.{" "}
-                  <Link href="/cobrancas/resolver" className="font-semibold text-petrol-700 hover:underline">
+                  Representação ativa.{" "}
+                  <Link href={`/cobrancas/resolver?companyId=${company.id}`} className="font-semibold text-petrol-700 hover:underline">
                     Resolver débitos e gerar cobrança
                   </Link>
                 </p>
@@ -143,7 +143,7 @@ export function RepresentationWorkspaceView({
                   {workspace.activeClaimsCount === 0
                     ? "Nenhuma representação vigente para este estabelecimento."
                     : workspace.hasConflict
-                      ? "Conflito: todas as claims vigentes são listadas sem eleger vencedora."
+                      ? "Em disputa: registros concorrentes listados — esclarecimento / juízo, sem eleger vencedor automático."
                       : `Status consolidado: ${statusLabel(workspace.currentStatus)}.`}
                 </SyntexPanelDescription>
               </div>

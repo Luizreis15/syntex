@@ -20,12 +20,21 @@ interface Option {
   label: string;
 }
 
-export function ResolveDuesForm({ companies }: { companies: Option[] }) {
+export function ResolveDuesForm({
+  companies,
+  initialCompanyId = "",
+}: {
+  companies: Option[];
+  /** Pré-seleção vinda de `/cobrancas/resolver?companyId=` (atalho demo). */
+  initialCompanyId?: string;
+}) {
   const router = useRouter();
   const [dues, setDues] = useState<DueRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [companyId, setCompanyId] = useState("");
+  const [companyId, setCompanyId] = useState(() =>
+    initialCompanyId && companies.some((c) => c.id === initialCompanyId) ? initialCompanyId : "",
+  );
   const [competence, setCompetence] = useState("");
   const [base, setBase] = useState("");
 

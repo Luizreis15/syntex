@@ -6,7 +6,11 @@ import { SyntexPageHeader } from "@/components/ui/syntex-page-header";
 import { SyntexEmptyState } from "@/components/ui/syntex-empty-state";
 import { ResolveDuesForm } from "@/features/charges/resolve-dues-form";
 
-export default async function ResolverDebitosPage() {
+export default async function ResolverDebitosPage({
+  searchParams,
+}: {
+  searchParams: { companyId?: string };
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
 
@@ -53,6 +57,7 @@ export default async function ResolverDebitosPage() {
             id: c.id,
             label: `${c.trade_name ?? c.legal_name} · ${c.cnpj}`,
           }))}
+          initialCompanyId={searchParams.companyId?.trim() || ""}
         />
       </div>
     </div>

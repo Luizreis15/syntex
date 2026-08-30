@@ -102,9 +102,11 @@ Ordenado por impacto na aceitação §2.3:
 
 ## 6.1 Próxima ação
 
-1. **Testes humanos** com nomenclatura ADR-021 (pendente → ativar → cobrança).  
-2. **C6** buffer / o que o teste achar.  
-3. Opcional V1.x: migration renomeando enum no banco.
+**Meta reunião SECABC: 17/09/2026** — ver `docs/SECABC-DEMO-17SET.md`.
+
+1. Hoje: atalhos UX + roteiro demo; você clica o ciclo.  
+2. Diário 2–3 h: só bugs do caminho feliz até freeze 16/09.  
+3. Não abrir V2 / Engajamento / Homologações no meio.
 
 ---
 

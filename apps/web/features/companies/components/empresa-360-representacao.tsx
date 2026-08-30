@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatData } from "@/lib/formatters/data";
 import { DashboardPanel } from "@/features/dashboard/components/dashboard-panel";
 import { CreateEstablishmentForm } from "@/features/companies/create-establishment-form";
+import { representationStatusLabel } from "@/lib/domain/representation-status-label";
 
 type Resolution = Awaited<
   ReturnType<typeof import("@/lib/domain/resolve-representation").resolveRepresentation>
@@ -77,7 +78,9 @@ export function Empresa360Representacao({
         {resolution ? (
           <div className="space-y-3 rounded-control border border-border p-4">
             <div className="flex flex-wrap items-center gap-2 text-body">
-              <span className="font-semibold capitalize text-ink">{resolution.status}</span>
+              <span className="font-semibold text-ink">
+                {representationStatusLabel(resolution.status)}
+              </span>
               {resolution.basis ? (
                 <span className="text-ink-2">base: {resolution.basis}</span>
               ) : null}
@@ -85,10 +88,10 @@ export function Empresa360Representacao({
 
             {resolution.status === "disputada" && resolution.conflicts.length > 0 ? (
               <div className="space-y-2">
-                <p className="text-body font-medium">Representações concorrentes nesta data:</p>
+                <p className="text-body font-medium">Registros concorrentes nesta data (em juízo / disputa):</p>
                 {resolution.conflicts.map((c) => (
                   <div key={c.id} className="rounded-control bg-surface-2 p-2 text-body">
-                    <span className="font-semibold">{c.status}</span>{" "}
+                    <span className="font-semibold">{representationStatusLabel(c.status)}</span>{" "}
                     <span className="font-mono text-ink-2">
                       {formatData(c.valid_from)} →{" "}
                       {c.valid_until ? formatData(c.valid_until) : "atual"}
@@ -128,6 +131,17 @@ export function Empresa360Representacao({
                   >
                     Abrir convenção
                   </Link>
+                  {resolution.status === "reconhecida" ? (
+                    <>
+                      {" · "}
+                      <Link
+                        href={`/cobrancas/resolver?companyId=${companyId}`}
+                        className="text-label font-semibold text-petrol-700 hover:underline"
+                      >
+                        Gerar cobrança
+                      </Link>
+                    </>
+                  ) : null}
                 </p>
                 {resolution.contributionRules.length > 0 ? (
                   <ul className="space-y-1 text-ink-2" data-testid="contribution-rules">
@@ -151,6 +165,17 @@ export function Empresa360Representacao({
               resolution.representation && (
                 <p className="border-t border-border pt-3 text-body text-ink-2">
                   Nenhuma CCT vigente encontrada para esta data (categorias/território/data).
+                  {resolution.status === "reconhecida" ? (
+                    <>
+                      {" "}
+                      <Link
+                        href={`/cobrancas/resolver?companyId=${companyId}`}
+                        className="font-semibold text-petrol-700 hover:underline"
+                      >
+                        Ir para cobrança
+                      </Link>
+                    </>
+                  ) : null}
                 </p>
               )
             )}
@@ -211,7 +236,7 @@ export function Empresa360Representacao({
           {timeline.map((r) => (
             <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 text-body">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold capitalize">{r.status}</span>
+                <span className="font-semibold">{representationStatusLabel(r.status)}</span>
                 {r.basis ? <span className="text-ink-2">{r.basis}</span> : null}
               </div>
               <span className="font-mono text-ink-2">

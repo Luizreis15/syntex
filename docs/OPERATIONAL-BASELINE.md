@@ -242,6 +242,7 @@ Voltam só com DoD de versão + `built:true`.
 | `docs/CORE-V1-BUILD-FLOW.md` | Ordem das fatias até aceite do Core V1 |
 | `docs/CORE-V1-ACCEPTANCE-RUNBOOK.md` | Roteiro clicável DoD V1 (C1); alinhar copy à ADR-021 |
 | `decisoes/ADR-021-…` | Representação operacional: Ativa / Pendente / Inativa |
+| `docs/SECABC-DEMO-17SET.md` | Calendário e roteiro demo reunião 17/09 |
 | `docs/FRONTEND-APPROVED-BASELINE.md` | Freeze visual PO |
 | `decisoes/ADR-020-…` | Precedência fase + frontend |
 | `decisoes/ADR-019-…` | platform_notification |
