@@ -1,7 +1,11 @@
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-process.loadEnvFile(".env.local");
+// Unit tests no CI não têm .env.local; integração local precisa.
+if (existsSync(".env.local")) {
+  process.loadEnvFile(".env.local");
+}
 
 export default defineConfig({
   resolve: {
