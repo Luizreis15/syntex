@@ -56,7 +56,7 @@ describe("arrecadação — obrigação, snapshot, cobrança e baixa", () => {
       .insert({
         tenant_id: tenant.id,
         collective_agreement_id: agreementId,
-        type: "mensalidade",
+        type: "assistencial",
         valid_from: "2026-01-01",
         valid_until: null,
         calculation_base: "folha",
@@ -99,7 +99,7 @@ describe("arrecadação — obrigação, snapshot, cobrança e baixa", () => {
       calculation_base_amount: number;
     };
     expect(snapshot.rule.value).toBe(1.5);
-    expect(snapshot.rule.type).toBe("mensalidade");
+    expect(snapshot.rule.type).toBe("assistencial");
     expect(snapshot.competence).toBe("2026-08");
     expect(snapshot.calculation_base_amount).toBe(10_000);
 

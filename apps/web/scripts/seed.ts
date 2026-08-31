@@ -232,7 +232,9 @@ async function resetTenantData(tenantId: string) {
     "journal_entry",
     "charge",
     "obligation",
+    "contribution_assessment",
     "contribution_rule",
+    "revenue_plan",
     "collective_agreement_territory",
     "collective_agreement",
     "union_representation",
@@ -518,7 +520,7 @@ async function seedContributionRules(
   const rows = agreements.map((agreement) => ({
     tenant_id: tenantId,
     collective_agreement_id: agreement.id,
-    type: "mensalidade" as const,
+    type: "assistencial" as const,
     valid_from: agreement.valid_from,
     valid_until: agreement.valid_until,
     calculation_base: "salário base mensal",

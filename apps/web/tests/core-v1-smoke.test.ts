@@ -105,7 +105,7 @@ describe("C2 smoke — ciclo Core V1", () => {
       .insert({
         tenant_id: tenant.id,
         collective_agreement_id: agreement.id,
-        type: "mensalidade",
+        type: "assistencial",
         valid_from: "2024-01-01",
         valid_until: null,
         calculation_base: "folha",
@@ -238,7 +238,7 @@ describe("C2 smoke — ciclo Core V1", () => {
     expect(snapshot.origin?.representation_id).toBe(recognized.representation.id);
     expect(snapshot.origin?.representation_status).toBe("reconhecida");
     expect(snapshot.agreement?.mediador_number).toBe(mediador);
-    expect(snapshot.rule.type).toBe("mensalidade");
+    expect(snapshot.rule.type).toBe("assistencial");
     expect(JSON.stringify(snapshot)).not.toMatch(/evidence/i);
   });
 

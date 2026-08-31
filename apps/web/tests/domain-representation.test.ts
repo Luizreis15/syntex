@@ -174,7 +174,7 @@ describe("semântica operacional — CCT só com reconhecida (Slice 1.3A)", () =
     const { error: ruleError } = await admin.from("contribution_rule").insert({
       tenant_id: tenant.id,
       collective_agreement_id: agreement.id,
-      type: "mensalidade",
+      type: "assistencial",
       valid_from: "2024-01-01",
       calculation_base: "empresa",
       value_type: "valor_fixo",

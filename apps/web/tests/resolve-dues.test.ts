@@ -92,7 +92,7 @@ describe("resolveCompanyDues — o que a empresa deve na competência", () => {
       .insert({
         tenant_id: tenant.id,
         collective_agreement_id: agreement.id,
-        type: "mensalidade",
+        type: "assistencial",
         valid_from: "2026-01-01",
         calculation_base: "empresa",
         value_type: "valor_fixo",
@@ -108,7 +108,7 @@ describe("resolveCompanyDues — o que a empresa deve na competência", () => {
       .insert({
         tenant_id: tenant.id,
         collective_agreement_id: agreement.id,
-        type: "assistencial",
+        type: "negocial",
         valid_from: "2026-01-01",
         calculation_base: "folha",
         value_type: "percentual",
@@ -263,7 +263,7 @@ describe("resolveCompanyDues — status não consolidado não gera obrigação (
     const { error: ruleError } = await admin.from("contribution_rule").insert({
       tenant_id: tenant.id,
       collective_agreement_id: agreement.id,
-      type: "mensalidade",
+      type: "assistencial",
       valid_from: "2026-01-01",
       calculation_base: "empresa",
       value_type: "valor_fixo",

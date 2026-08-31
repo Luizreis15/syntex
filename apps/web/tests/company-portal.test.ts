@@ -119,7 +119,7 @@ describe("portal empresa — intent na cobrança da empresa", () => {
       .insert({
         tenant_id: tenant.id,
         collective_agreement_id: agreement!.id,
-        type: "mensalidade",
+        type: "assistencial",
         valid_from: "2026-01-01",
         calculation_base: "empresa",
         value_type: "valor_fixo",

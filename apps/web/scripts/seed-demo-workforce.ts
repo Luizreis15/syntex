@@ -42,7 +42,7 @@ export interface ContributionRuleRef {
   value: number;
   valid_from: string;
   valid_until: string | null;
-  collective_agreement_id: string;
+  collective_agreement_id: string | null;
 }
 
 export interface AgreementRef {
@@ -235,6 +235,10 @@ export async function seedDemoFinance(input: {
       tenant_id: tenantId,
       company_id: company.id,
       contribution_rule_id: rule.id,
+      debtor_kind: "company" as const,
+      debtor_company_id: company.id,
+      debtor_person_id: null,
+      remitting_company_id: null,
       competence: competenceYmToDate(p.competenceYm),
       amount: p.amount,
       currency: "BRL" as const,
