@@ -3,6 +3,8 @@
 **Âncora:** ciclo Core (empresa → pendente → **ativa** → cobrança + origem)  
 **Fora:** Atendimento, Engajamento, IA, Homologações/Veramo, tenant virgem completo  
 
+> Este doc é o **status único** até 17/09. Agents: override no topo de `AGENTS.md` / `CLAUDE.md`.
+
 ## Capacidade
 
 | Quando | Horas |

@@ -45,10 +45,13 @@ Abra http://localhost:3000.
 ## Testes
 
 ```bash
-npm run test       # Vitest — unit + integração (permissão, temporal, isolamento)
+npm run test:unit  # Vitest sem Supabase (CI)
+npm run test       # Vitest — unit + integração (precisa DEV)
 npm run test:e2e   # Playwright
+npm run typecheck
 ```
 
+CI (GitHub Actions): `typecheck` + `test:unit` em push/PR.
 ## Ambientes
 
 O projeto Supabase apontado por `.env.local` é **DEV**. Produção é um projeto Supabase separado, criado quando houver contrato assinado com o cliente fundador. Nunca aponte código para produção a partir deste repositório sem trocar as credenciais explicitamente.

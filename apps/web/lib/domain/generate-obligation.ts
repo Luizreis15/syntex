@@ -111,7 +111,10 @@ export async function generateObligationWithCharge(
     : { data: null };
 
   const parties = resolveObligationParties(
-    planRow ?? { liable_party: "company", collection_role: "direct" },
+    (planRow as { liable_party: "worker" | "member" | "company"; collection_role: "employer_remittance" | "direct" } | null) ?? {
+      liable_party: "company",
+      collection_role: "direct",
+    },
     input.companyId,
   );
 

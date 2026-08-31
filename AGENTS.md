@@ -1,5 +1,11 @@
 # Syntex — Contexto do Projeto
 
+> **OVERRIDE até 17/09/2026 (reunião SECABC)** — manda sobre WAVE/baseline neste período.  
+> Foco único: ciclo **empresa → pendente → ativa → cobrança (+ origem)**.  
+> Status operacional: `docs/SECABC-DEMO-17SET.md`.  
+> **Não** abrir Engajamento, IA, Homologações, redesenho de shell, nem “completar o Core”.  
+> Depois de 17/09: este bloco cai; volta a hierarquia normativa abaixo.
+
 Plataforma SaaS multi-tenant de gestão sindical. Cliente fundador: Sindicato dos
 Comerciários do ABC (SECABC). O produto modela a **relação sindical** entre
 trabalhador, empresa e entidade — não é um ERP genérico.

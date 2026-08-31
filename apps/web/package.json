@@ -9,6 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:unit": "vitest run tests/adr-021-representation-labels.test.ts tests/demo-resolver-shortcut.test.ts tests/revenue-plan.test.ts tests/formatters.test.ts tests/permission-matrix.test.ts tests/core-v1-c4-honesty.test.ts tests/core-v1-c5-nav-baseline.test.ts tests/token-conformance.test.ts tests/seed-generators.test.ts",
     "test:watch": "vitest",
     "test:core-v1": "vitest run tests/core-v1-smoke.test.ts",
     "test:e2e": "playwright test",
