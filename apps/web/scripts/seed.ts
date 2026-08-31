@@ -529,6 +529,46 @@ async function seedContributionRules(
   }));
   const { data, error } = await supabase.from("contribution_rule").insert(rows).select();
   if (error) throw error;
+
+  // Plano associativo (sem CCT) cobrindo a vigência da CCT financeira atual — demo 17/09.
+  const finance = agreements[agreements.length - 1];
+  if (finance) {
+    const { data: membershipPlan, error: planError } = await supabase
+      .from("revenue_plan")
+      .insert({
+        tenant_id: tenantId,
+        name: "Mensalidade associativa",
+        type: "mensalidade",
+        source_type: "statute",
+        collective_agreement_id: null,
+        liable_party: "member",
+        collection_role: "employer_remittance",
+        audience: "members",
+        frequency: "monthly",
+        due_day: 10,
+        opposition_applies: false,
+        status: "active",
+        valid_from: finance.valid_from,
+        valid_until: finance.valid_until,
+      })
+      .select("id")
+      .single();
+    if (planError) throw planError;
+    const { error: ruleError } = await supabase.from("contribution_rule").insert({
+      tenant_id: tenantId,
+      revenue_plan_id: membershipPlan.id,
+      collective_agreement_id: null,
+      type: "mensalidade",
+      calculation_method: "declared_payroll_percentage",
+      calculation_base: "folha salarial declarada",
+      value_type: "percentual",
+      value: 1,
+      valid_from: finance.valid_from,
+      valid_until: finance.valid_until,
+    });
+    if (ruleError) throw ruleError;
+  }
+
   return data;
 }
 

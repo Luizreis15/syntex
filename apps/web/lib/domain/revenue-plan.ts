@@ -154,6 +154,12 @@ export function competenceIsWithinPlan(
   return plan.valid_from <= competenceDate && (!plan.valid_until || plan.valid_until >= competenceDate);
 }
 
+/** "YYYY-MM" → "YYYY-MM-01"; inválido → null. */
+export function competenceToDateSafe(competence: string): string | null {
+  if (!/^\d{4}-\d{2}$/.test(competence)) return null;
+  return `${competence}-01`;
+}
+
 /** Resolve papéis na obrigação a partir do plano + empresa de contexto. */
 export function resolveObligationParties(
   plan: Pick<RevenuePlan, "liable_party" | "collection_role">,
