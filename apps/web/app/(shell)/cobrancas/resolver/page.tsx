@@ -47,8 +47,11 @@ export default async function ResolverDebitosPage({
           </span>
         }
         actions={
-          <Link href="/cobrancas" className="text-body text-petrol-700 hover:underline">
-            Voltar às cobranças
+          <Link
+            href="/cobrancas"
+            className="inline-flex h-input items-center rounded-control border-2 border-petrol-800 bg-white px-4 text-body font-semibold text-petrol-900 hover:bg-teal-50"
+          >
+            Ver cobranças
           </Link>
         }
       />

@@ -40,20 +40,21 @@ export default async function CobrancasPage({
         title="Cobranças"
         actions={
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="/cobrancas/modelos" className="text-body text-petrol-700 hover:underline">
-              Planos de arrecadação
-            </Link>
-            <Link href="/cobrancas/resolver" className="text-body text-petrol-700 hover:underline">
-              Apurar competência
+            <Link href="/cobrancas/modelos" className="text-body font-semibold text-petrol-700 hover:underline">
+              Planos
             </Link>
             {canWrite ? (
               <Link
-                href="/cobrancas/nova"
-                className="inline-flex h-input items-center rounded-sm bg-petrol-800 px-3 text-body text-shell-ink"
+                href="/cobrancas/resolver"
+                className="inline-flex h-input items-center rounded-control bg-teal-500 px-4 text-body font-semibold text-petrol-950 hover:bg-teal-400"
               >
-                Gerar cobrança
+                Apurar competência
               </Link>
-            ) : null}
+            ) : (
+              <Link href="/cobrancas/resolver" className="text-body font-semibold text-petrol-700 hover:underline">
+                Apurar competência
+              </Link>
+            )}
           </div>
         }
       />

@@ -515,6 +515,12 @@ export function RevenueAssessmentForm({
             >
               {pending ? "Gerando…" : "Gerar cobrança"}
             </button>
+            <a
+              href="/cobrancas"
+              className="inline-flex h-11 w-full items-center justify-center rounded-control border-2 border-petrol-800 bg-white px-4 text-body font-semibold text-petrol-900 hover:bg-teal-50"
+            >
+              Ir para lista de cobranças
+            </a>
           </>
         ) : null}
       </aside>

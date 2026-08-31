@@ -3,6 +3,10 @@ import type { Database } from "@syntex/database";
 
 type Client = SupabaseClient<Database>;
 
+/** FK composta de contexto (não confundir com debtor/remitting após ADR-023). */
+const OBLIGATION_COMPANY_EMBED =
+  "company!obligation_company_id_tenant_id_fkey(id, legal_name, trade_name, cnpj)";
+
 export async function fetchChargesPage(
   supabase: Client,
   tenantId: string,
@@ -16,7 +20,7 @@ export async function fetchChargesPage(
       id, amount, due_date, status, paid_at, payment_method, created_at, obligation_id,
       obligation(
         id, competence, status, company_id,
-        company(id, legal_name, trade_name, cnpj)
+        ${OBLIGATION_COMPANY_EMBED}
       )
     `,
     )
@@ -44,7 +48,7 @@ export async function fetchChargeDetail(supabase: Client, tenantId: string, id: 
       *,
       obligation(
         *,
-        company(id, legal_name, trade_name, cnpj),
+        ${OBLIGATION_COMPANY_EMBED},
         contribution_rule(type, value_type, value, calculation_base)
       )
     `,
