@@ -156,7 +156,7 @@ export async function generateChargeFromAssessment(
 ) {
   const { data: assessment, error: assessmentError } = await supabase
     .from("contribution_assessment")
-    .select("*, plan:revenue_plan_id(*), rule:contribution_rule_id(*)")
+    .select("*, plan:revenue_plan(*), rule:contribution_rule(*)")
     .eq("tenant_id", input.tenantId)
     .eq("id", input.assessmentId)
     .single();

@@ -200,7 +200,7 @@ export async function fetchRevenuePlanViews(
   let query = supabase
     .from("revenue_plan")
     .select(
-      "*, contribution_rule(*), collective_agreement:collective_agreement_id(id, kind, mediador_number, valid_from, valid_until)",
+      "*, contribution_rule(*), collective_agreement(id, kind, mediador_number, valid_from, valid_until)",
     )
     .eq("tenant_id", tenantId)
     .order("status")
