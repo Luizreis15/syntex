@@ -25,6 +25,10 @@ jobs:
       - name: Install
         run: npm ci
 
+      # npm optionalDeps + lock gerado em macOS às vezes omite o binário linux do rollup.
+      - name: Rollup native (linux)
+        run: npm install --no-save @rollup/rollup-linux-x64-gnu
+
       - name: Typecheck
         run: npm run typecheck
 

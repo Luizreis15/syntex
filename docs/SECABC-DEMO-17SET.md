@@ -55,6 +55,8 @@ Sidebar só Core (ADR-022). Painel DEMO ignorado / rotulado.
 | 11/09–16/09 | Freeze demo + checklist sala + 1 backup |
 | **17/09** | Reunião |
 
+Smoke local do ciclo: `cd apps/web && npx playwright test e2e/demo-cycle.spec.ts` (DEV seedado).
+
 ## Roteiro demo (sala) — 12 min
 
 **Login:** `diretoria@secabc.exemplo.org.br`  

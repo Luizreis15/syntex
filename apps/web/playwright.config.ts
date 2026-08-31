@@ -4,6 +4,7 @@ process.loadEnvFile(".env.local");
 
 export default defineConfig({
   testDir: "./e2e",
+  testMatch: "**/*.spec.ts",
   fullyParallel: false,
   workers: 1,
   reporter: "list",
