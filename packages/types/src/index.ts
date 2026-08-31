@@ -24,7 +24,17 @@ export type ContributionRuleType =
   | "assistencial"
   | "confederativa"
   | "mensalidade"
-  | "negocial";
+  | "negocial"
+  | "sindical"
+  | "patronal"
+  | "servico"
+  | "outro";
+
+export type ContributionCalculationMethod =
+  | "floor_headcount_percentage"
+  | "declared_payroll_percentage"
+  | "fixed_per_worker"
+  | "fixed_company";
 
 export type DataClassification =
   | "publico"
@@ -70,16 +80,39 @@ export interface CollectiveAgreement {
   professional_category_id: string;
 }
 
+/** Átomo de cálculo (V1: 1:1 com RevenuePlan). */
 export interface ContributionRule {
   id: string;
   tenant_id: string;
-  collective_agreement_id: string;
+  revenue_plan_id: string;
+  collective_agreement_id: string | null;
   type: ContributionRuleType;
   valid_from: string;
   valid_until: string | null;
   calculation_base: string;
+  calculation_method: ContributionCalculationMethod;
   value_type: "percentual" | "valor_fixo";
   value: number;
+}
+
+/** Cabeçalho do plano de arrecadação (ADR-023). */
+export interface RevenuePlan {
+  id: string;
+  tenant_id: string;
+  name: string;
+  type: ContributionRuleType;
+  source_type: "collective_agreement" | "assembly" | "statute" | "individual_authorization" | "contract";
+  collective_agreement_id: string | null;
+  clause_reference: string | null;
+  liable_party: "worker" | "member" | "company";
+  collection_role: "employer_remittance" | "direct";
+  audience: "represented_workers" | "members" | "authorized_workers" | "companies";
+  frequency: "monthly" | "single";
+  due_day: number;
+  opposition_applies: boolean;
+  status: "draft" | "active" | "inactive";
+  valid_from: string;
+  valid_until: string | null;
 }
 
 export interface ResolveRepresentationResult {

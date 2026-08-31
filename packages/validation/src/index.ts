@@ -116,6 +116,98 @@ export const contributionRuleCreateSchema = z.object({
 });
 export type ContributionRuleCreateInput = z.infer<typeof contributionRuleCreateSchema>;
 
+export const revenuePlanCreateSchema = z
+  .object({
+    name: z.string().trim().min(3).max(120),
+    type: z.enum([
+      "assistencial",
+      "confederativa",
+      "mensalidade",
+      "negocial",
+      "sindical",
+      "patronal",
+      "servico",
+      "outro",
+    ]),
+    sourceType: z.enum([
+      "collective_agreement",
+      "assembly",
+      "statute",
+      "individual_authorization",
+      "contract",
+    ]),
+    collectiveAgreementId: z.string().uuid().optional().nullable(),
+    clauseReference: z.string().trim().max(160).optional().nullable(),
+    liableParty: z.enum(["worker", "member", "company"]),
+    collectionRole: z.enum(["employer_remittance", "direct"]),
+    audience: z.enum(["represented_workers", "members", "authorized_workers", "companies"]),
+    calculationMethod: z.enum([
+      "floor_headcount_percentage",
+      "declared_payroll_percentage",
+      "fixed_per_worker",
+      "fixed_company",
+    ]),
+    value: z.number().positive(),
+    frequency: z.enum(["monthly", "single"]),
+    dueDay: z.number().int().min(1).max(28),
+    validFrom: isoDate,
+    validUntil: isoDate.optional().nullable(),
+    oppositionApplies: z.boolean(),
+    status: z.enum(["draft", "active"]),
+  })
+  .strict()
+  .superRefine((input, ctx) => {
+    if (input.sourceType === "collective_agreement" && !input.collectiveAgreementId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["collectiveAgreementId"],
+        message: "selecione a CCT/ACT que fundamenta o plano",
+      });
+    }
+    if (input.sourceType !== "collective_agreement" && input.collectiveAgreementId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["collectiveAgreementId"],
+        message: "CCT/ACT só é permitida quando o fundamento é convenção coletiva",
+      });
+    }
+    if (
+      input.type === "mensalidade" &&
+      !["statute", "assembly", "individual_authorization"].includes(input.sourceType)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["sourceType"],
+        message: "mensalidade associativa não se fundamenta em CCT/ACT",
+      });
+    }
+    if (input.validUntil && input.validUntil < input.validFrom) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["validUntil"],
+        message: "a vigência final não pode anteceder a inicial",
+      });
+    }
+  });
+export type RevenuePlanCreateInput = z.infer<typeof revenuePlanCreateSchema>;
+
+export const contributionAssessmentSchema = z
+  .object({
+    revenuePlanId: z.string().uuid(),
+    companyId: z.string().uuid(),
+    establishmentId: z.string().uuid().optional().nullable(),
+    competence: z.string().regex(/^\d{4}-\d{2}$/, "competência deve ser YYYY-MM"),
+    headcount: z.number().int().nonnegative().optional().nullable(),
+    headcountSource: z
+      .enum(["company_registration", "finance_confirmed", "company_declared", "system_workers"])
+      .optional()
+      .nullable(),
+    categoryFloor: z.number().nonnegative().optional().nullable(),
+    declaredPayroll: z.number().nonnegative().optional().nullable(),
+  })
+  .strict();
+export type ContributionAssessmentInput = z.infer<typeof contributionAssessmentSchema>;
+
 /** Competência YYYY-MM → normalizada no servidor para o 1º dia do mês. */
 export const generateObligationSchema = z.object({
   companyId: z.string().uuid(),

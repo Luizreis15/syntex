@@ -32,6 +32,8 @@ export const TABLE_DATA_CLASSIFICATION = {
   collective_agreement: "juridico",
   collective_agreement_territory: "interno",
   contribution_rule: "financeiro",
+  revenue_plan: "financeiro",
+  contribution_assessment: "financeiro",
   obligation: "financeiro",
   charge: "financeiro",
   journal_entry: "financeiro",

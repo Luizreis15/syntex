@@ -473,13 +473,100 @@ export type Database = {
           },
         ]
       }
+
+      revenue_plan: {
+        Row: {
+          audience: string
+          clause_reference: string | null
+          collection_role: string
+          collective_agreement_id: string | null
+          created_at: string
+          created_by: string | null
+          data_classification: string
+          due_day: number
+          frequency: string
+          id: string
+          liable_party: string
+          name: string
+          opposition_applies: boolean
+          source_type: string
+          status: string
+          tenant_id: string
+          type: string
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          audience: string
+          clause_reference?: string | null
+          collection_role: string
+          collective_agreement_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_classification?: string
+          due_day: number
+          frequency: string
+          id?: string
+          liable_party: string
+          name: string
+          opposition_applies?: boolean
+          source_type: string
+          status: string
+          tenant_id: string
+          type: string
+          updated_at?: string
+          valid_from: string
+          valid_until?: string | null
+        }
+        Update: {
+          audience?: string
+          clause_reference?: string | null
+          collection_role?: string
+          collective_agreement_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_classification?: string
+          due_day?: number
+          frequency?: string
+          id?: string
+          liable_party?: string
+          name?: string
+          opposition_applies?: boolean
+          source_type?: string
+          status?: string
+          tenant_id?: string
+          type?: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_plan_collective_agreement_id_tenant_id_fkey"
+            columns: ["collective_agreement_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "collective_agreement"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "revenue_plan_created_by_tenant_fkey"
+            columns: ["created_by", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
+            referencedColumns: ["id", "tenant_id"]
+          },
+        ]
+      }
       contribution_rule: {
         Row: {
           calculation_base: string
-          collective_agreement_id: string
+          calculation_method: string
+          collective_agreement_id: string | null
           created_at: string
           data_classification: string
           id: string
+          revenue_plan_id: string
           tenant_id: string
           type: string
           valid_from: string
@@ -489,10 +576,12 @@ export type Database = {
         }
         Insert: {
           calculation_base: string
-          collective_agreement_id: string
+          calculation_method?: string
+          collective_agreement_id?: string | null
           created_at?: string
           data_classification?: string
           id?: string
+          revenue_plan_id?: string
           tenant_id: string
           type: string
           valid_from: string
@@ -502,10 +591,12 @@ export type Database = {
         }
         Update: {
           calculation_base?: string
-          collective_agreement_id?: string
+          calculation_method?: string
+          collective_agreement_id?: string | null
           created_at?: string
           data_classification?: string
           id?: string
+          revenue_plan_id?: string
           tenant_id?: string
           type?: string
           valid_from?: string
@@ -519,6 +610,115 @@ export type Database = {
             columns: ["collective_agreement_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "collective_agreement"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "contribution_rule_revenue_plan_fkey"
+            columns: ["revenue_plan_id", "tenant_id"]
+            isOneToOne: true
+            referencedRelation: "revenue_plan"
+            referencedColumns: ["id", "tenant_id"]
+          },
+        ]
+      }
+      contribution_assessment: {
+        Row: {
+          amount: number
+          calculation_snapshot: Json
+          category_floor: number | null
+          company_id: string
+          competence: string
+          confirmed_at: string
+          contribution_rule_id: string
+          created_at: string
+          created_by: string
+          data_classification: string
+          declared_payroll: number | null
+          establishment_id: string | null
+          headcount: number | null
+          headcount_source: string | null
+          id: string
+          revenue_plan_id: string
+          status: string
+          tenant_id: string
+          unit_amount: number | null
+        }
+        Insert: {
+          amount: number
+          calculation_snapshot: Json
+          category_floor?: number | null
+          company_id: string
+          competence: string
+          confirmed_at?: string
+          contribution_rule_id: string
+          created_at?: string
+          created_by: string
+          data_classification?: string
+          declared_payroll?: number | null
+          establishment_id?: string | null
+          headcount?: number | null
+          headcount_source?: string | null
+          id?: string
+          revenue_plan_id: string
+          status?: string
+          tenant_id: string
+          unit_amount?: number | null
+        }
+        Update: {
+          amount?: number
+          calculation_snapshot?: Json
+          category_floor?: number | null
+          company_id?: string
+          competence?: string
+          confirmed_at?: string
+          contribution_rule_id?: string
+          created_at?: string
+          created_by?: string
+          data_classification?: string
+          declared_payroll?: number | null
+          establishment_id?: string | null
+          headcount?: number | null
+          headcount_source?: string | null
+          id?: string
+          revenue_plan_id?: string
+          status?: string
+          tenant_id?: string
+          unit_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contribution_assessment_company_id_tenant_id_fkey"
+            columns: ["company_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "contribution_assessment_contribution_rule_id_tenant_id_fkey"
+            columns: ["contribution_rule_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "contribution_rule"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "contribution_assessment_revenue_plan_id_tenant_id_fkey"
+            columns: ["revenue_plan_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_plan"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "contribution_assessment_establishment_id_tenant_id_fkey"
+            columns: ["establishment_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "establishment"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "contribution_assessment_created_by_tenant_fkey"
+            columns: ["created_by", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "app_user"
             referencedColumns: ["id", "tenant_id"]
           },
         ]
@@ -970,6 +1170,7 @@ export type Database = {
       }
       obligation: {
         Row: {
+          assessment_id: string | null
           amount: number
           company_id: string
           competence: string
@@ -977,12 +1178,17 @@ export type Database = {
           created_at: string
           currency: string
           data_classification: string
+          debtor_company_id: string | null
+          debtor_kind: string
+          debtor_person_id: string | null
           id: string
+          remitting_company_id: string | null
           rule_snapshot: Json
           status: string
           tenant_id: string
         }
         Insert: {
+          assessment_id?: string | null
           amount: number
           company_id: string
           competence: string
@@ -990,12 +1196,17 @@ export type Database = {
           created_at?: string
           currency?: string
           data_classification?: string
+          debtor_company_id?: string | null
+          debtor_kind: string
+          debtor_person_id?: string | null
           id?: string
+          remitting_company_id?: string | null
           rule_snapshot: Json
           status?: string
           tenant_id: string
         }
         Update: {
+          assessment_id?: string | null
           amount?: number
           company_id?: string
           competence?: string
@@ -1003,12 +1214,23 @@ export type Database = {
           created_at?: string
           currency?: string
           data_classification?: string
+          debtor_company_id?: string | null
+          debtor_kind?: string
+          debtor_person_id?: string | null
           id?: string
+          remitting_company_id?: string | null
           rule_snapshot?: Json
           status?: string
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "obligation_assessment_id_tenant_fkey"
+            columns: ["assessment_id", "tenant_id"]
+            isOneToOne: true
+            referencedRelation: "contribution_assessment"
+            referencedColumns: ["id", "tenant_id"]
+          },
           {
             foreignKeyName: "obligation_company_id_tenant_id_fkey"
             columns: ["company_id", "tenant_id"]
