@@ -72,7 +72,7 @@ export function CreateWorkerForm({
     const json = await res.json();
     setPending(false);
     if (!res.ok) {
-      setError(typeof json.error === "string" ? json.error : "Não foi possível cadastrar.");
+      setError(formatWorkerApiError(json.error));
       return;
     }
     router.push(`/trabalhadores/${json.data.worker.id}`);
@@ -138,7 +138,11 @@ export function CreateWorkerForm({
 
       <fieldset className="space-y-3">
         <legend className="text-component font-semibold text-ink">Pessoa</legend>
-        <Field label="CPF" name="cpf">
+        <Field
+          label="CPF"
+          name="cpf"
+          hint="Precisa ser um CPF com dígitos verificadores válidos (não aceita 000… ou 111…)."
+        >
           <input id="cpf" name="cpf" required placeholder="000.000.000-00" className={inputClass} />
         </Field>
         <Field label="Nome completo" name="fullName">
@@ -151,7 +155,7 @@ export function CreateWorkerForm({
           <Field label="E-mail" name="email">
             <input id="email" name="email" type="email" className={inputClass} />
           </Field>
-          <Field label="Telefone" name="phone">
+          <Field label="Telefone" name="phone" hint="Com DDD, pelo menos 8 dígitos — ou deixe em branco.">
             <input id="phone" name="phone" className={inputClass} />
           </Field>
         </div>
@@ -179,16 +183,16 @@ export function CreateWorkerForm({
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="text-component font-semibold text-ink">Filiação (Atendimento)</legend>
+        <legend className="text-component font-semibold text-ink">Filiação (associado)</legend>
         <p className="text-label text-ink-3">
-          Dado sensível (LGPD). Sócio precisa trabalhar em empresa do setor e não ter carta de
-          oposição. Pode ficar para o Atendimento depois do cadastro.
+          Dado sensível (LGPD). Para marcar como associado agora, escolha status{" "}
+          <span className="font-semibold text-ink">ativo</span>. Pode ficar para depois.
         </p>
         <Field label="Status inicial" name="membershipStatus">
           <select id="membershipStatus" name="membershipStatus" className={inputClass}>
             <option value="">Sem filiação agora</option>
             <option value="prospect">prospect</option>
-            <option value="ativo">ativo</option>
+            <option value="ativo">ativo (associado)</option>
             <option value="suspenso">suspenso</option>
           </select>
         </Field>
@@ -197,11 +201,15 @@ export function CreateWorkerForm({
         </Field>
       </fieldset>
 
-      {error && <p className="text-body text-danger">{error}</p>}
+      {error && (
+        <p role="alert" className="rounded-control bg-red-50 px-4 py-3 text-body text-danger">
+          {error}
+        </p>
+      )}
       <button
         type="submit"
         disabled={pending || companies.length === 0}
-        className="h-input rounded-sm bg-petrol-800 px-3 text-body text-shell-ink disabled:opacity-50"
+        className="h-input rounded-control bg-petrol-800 px-4 text-body font-semibold text-white disabled:opacity-50"
       >
         {pending ? "Salvando…" : "Cadastrar trabalhador"}
       </button>
@@ -214,16 +222,56 @@ export function CreateWorkerForm({
   );
 }
 
-function Field({ label, name, children }: { label: string; name: string; children: React.ReactNode }) {
+function formatWorkerApiError(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (!error || typeof error !== "object") return "Não foi possível cadastrar.";
+  const flat = error as {
+    formErrors?: string[];
+    fieldErrors?: Record<string, string[] | undefined>;
+  };
+  const fieldLines = Object.entries(flat.fieldErrors ?? {})
+    .flatMap(([field, messages]) => (messages ?? []).map((m) => `${labelForField(field)}: ${m}`));
+  const formLines = flat.formErrors ?? [];
+  const lines = [...fieldLines, ...formLines];
+  return lines.length > 0 ? lines.join(" · ") : "Não foi possível cadastrar.";
+}
+
+function labelForField(field: string): string {
+  const map: Record<string, string> = {
+    cpf: "CPF",
+    fullName: "Nome",
+    email: "E-mail",
+    phone: "Telefone",
+    companyId: "Empresa",
+    establishmentId: "Estabelecimento",
+    membershipStatus: "Filiação",
+    membershipValidFrom: "Data de associação",
+    employmentValidFrom: "Início do vínculo",
+  };
+  return map[field] ?? field;
+}
+
+function Field({
+  label,
+  name,
+  hint,
+  children,
+}: {
+  label: string;
+  name: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1">
       <label htmlFor={name} className="text-label text-ink-3">
         {label}
       </label>
       {children}
+      {hint ? <p className="text-label text-ink-3">{hint}</p> : null}
     </div>
   );
 }
 
 const inputClass =
-  "h-input w-full rounded-sm border border-border bg-surface px-2 text-body text-ink disabled:opacity-50";
+  "h-input w-full rounded-control border border-border bg-surface px-2 text-body text-ink disabled:opacity-50";
