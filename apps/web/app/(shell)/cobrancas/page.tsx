@@ -40,8 +40,11 @@ export default async function CobrancasPage({
         title="Cobranças"
         actions={
           <div className="flex flex-wrap items-center gap-3">
+            <Link href="/cobrancas/modelos" className="text-body text-petrol-700 hover:underline">
+              Planos de arrecadação
+            </Link>
             <Link href="/cobrancas/resolver" className="text-body text-petrol-700 hover:underline">
-              O que deve
+              Apurar competência
             </Link>
             {canWrite ? (
               <Link

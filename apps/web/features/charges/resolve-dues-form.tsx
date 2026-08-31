@@ -107,13 +107,12 @@ export function ResolveDuesForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <label htmlFor="competence" className="text-label text-ink-3">
-              Competência (YYYY-MM)
+              Competência
             </label>
             <input
               id="competence"
+              type="month"
               required
-              pattern="\d{4}-\d{2}"
-              placeholder="2026-08"
               value={competence}
               onChange={(e) => setCompetence(e.target.value)}
               className={inputClass}
@@ -121,7 +120,7 @@ export function ResolveDuesForm({
           </div>
           <div className="space-y-1">
             <label htmlFor="base" className="text-label text-ink-3">
-              Base R$ (se percentual)
+              Base de cálculo (R$)
             </label>
             <input
               id="base"
@@ -132,6 +131,7 @@ export function ResolveDuesForm({
               onChange={(e) => setBase(e.target.value)}
               className={inputClass}
             />
+            <p className="text-label text-ink-3">Preencha somente quando a contribuição for percentual.</p>
           </div>
         </div>
         <button
@@ -139,7 +139,7 @@ export function ResolveDuesForm({
           disabled={pending}
           className="h-input rounded-sm border border-border-strong px-3 text-body disabled:opacity-50"
         >
-          {pending ? "Resolvendo…" : "Resolver o que deve"}
+          {pending ? "Calculando…" : "Calcular cobrança"}
         </button>
       </form>
 
@@ -148,7 +148,9 @@ export function ResolveDuesForm({
       {dues && (
         <div className="space-y-3">
           <h2 className="text-component font-semibold text-ink">
-            {dues.length === 0 ? "Nada devido nesta competência" : `${dues.length} débito(s)`}
+            {dues.length === 0
+              ? "Nenhuma cobrança aplicável nesta competência"
+              : `${dues.length} cobrança(s) encontrada(s)`}
           </h2>
           {dues.length > 0 && (
             <>
@@ -196,7 +198,9 @@ export function ResolveDuesForm({
                 onClick={generate}
                 className="h-input rounded-sm bg-petrol-800 px-3 text-body text-shell-ink disabled:opacity-50"
               >
-                Gerar obrigações e cobranças
+                {dues.filter((d) => !d.existingChargeId).length === 1
+                  ? "Gerar cobrança"
+                  : "Gerar cobranças"}
               </button>
             </>
           )}

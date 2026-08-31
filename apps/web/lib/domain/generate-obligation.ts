@@ -7,6 +7,7 @@ import {
   computeObligationAmount,
   type RuleSnapshot,
 } from "@/lib/domain/obligation";
+import { resolveObligationParties } from "@/lib/domain/revenue-plan";
 import { resolveCompanyDues } from "@/lib/domain/resolve-dues";
 
 type Client = SupabaseClient<Database>;
@@ -74,12 +75,12 @@ export async function generateObligationWithCharge(
     throw new Error("regra não vigente na competência");
   }
 
-  const { data: agreement } = await supabase
+  const { data: agreement } = rule.collective_agreement_id ? await supabase
     .from("collective_agreement")
     .select("id, kind, mediador_number, valid_from, valid_until, base_date")
     .eq("tenant_id", input.tenantId)
     .eq("id", rule.collective_agreement_id)
-    .maybeSingle();
+    .maybeSingle() : { data: null };
 
   const amount = computeObligationAmount(ruleTyped, input.calculationBaseAmount);
   const origin = await resolveSnapshotOrigin(supabase, input);
@@ -100,6 +101,20 @@ export async function generateObligationWithCharge(
     origin,
   });
 
+  const { data: planRow } = ruleTyped.revenue_plan_id
+    ? await supabase
+        .from("revenue_plan")
+        .select("liable_party, collection_role")
+        .eq("tenant_id", input.tenantId)
+        .eq("id", ruleTyped.revenue_plan_id)
+        .maybeSingle()
+    : { data: null };
+
+  const parties = resolveObligationParties(
+    planRow ?? { liable_party: "company", collection_role: "direct" },
+    input.companyId,
+  );
+
   const { data: obligation, error: obligationError } = await supabase
     .from("obligation")
     .insert({
@@ -110,6 +125,7 @@ export async function generateObligationWithCharge(
       amount,
       rule_snapshot: snapshot as unknown as Json,
       status: "aberta",
+      ...parties,
     })
     .select()
     .single();

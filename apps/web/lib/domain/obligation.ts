@@ -3,13 +3,15 @@ import type { ContributionRule } from "@syntex/types";
 export interface RuleSnapshot {
   rule: {
     id: string;
+    name?: string;
     type: string;
     calculation_base: string;
+    calculation_method?: string;
     value_type: string;
     value: number;
     valid_from: string;
     valid_until: string | null;
-    collective_agreement_id: string;
+    collective_agreement_id: string | null;
   };
   agreement: {
     id: string;
@@ -21,9 +23,23 @@ export interface RuleSnapshot {
   } | null;
   /** Origem sindical no momento da geração (A2) — sem evidence. */
   origin?: {
-    establishment_id: string;
+    establishment_id: string | null;
     representation_id: string | null;
     representation_status: string;
+  } | null;
+  assessment?: {
+    version?: number;
+    calculation?: {
+      amount?: number;
+      unitAmount?: number | null;
+      formula?: string;
+      inputs?: {
+        headcount?: number | null;
+        categoryFloor?: number | null;
+        declaredPayroll?: number | null;
+        rateOrValue?: number;
+      };
+    };
   } | null;
   competence: string;
   calculation_base_amount: number | null;

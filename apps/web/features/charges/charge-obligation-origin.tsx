@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { representationStatusLabel } from "@/lib/domain/representation-status-label";
 import type { RuleSnapshot } from "@/lib/domain/obligation";
+import { formatMoeda } from "@/lib/formatters/moeda";
 
 const RULE_TYPE_LABEL: Record<string, string> = {
   assistencial: "Contribuição assistencial",
   confederativa: "Contribuição confederativa",
   mensalidade: "Mensalidade",
   negocial: "Contribuição negocial",
+  sindical: "Contribuição sindical",
+  patronal: "Contribuição patronal",
+  servico: "Serviço",
+  outro: "Outra receita",
 };
 
 /**
@@ -31,6 +36,7 @@ export function ChargeObligationOrigin({
   const rule = parsed?.rule;
   const agreement = parsed?.agreement;
   const origin = parsed?.origin;
+  const assessment = parsed?.assessment?.calculation;
 
   const typeLabel =
     RULE_TYPE_LABEL[ruleLive?.type ?? rule?.type ?? ""] ??
@@ -68,6 +74,19 @@ export function ChargeObligationOrigin({
             ) : null}
           </dd>
         </div>
+        {assessment ? (
+          <div className="sm:col-span-2 rounded-control border border-border bg-surface-inset p-3">
+            <dt className="text-label font-semibold uppercase tracking-wide text-ink-3">Memória de cálculo</dt>
+            <dd className="mt-2 grid gap-2 sm:grid-cols-3">
+              {assessment.inputs?.headcount != null ? <OriginValue label="Funcionários" value={String(assessment.inputs.headcount)} /> : null}
+              {assessment.inputs?.categoryFloor != null ? <OriginValue label="Piso da categoria" value={formatMoeda(assessment.inputs.categoryFloor)} /> : null}
+              {assessment.inputs?.declaredPayroll != null ? <OriginValue label="Folha declarada" value={formatMoeda(assessment.inputs.declaredPayroll)} /> : null}
+              {assessment.unitAmount != null ? <OriginValue label="Por funcionário" value={formatMoeda(assessment.unitAmount)} /> : null}
+              {assessment.formula ? <OriginValue label="Fórmula" value={assessment.formula} mono /> : null}
+              {assessment.amount != null ? <OriginValue label="Total apurado" value={formatMoeda(assessment.amount)} /> : null}
+            </dd>
+          </div>
+        ) : null}
         <div>
           <dt className="text-label text-ink-3">Competência</dt>
           <dd className="font-mono text-ink">{parsed?.competence ?? "—"}</dd>
@@ -91,7 +110,7 @@ export function ChargeObligationOrigin({
         <div className="sm:col-span-2">
           <dt className="text-label text-ink-3">Representação na origem</dt>
           <dd className="text-ink">
-            {origin?.representation_status ? (
+            {origin?.representation_status && origin.representation_status !== "not_applicable" ? (
               <>
                 Status <span className="font-medium">{representationStatusLabel(origin.representation_status)}</span>
                 {origin.establishment_id ? (
@@ -105,6 +124,8 @@ export function ChargeObligationOrigin({
                   </span>
                 ) : null}
               </>
+            ) : origin?.representation_status === "not_applicable" ? (
+              <span className="text-ink-2">Não se aplica a este plano.</span>
             ) : (
               <span className="text-ink-3">
                 Origem sindical não registrada neste snapshot (cobrança anterior ao A2 ou geração
@@ -125,6 +146,10 @@ export function ChargeObligationOrigin({
       </details>
     </section>
   );
+}
+
+function OriginValue({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return <span><span className="block text-label text-ink-3">{label}</span><span className={mono ? "font-mono text-label text-ink" : "font-medium text-ink"}>{value}</span></span>;
 }
 
 function parseSnapshot(snapshot: unknown): RuleSnapshot | null {
