@@ -176,6 +176,12 @@ export function RevenueAssessmentForm({
     const json = await response.json();
     setPending(false);
     if (!response.ok) {
+      if (response.status === 409) {
+        setError(
+          "Já existe apuração confirmada para esta empresa/plano/competência. Abra Cobranças para ver a cobrança gerada.",
+        );
+        return;
+      }
       setError(typeof json.error === "string" ? json.error : "não foi possível confirmar a apuração");
       return;
     }
@@ -193,8 +199,12 @@ export function RevenueAssessmentForm({
       setError(typeof json.error === "string" ? json.error : "não foi possível gerar a cobrança");
       return;
     }
-    if (json.data.chargeId) router.push(`/cobrancas/${json.data.chargeId}`);
-    else router.push("/cobrancas");
+    const chargeId = json.data?.chargeId as string | null | undefined;
+    if (chargeId) {
+      router.push(`/cobrancas/${chargeId}`);
+    } else {
+      router.push("/cobrancas");
+    }
     router.refresh();
   }
 
@@ -458,21 +468,28 @@ export function RevenueAssessmentForm({
                     {formatMoeda(preview.amount)}
                   </p>
                 </div>
-                <p className="text-label leading-relaxed text-slate-400">
-                  Ao confirmar, esta memória torna-se imutável e passa a explicar a obrigação
-                  financeira.
-                </p>
+                {assessmentId ? (
+                  <p className="rounded-control bg-emerald-500/20 px-3 py-2 text-label font-semibold text-emerald-200">
+                    Apuração confirmada — próxima etapa: gerar cobrança.
+                  </p>
+                ) : (
+                  <p className="text-label leading-relaxed text-slate-400">
+                    Ao confirmar, esta memória torna-se imutável e passa a explicar a obrigação
+                    financeira.
+                  </p>
+                )}
               </div>
             )}
           </SyntexPanelBody>
         </SyntexPanel>
 
+        {/* CTAs claros no fundo do papel — nunca petrol sobre painel dark */}
         {preview && !assessmentId && canWrite ? (
           <button
             type="button"
             onClick={confirmAssessment}
             disabled={pending || !planInForce}
-            className="inline-flex h-11 w-full items-center justify-center rounded-control bg-petrol-800 px-4 text-body font-semibold text-white hover:bg-petrol-700 disabled:opacity-50"
+            className="inline-flex h-11 w-full items-center justify-center rounded-control border-2 border-petrol-800 bg-white px-4 text-body font-semibold text-petrol-900 shadow-sm hover:bg-teal-50 disabled:opacity-50"
           >
             {pending ? "Confirmando…" : "Confirmar apuração"}
           </button>
@@ -484,17 +501,17 @@ export function RevenueAssessmentForm({
         ) : null}
         {assessmentId ? (
           <>
-            <div className="rounded-control border border-emerald-200 bg-emerald-50 p-3">
-              <p className="text-body font-semibold text-emerald-800">Apuração confirmada</p>
-              <p className="mt-1 text-label text-emerald-700">
-                Agora você pode emitir a cobrança com esta memória de cálculo.
+            <div className="rounded-control border border-emerald-300 bg-emerald-50 p-4">
+              <p className="text-body font-semibold text-emerald-900">Apuração confirmada</p>
+              <p className="mt-1 text-label text-emerald-800">
+                Memória de cálculo gravada. Clique abaixo para emitir a cobrança desta competência.
               </p>
             </div>
             <button
               type="button"
               onClick={generateCharge}
               disabled={pending}
-              className="inline-flex h-11 w-full items-center justify-center rounded-control bg-petrol-800 px-4 text-body font-semibold text-white hover:bg-petrol-700 disabled:opacity-50"
+              className="inline-flex h-11 w-full items-center justify-center rounded-control bg-teal-500 px-4 text-body font-semibold text-petrol-950 shadow-sm hover:bg-teal-400 disabled:opacity-50"
             >
               {pending ? "Gerando…" : "Gerar cobrança"}
             </button>
